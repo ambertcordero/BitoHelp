@@ -15,14 +15,34 @@
           </div>
         </div>
 
-        <q-select v-model="form.cause" outlined label="Choose non-profit or a cause" class="q-mb-md" />
-        <q-input v-model="form.contract" outlined label="Contract" class="q-mb-md" />
+        <q-select 
+          v-model="form.cause" 
+          :options="nonprofitOptions" 
+          outlined 
+          label="Choose non-profit or a cause" 
+          class="q-mb-md"
+        />
+        <q-input 
+          v-model="form.recipientAddress" 
+          outlined 
+          label="Recipient BCH Address" 
+          hint="Enter the nonprofit's Bitcoin Cash address"
+          class="q-mb-md" 
+        />
         <div class="row q-col-gutter-md">
           <div class="col">
-            <q-select v-model="form.coin" :options="causes" label="Choose a coin" outlined dense class="q-mb-md"/>
+            <q-select v-model="form.coin" :options="cryptoOptions" label="Choose a coin" outlined dense class="q-mb-md"/>
           </div>
           <div class="col">
-            <q-input v-model="form.amount" outlined label="Coin amount" />
+            <q-input 
+              v-model.number="form.amount" 
+              outlined 
+              label="Amount" 
+              type="number"
+              step="0.00000001"
+              min="0"
+              :suffix="form.coin || 'BCH'"
+            />
           </div>
         </div>  
 
@@ -51,32 +71,33 @@
 
           <div class="summary-row">
             <span>Charity Name</span>
-            <span>BSP Fund</span>
+            <span>{{ form.cause || 'Not selected' }}</span>
           </div>
 
           <div class="summary-row">
-            <span>Contract</span>
-            <span>5 years</span>
+            <span>Recipient Address</span>
+            <span class="text-caption">{{ form.recipientAddress || 'Not entered' }}</span>
           </div>
 
           <div class="summary-row">
             <span>Coin</span>
-            <span>Bitcoin</span>
+            <span>{{ form.coin || 'BCH' }}</span>
           </div>
 
           <div class="summary-row">
             <span>Amount</span>
-            <span>1 Million USD</span>
+            <span>{{ form.amount || 0 }} {{ form.coin || 'BCH' }}</span>
           </div>
 
           <div class="summary-divider"></div>
 
           <q-btn
             class="continue-btn"
-            label="Continue"
+            label="Send Donation"
             unelevated
-            to="/continue"
-            @click="$router.push('/continue')"
+            @click="handleDonation"
+            :loading="processing"
+            :disable="(!isTestMode && !isConnected) || !form.cause || !form.recipientAddress || !form.amount"
           />
 
           <p class="terms">
@@ -124,16 +145,165 @@
 
 <script setup>
 import { ref } from 'vue'
+import { useBCHContract } from '../composables/useBCHContract'
+import { useDonationStore } from '../stores/donation-store'
+import { useQuasar } from 'quasar'
+import { useRouter } from 'vue-router'
 
+const $q = useQuasar()
+const router = useRouter()
+const donationStore = useDonationStore()
+
+const nonprofitOptions = ref([
+  'Typhoon Relief Fund',
+  'Educational Fund',
+  'Medical Fund',
+  'Health Fund'
+])
+
+const cryptoOptions = ref([
+  'Bitcoin Cash (BCH)',
+  'Bitcoin (BTC)',
+  'Ethereum (ETH)',
+  'Tether (USDT)',
+  'BNB',
+  'USD Coin (USDC)'
+])
 
 const form = ref({
   cause: null,
-  contract: null,
-  coin: null,
+  recipientAddress: '',
+  coin: 'Bitcoin Cash (BCH)',
   amount: null,
   message: '',
   email: '',
   name: '',
   contact: ''
 })
+
+const {
+  isConnected,
+  isTestMode,
+  sendDonation
+} = useBCHContract()
+
+const processing = ref(false)
+const txResult = ref(null)
+
+
+const handleDonation = async () => {
+  console.log(' handleDonation called')
+  console.log('Test Mode:', isTestMode.value)
+  console.log('Connected:', isConnected.value)
+  console.log('Form data:', form.value)
+  
+  
+  if (!isTestMode.value && !isConnected.value) {
+    $q.notify({
+      type: 'warning',
+      message: 'Please connect your wallet first',
+      caption: 'Click the wallet button in the header'
+    })
+    return
+  }
+
+  if (!form.value.cause) {
+    $q.notify({
+      type: 'warning',
+      message: 'Please select a non-profit or cause'
+    })
+    return
+  }
+
+  if (!form.value.recipientAddress) {
+    $q.notify({
+      type: 'warning',
+      message: 'Please enter recipient address'
+    })
+    return
+  }
+
+  if (!form.value.amount || form.value.amount <= 0) {
+    $q.notify({
+      type: 'warning',
+      message: 'Please enter a valid amount'
+    })
+    return
+  }
+
+  processing.value = true
+  
+  try {
+    console.log('🔹 Starting donation process...')
+    const donationData = {
+      recipient: form.value.recipientAddress,
+      amount: form.value.amount,
+      message: form.value.message,
+      cause: form.value.cause,
+      coin: form.value.coin,
+      donorName: form.value.name,
+      donorEmail: form.value.email,
+      donorContact: form.value.contact
+    }
+
+    console.log(' Sending donation with data:', donationData)
+    const result = await sendDonation(donationData)
+    console.log(' sendDonation result:', result)
+    txResult.value = result
+
+    // Save donation to store (Django API)
+    await donationStore.addDonation({
+      ...donationData,
+      txid: result.txid,
+      explorerUrl: result.explorerUrl,
+      timestamp: new Date().toISOString()
+    })
+
+    $q.notify({
+      type: 'positive',
+      message: 'Donation sent successfully!',
+      caption: `Transaction ID: ${result.txid}`,
+      timeout: 5000,
+      actions: [
+        {
+          label: 'View on Explorer',
+          color: 'white',
+          handler: () => {
+            window.open(result.explorerUrl, '_blank')
+          }
+        }
+      ]
+    })
+
+ 
+    console.log(' Donation completed:', {
+      cause: form.value.cause,
+      amount: form.value.amount,
+      coin: form.value.coin,
+      donor: form.value.name,
+      txid: result.txid
+    })
+
+   
+    console.log(' Redirecting to /continue in 2 seconds...')
+    setTimeout(() => {
+      console.log(' Executing router.push(/continue)')
+      router.push('/continue')
+        .then(() => console.log(' Navigation successful'))
+        .catch(err => console.error(' Navigation failed:', err))
+    }, 2000)
+
+  } catch (error) {
+    console.error(' Donation error:', error)
+    console.error('Error details:', error.message, error.stack)
+    $q.notify({
+      type: 'negative',
+      message: 'Failed to send donation',
+      caption: error.message
+    })
+  } finally {
+    console.log(' Setting processing to false')
+    processing.value = false
+  }
+}
 </script>
