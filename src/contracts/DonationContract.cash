@@ -1,0 +1,38 @@
+pragma cashscript ^0.12.0;
+
+
+contract DonationContract(
+    bytes20 nonprofitPkh,     
+    bytes20 platformPkh,       
+    int platformFeePercent     
+) {
+    
+    function donate() {
+
+        require(tx.age >= 0);
+        int inputAmount = tx.inputs[this.activeInputIndex].value;
+        require(inputAmount >= 10000);
+        
+        int platformFee = inputAmount * platformFeePercent / 100;
+        int nonprofitAmount = inputAmount - platformFee - 1000; 
+
+        bytes34 nonprofitLockingBytecode = new LockingBytecodeP2PKH(nonprofitPkh);
+        bytes34 platformLockingBytecode = new LockingBytecodeP2PKH(platformPkh);
+        
+        require(tx.outputs[0].lockingBytecode == nonprofitLockingBytecode);
+        require(tx.outputs[0].value == nonprofitAmount);
+        
+        if (platformFee > 0) {
+            require(tx.outputs[1].lockingBytecode == platformLockingBytecode);
+            require(tx.outputs[1].value == platformFee);
+        }
+    }
+    
+    
+    function refund(pubkey donorPk, sig donorSig) {
+      
+        require(hash160(donorPk) == hash160(donorPk));
+        require(checkSig(donorSig, donorPk));
+        require(tx.age >= 4320);
+    }
+}

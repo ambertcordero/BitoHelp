@@ -128,6 +128,7 @@
               class="full-width" 
               padding="md"
               style="font-weight: 700; font-size: 13px; letter-spacing: 0.3px;"
+              @click="$router.push('/donate')"
             />
           </q-card>
 
@@ -146,6 +147,11 @@
                 </tr>
               </thead>
               <tbody>
+                <tr v-if="donationHistory.length === 0">
+                  <td colspan="3" class="text-center text-grey-7 q-pa-md">
+                    No donations yet
+                  </td>
+                </tr>
                 <tr v-for="item in donationHistory" :key="item.Date">
                   <td class="text-weight-medium">{{ item.Date }}</td>
                   <td>{{ item.Fund }}</td>
@@ -191,12 +197,24 @@
           <q-card class="q-pa-md" style="background: #e3edfc; border-radius: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); border: none; border-style: solid; border-color: #3b82f6;">
             <div class="text-h6 text-weight-bold q-mb-md" style="color: #1a1a1a;">Latest Blockchain Transactions</div>
             <div class="transactions-list">
+              <div v-if="transactions.length === 0" class="text-center q-pa-lg">
+                <q-icon name="info" size="48px" color="grey-5" class="q-mb-md" />
+                <div class="text-body2 text-grey-7">No transactions yet. Make your first donation!</div>
+                <q-btn 
+                  label="Donate Now" 
+                  color="primary" 
+                  class="q-mt-md"
+                  @click="$router.push('/donate')"
+                />
+              </div>
               <div 
                 v-for="(tx, index) in transactions" 
                 :key="index"
                 class="transaction-item row items-center justify-between q-pa-md q-mb-sm"
-                style="background: #F5F5F5; border-radius: 8px;"
+                style="background: #F5F5F5; border-radius: 8px; cursor: pointer;"
+                @click="openExplorer(tx)"
               >
+                <q-tooltip>Click to view on blockchain explorer</q-tooltip>
                 <div class="row items-center q-gutter-md">
                   <q-avatar size="44px" color="primary" text-color="white">
                     <q-icon name="currency_bitcoin" size="24px" />
@@ -265,37 +283,116 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, computed, onMounted } from 'vue'
+import { useDonationStore } from '../stores/donation-store'
+import { useQuasar } from 'quasar'
 
-const selectedCause = ref('Typhoon Relief Fund')
+const $q = useQuasar()
+const donationStore = useDonationStore()
+
+
+onMounted(() => {
+  donationStore.loadDonationsFromStorage()
+  
+  
+  if (donationStore.latestDonation) {
+    $q.notify({
+      type: 'positive',
+      message: `Thank you for your donation to ${donationStore.latestDonation.cause}!`,
+      caption: `Amount: ${donationStore.latestDonation.amount} ${donationStore.latestDonation.coin}`,
+      position: 'top',
+      timeout: 3000
+    })
+  }
+})
+
+const selectedCause = ref(donationStore.latestDonation?.cause || 'Typhoon Relief Fund')
 const causes = [
   'Typhoon Relief Fund',
-  'Education Fund',
-  'Medical Aid',
-  'Disaster Response'
+  'Educational Fund',
+  'Medical Fund',
+  'Health Fund'
 ]
 
 const btcAmount = ref('0.01 BTC')
-const walletAddress = ref('1A1bcxy..9GhYz')
-const progress = ref(0.29)
-const raised = ref(1.45)
+const walletAddress = computed(() => {
+  return donationStore.latestDonation?.recipient || '1A1bcxy..9GhYz'
+})
+
+
+const progress = computed(() => {
+  const total = donationStore.getTotalAmount
+  const goalValue = 5 
+  return Math.min(total / goalValue, 1)
+})
+
+const raised = computed(() => {
+  return donationStore.getTotalAmount.toFixed(4)
+})
+
 const goal = ref(5)
-const totalRaised = ref(8.24)
-const totalDonors = ref(324)
 
-const donationHistory = ref([
-  { Date: 'Jan', Fund: 'Typhoon Relief Fund', Amount: '0.01 BTC' },
-  { Date: 'Feb', Fund: 'Educational Fund', Amount: '0.02 BTC' },
-  { Date: 'Mar', Fund: 'Medical Fund', Amount: '0.03 BTC' },
-  { Date: 'Apr', Fund: 'Health Fund', Amount: '0.04 BTC' }
-])
+const totalRaised = computed(() => {
+  return donationStore.getTotalAmount.toFixed(2)
+})
 
-const transactions = ref([
-  { Date: 'Jan', Amount: '0.01 BTC', Wallet: '1A2fcxy..6GkYz', Status: 'Last Confirmed', Time: '22 mins ago' },
-  { Date: 'Jan', Amount: '0.01 BTC', Wallet: '3F0baxe..3ThUz', Status: 'Last Confirmed', Time: '22 mins ago' },
-  { Date: 'Jan', Amount: '0.01 BTC', Wallet: '4L9lgnm..2WpZQ', Status: 'Last Confirmed', Time: '22 mins ago' },
-  { Date: 'Jan', Amount: '0.01 BTC', Wallet: '1A1bcxy..9GhYz', Status: 'Last Confirmed', Time: '22 mins ago' }
-])
+const totalDonors = computed(() => {
+  return donationStore.getDonationCount
+})
+
+
+const donationHistory = computed(() => {
+  return donationStore.donationHistory.slice(0, 4).map(donation => ({
+    Date: new Date(donation.timestamp).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+    Fund: donation.cause,
+    Amount: `${donation.amount} ${donation.coin}`
+  }))
+})
+
+
+const transactions = computed(() => {
+  return donationStore.donationHistory.slice(0, 4).map(donation => {
+    const date = new Date(donation.timestamp)
+    const timeAgo = getTimeAgo(date)
+    const shortAddress = donation.recipient 
+      ? `${donation.recipient.slice(0, 7)}..${donation.recipient.slice(-5)}`
+      : 'N/A'
+    
+    return {
+      Date: date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+      Amount: `${donation.amount} ${donation.coin}`,
+      Wallet: shortAddress,
+      Status: 'Confirmed',
+      Time: timeAgo,
+      txid: donation.txid,
+      explorerUrl: donation.explorerUrl
+    }
+  })
+})
+
+
+const getTimeAgo = (date) => {
+  const now = new Date()
+  const diffMs = now - date
+  const diffMins = Math.floor(diffMs / 60000)
+  const diffHours = Math.floor(diffMs / 3600000)
+  const diffDays = Math.floor(diffMs / 86400000)
+  
+  if (diffMins < 1) return 'Just now'
+  if (diffMins < 60) return `${diffMins} min${diffMins > 1 ? 's' : ''} ago`
+  if (diffHours < 24) return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`
+  return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`
+}
+
+
+const openExplorer = (tx) => {
+  if (tx.explorerUrl) {
+    window.open(tx.explorerUrl, '_blank')
+  } else if (tx.txid) {
+    
+    window.open(`https://explorer.bitcoin.com/bch/tx/${tx.txid}`, '_blank')
+  }
+}
 
 const copyWallet = () => {
   navigator.clipboard.writeText(walletAddress.value)
