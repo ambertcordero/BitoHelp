@@ -52,7 +52,7 @@ export const useDonationStore = defineStore('donation', {
         this.latestDonation = donation
         this.donationHistory.unshift(donation)
         
-        // Keep only last 50 donations in memory
+        
         if (this.donationHistory.length > 50) {
           this.donationHistory = this.donationHistory.slice(0, 50)
         }
@@ -62,13 +62,13 @@ export const useDonationStore = defineStore('donation', {
         // Also save to localStorage as backup
         this.saveDonationsToStorage()
         
-        console.log('✅ Donation saved to Django API:', donation)
+        console.log(' Donation saved to Django API:', donation)
         return donation
       } catch (error) {
-        console.error('❌ Failed to save donation to API:', error)
+        console.error(' Failed to save donation to API:', error)
         this.error = error.response?.data || error.message
         
-        // Fallback: save to localStorage only
+        
         const localDonation = {
           id: Date.now(),
           ...donationData,
@@ -92,9 +92,9 @@ export const useDonationStore = defineStore('donation', {
       try {
         const response = await api.get(`donations/?limit=${limit}`)
         this.donationHistory = response.data.results || response.data
-        console.log(`✅ Fetched ${this.donationHistory.length} donations from API`)
+        console.log(` Fetched ${this.donationHistory.length} donations from API`)
       } catch (error) {
-        console.error('❌ Failed to fetch donations:', error)
+        console.error(' Failed to fetch donations:', error)
         this.error = error.response?.data || error.message
         // Load from localStorage as fallback
         this.loadDonationsFromStorage()
@@ -108,7 +108,7 @@ export const useDonationStore = defineStore('donation', {
         const response = await api.get('stats/')
         return response.data
       } catch (error) {
-        console.error('❌ Failed to fetch stats:', error)
+        console.error(' Failed to fetch stats:', error)
         return null
       }
     },
@@ -156,3 +156,4 @@ export const useDonationStore = defineStore('donation', {
 if (import.meta.hot) {
   import.meta.hot.accept(acceptHMRUpdate(useDonationStore, import.meta.hot))
 }
+
