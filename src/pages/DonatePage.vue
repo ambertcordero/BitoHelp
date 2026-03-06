@@ -534,8 +534,16 @@ const summarizeBchSigningCompatibility = (payload, walletClient) => {
     sourceAddressMainnet: sourceAddressVariants?.bitcoincash || null,
     sourceAddressChipnet: sourceAddressVariants?.bchtest || null,
     sourcePayload: sourceAddressVariants?.payload || null,
-    samePayloadHash: Boolean(walletPayload && sourceAddressVariants?.payload && walletPayload === sourceAddressVariants.payload),
-    exactChipnetMatch: Boolean(walletAddress && sourceAddressVariants?.bchtest && walletAddress === sourceAddressVariants.bchtest),
+    samePayloadHash: Boolean(
+      walletPayload &&
+      sourceAddressVariants?.payload &&
+      walletPayload === sourceAddressVariants.payload,
+    ),
+    exactChipnetMatch: Boolean(
+      walletAddress &&
+      sourceAddressVariants?.bchtest &&
+      walletAddress === sourceAddressVariants.bchtest,
+    ),
   }
 }
 
@@ -548,7 +556,9 @@ const ensureWalletSessionReachable = async (walletClient, timeoutMs = 10000) => 
     walletClient.ping(),
     new Promise((_, reject) => {
       window.setTimeout(() => {
-        reject(new Error('WalletConnect session is not responding. Reconnect wallet and try again.'))
+        reject(
+          new Error('WalletConnect session is not responding. Reconnect wallet and try again.'),
+        )
       }, timeoutMs)
     }),
   ])
@@ -560,7 +570,9 @@ const validateBchWalletSession = (walletClient, chainId) => {
   const summary = getWalletSessionSummary(walletClient)
   const normalizedAddress = normalizeChipnetAddress(summary.address)
   const hasMatchingAccount = summary.accounts.some((account) => {
-    const rawAccountAddress = account.includes(':') ? account.slice(account.indexOf(':') + 1) : account
+    const rawAccountAddress = account.includes(':')
+      ? account.slice(account.indexOf(':') + 1)
+      : account
     return normalizeChipnetAddress(rawAccountAddress) === normalizedAddress
   })
 
@@ -569,15 +581,21 @@ const validateBchWalletSession = (walletClient, chainId) => {
   }
 
   if (summary.chain && summary.chain !== chainId) {
-    throw new Error(`WalletConnect session chain mismatch. Expected ${chainId}, got ${summary.chain}. Reconnect wallet and try again.`)
+    throw new Error(
+      `WalletConnect session chain mismatch. Expected ${chainId}, got ${summary.chain}. Reconnect wallet and try again.`,
+    )
   }
 
   if (!summary.methods.includes('bch_signTransaction')) {
-    throw new Error('WalletConnect session does not allow BCH transaction signing. Reconnect wallet and try again.')
+    throw new Error(
+      'WalletConnect session does not allow BCH transaction signing. Reconnect wallet and try again.',
+    )
   }
 
   if (normalizedAddress && summary.accounts.length > 0 && !hasMatchingAccount) {
-    throw new Error('WalletConnect session account does not match the connected BCH address. Reconnect wallet and try again.')
+    throw new Error(
+      'WalletConnect session account does not match the connected BCH address. Reconnect wallet and try again.',
+    )
   }
 
   return summary
@@ -646,7 +664,8 @@ const executeWalletRequest = async (walletClient, chainId, method, candidatePara
           requestMeta,
           historyRecord,
           pendingHistory,
-          walletSession: method === 'bch_signTransaction' ? getWalletSessionSummary(walletClient) : undefined,
+          walletSession:
+            method === 'bch_signTransaction' ? getWalletSessionSummary(walletClient) : undefined,
         })
       }
 
@@ -674,7 +693,11 @@ const getErrorMessage = (error, fallback) => {
     return fallback
   }
 
-  if (/user rejected|rejected by user|denied by user|cancelled by user|canceled by user/i.test(message)) {
+  if (
+    /user rejected|rejected by user|denied by user|cancelled by user|canceled by user/i.test(
+      message,
+    )
+  ) {
     return 'Transaction was rejected in wallet.'
   }
 
@@ -769,22 +792,23 @@ const updateDonationRecord = (donationId, partial) => {
   saveDonations(next)
 }
 
-const signBchTransactionWithWalletConnect = async ({
-  walletClient,
-  chainId,
-  signingPayload,
-}) => {
+const signBchTransactionWithWalletConnect = async ({ walletClient, chainId, signingPayload }) => {
   const resolvedChainId = walletClient?.chain || chainId
 
   if (import.meta.env.DEV) {
-    console.info('[BitoHelp][bch-session:preflight]', validateBchWalletSession(walletClient, resolvedChainId))
+    console.info(
+      '[BitoHelp][bch-session:preflight]',
+      validateBchWalletSession(walletClient, resolvedChainId),
+    )
   } else {
     validateBchWalletSession(walletClient, resolvedChainId)
   }
 
   await ensureWalletSessionReachable(walletClient)
 
-  return executeWalletRequest(walletClient, resolvedChainId, 'bch_signTransaction', [signingPayload])
+  return executeWalletRequest(walletClient, resolvedChainId, 'bch_signTransaction', [
+    signingPayload,
+  ])
 }
 
 const runChipnetBchDonationFlow = async ({
@@ -796,9 +820,7 @@ const runChipnetBchDonationFlow = async ({
   amountCoin,
   donationId,
 }) => {
-  const feeRate = Number.isFinite(bchConfig.feeRateSatsPerByte)
-    ? bchConfig.feeRateSatsPerByte
-    : 1.2
+  const feeRate = Number.isFinite(bchConfig.feeRateSatsPerByte) ? bchConfig.feeRateSatsPerByte : 1.2
 
   const utxos = await fetchAddressUtxos({
     apiBaseUrl: bchConfig.apiBaseUrl,
@@ -822,7 +844,10 @@ const runChipnetBchDonationFlow = async ({
 
   if (import.meta.env.DEV) {
     console.info('[BitoHelp][bch-sign-payload]', summarizeBchSigningPayload(signingPayload))
-    console.info('[BitoHelp][bch-sign-compat]', summarizeBchSigningCompatibility(signingPayload, walletClient))
+    console.info(
+      '[BitoHelp][bch-sign-compat]',
+      summarizeBchSigningCompatibility(signingPayload, walletClient),
+    )
   }
 
   submissionStatus.value = {
@@ -930,9 +955,7 @@ const submitDonation = async () => {
   const selectedCoin = form.value.coin
   const typedRecipientAddress = normalizeRecipientAddress(form.value.recipientAddress)
   const recipientAddress =
-    selectedCoin === 'BCH'
-      ? normalizeChipnetAddress(typedRecipientAddress)
-      : typedRecipientAddress
+    selectedCoin === 'BCH' ? normalizeChipnetAddress(typedRecipientAddress) : typedRecipientAddress
   const amountUnitsEth = selectedCoin === 'ETH' ? parseEthAmountToWei(form.value.amount) : null
   const amountUnitsBch = selectedCoin === 'BCH' ? decimalBchToSatoshis(form.value.amount) : null
   const amountCoin = Number.parseFloat(String(form.value.amount ?? '').trim())

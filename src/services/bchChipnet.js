@@ -32,14 +32,18 @@ export const getBchRuntimeConfig = () => {
     isChipnet: network === 'chipnet',
     apiBaseUrl: normalizeApiBaseUrl(getEnvValue('BCH_CHIPNET_API_URL', DEFAULT_API_BASE)),
     explorerBaseUrl: getEnvValue('BCH_EXPLORER_BASE_URL', ''),
-    feeRateSatsPerByte: Number.parseFloat(getEnvValue('BCH_FEE_RATE_SATS_PER_BYTE', `${DEFAULT_FEE_RATE}`)),
+    feeRateSatsPerByte: Number.parseFloat(
+      getEnvValue('BCH_FEE_RATE_SATS_PER_BYTE', `${DEFAULT_FEE_RATE}`),
+    ),
   }
 }
 
 const isFinitePositiveInteger = (value) => Number.isInteger(value) && value > 0
 
 const hexToBytes = (hexValue) => {
-  const sanitized = String(hexValue || '').replace(/^0x/i, '').trim()
+  const sanitized = String(hexValue || '')
+    .replace(/^0x/i, '')
+    .trim()
   if (!sanitized || sanitized.length % 2 !== 0 || /[^a-fA-F0-9]/.test(sanitized)) {
     throw new Error('Invalid hexadecimal value.')
   }
@@ -135,12 +139,19 @@ const sanitizeUtxo = (item) => {
       valueSatoshis = BigInt(asStr)
     }
   } catch (e) {
-    console.warn('[BitoHelp][bch-utxo] sanitizeUtxo: rejected (value parse error)', { item, valueRaw, error: String(e) })
+    console.warn('[BitoHelp][bch-utxo] sanitizeUtxo: rejected (value parse error)', {
+      item,
+      valueRaw,
+      error: String(e),
+    })
     return null
   }
 
   if (valueSatoshis <= 0n) {
-    console.warn('[BitoHelp][bch-utxo] sanitizeUtxo: rejected (zero/negative value)', { item, valueSatoshis: String(valueSatoshis) })
+    console.warn('[BitoHelp][bch-utxo] sanitizeUtxo: rejected (zero/negative value)', {
+      item,
+      valueSatoshis: String(valueSatoshis),
+    })
     return null
   }
 
@@ -332,7 +343,10 @@ const normalizeBytesLike = (value) => {
 
   if (value && typeof value === 'object') {
     const entries = Object.values(value)
-    if (entries.length > 0 && entries.every((item) => Number.isInteger(item) && item >= 0 && item <= 255)) {
+    if (
+      entries.length > 0 &&
+      entries.every((item) => Number.isInteger(item) && item >= 0 && item <= 255)
+    ) {
       return Uint8Array.from(entries)
     }
   }
@@ -478,11 +492,7 @@ export const extractWalletSignedTransaction = (result) => {
     throw new Error('Wallet did not return a signed BCH transaction hex.')
   }
 
-  const signedTxid =
-    result?.signedTransactionHash ||
-    result?.txid ||
-    result?.hash ||
-    null
+  const signedTxid = result?.signedTransactionHash || result?.txid || result?.hash || null
 
   return {
     rawTxHex: signedTxHex,
@@ -636,7 +646,11 @@ export const fetchMainnetBalanceForChipnetAddress = async ({ address }) => {
         }
         const payload = await response.json()
         console.info('[BitoHelp][bch-mainnet-utxo] raw response', { url, payload })
-        const utxoList = Array.isArray(payload?.utxos) ? payload.utxos : Array.isArray(payload) ? payload : []
+        const utxoList = Array.isArray(payload?.utxos)
+          ? payload.utxos
+          : Array.isArray(payload)
+            ? payload
+            : []
         for (const rawUtxo of utxoList) {
           const parsed = sanitizeUtxo(rawUtxo)
           if (!parsed) continue

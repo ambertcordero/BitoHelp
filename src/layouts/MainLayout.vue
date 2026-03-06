@@ -101,7 +101,8 @@ import {
 } from '../services/bchChipnet'
 
 const projectId = '1e52dff3b9c75d86cfc7b1190c02d3a0'
-const makeWalletConnectStoragePrefix = () => `bitohelp-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`
+const makeWalletConnectStoragePrefix = () =>
+  `bitohelp-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`
 let walletConnectStoragePrefix = makeWalletConnectStoragePrefix()
 const walletConnectRelayUrl = 'wss://relay.walletconnect.com'
 const bchChains = ['bch:bchtest']
@@ -486,7 +487,10 @@ const walletSymbol = computed(() => {
 // Examples: 0.09999318 → "0.099",  0.10000000 → "0.1",  1.50000000 → "1.5"
 const formatBchDisplay = (value) => {
   const floored = Math.floor(value * 1000) / 1000
-  return floored.toFixed(3).replace(/(\.\d*[1-9])0+$/, '$1').replace(/\.0+$/, '.0')
+  return floored
+    .toFixed(3)
+    .replace(/(\.\d*[1-9])0+$/, '$1')
+    .replace(/\.0+$/, '.0')
 }
 
 const formattedBalance = computed(() => {
@@ -515,17 +519,17 @@ const parseBchAccount = (account) => {
   }
 
   const parts = account.split(':')
-  
+
   // bch:chipnet:bchtest:qq... → bchtest:qq...
   if (parts.length >= 4 && parts[2] === 'bchtest') {
     return `${parts[2]}:${parts.slice(3).join(':')}`.toLowerCase()
   }
-  
+
   // bch:bchtest:qq... → bchtest:qq...
   if (parts.length >= 3 && parts[1] === 'bchtest') {
     return `${parts[1]}:${parts.slice(2).join(':')}`.toLowerCase()
   }
-  
+
   // bch:chipnet:qq... or bch:chipnet:bchtest:qq...
   if (parts.length >= 3 && parts[1] === 'chipnet') {
     const addressPart = parts.slice(2).join(':')
@@ -550,12 +554,12 @@ const parseBchChainFromAccount = (account) => {
   if (!account || !account.startsWith('bch:')) {
     return ''
   }
-  
+
   const parts = account.split(':')
   if (parts.length < 2) {
     return ''
   }
-  
+
   const network = parts[1]
   if (network === 'chipnet' || network === 'bchtest') {
     return 'bch:bchtest'
@@ -657,7 +661,10 @@ const pickStoredSession = (sessions) => {
   return sanitizeWalletConnectSession(rankedSessions[0] || null)
 }
 
-const pingWalletConnectSession = async (topic, timeoutMs = WALLETCONNECT_SESSION_PING_TIMEOUT_MS) => {
+const pingWalletConnectSession = async (
+  topic,
+  timeoutMs = WALLETCONNECT_SESSION_PING_TIMEOUT_MS,
+) => {
   if (!signClient || !topic) {
     return false
   }
@@ -985,11 +992,11 @@ const parseChainFromAccount = (account) => {
   if (!account) {
     return ''
   }
-  
+
   if (account.startsWith('bch:')) {
     return parseBchChainFromAccount(account)
   }
-  
+
   const parts = account.split(':')
   if (parts.length < 2) {
     return ''
@@ -1098,7 +1105,7 @@ const updateFromSession = (session) => {
   walletNamespace.value = namespaceKey
   walletChain.value = chain
   const parsedAddress = parseAccount(account)
-  
+
   if (namespaceKey === 'bch') {
     const normalized = normalizeChipnetAddress(parsedAddress)
     if (!normalized) {
@@ -1112,7 +1119,7 @@ const updateFromSession = (session) => {
       return
     }
     walletAddress.value = normalized
-    
+
     if (import.meta.env.DEV) {
       console.info('[BitoHelp][bch-session] Address normalized', {
         raw: parsedAddress,
@@ -1255,7 +1262,10 @@ const fetchBalance = async (address, chainId = walletChain.value) => {
             apiBaseUrl,
             address: addr,
           })
-          console.info('[BitoHelp][bch-balance] chipnet result', { address: addr, balance: chipnetBal })
+          console.info('[BitoHelp][bch-balance] chipnet result', {
+            address: addr,
+            balance: chipnetBal,
+          })
           totalBalance += chipnetBal
         } catch (addrErr) {
           console.warn('[BitoHelp][bch-balance] chipnet fetch failed', addr, String(addrErr))
@@ -1263,7 +1273,10 @@ const fetchBalance = async (address, chainId = walletChain.value) => {
         // 2. Mainnet UTXOs (same key-pair, bitcoincash: prefix, watchtower.cash API)
         try {
           const mainnetBal = await fetchMainnetBalanceForChipnetAddress({ address: addr })
-          console.info('[BitoHelp][bch-balance] mainnet result', { address: addr, balance: mainnetBal })
+          console.info('[BitoHelp][bch-balance] mainnet result', {
+            address: addr,
+            balance: mainnetBal,
+          })
           totalBalance += mainnetBal
         } catch (addrErr) {
           console.warn('[BitoHelp][bch-balance] mainnet fetch failed', addr, String(addrErr))
@@ -1389,7 +1402,7 @@ const initWalletConnect = async () => {
           }
 
           const parsedAddress = parseAccount(account)
-        
+
           if (walletNamespace.value === 'bch') {
             const normalized = normalizeChipnetAddress(parsedAddress)
             if (!normalized) {
@@ -1404,7 +1417,7 @@ const initWalletConnect = async () => {
               return
             }
             walletAddress.value = normalized
-          
+
             if (import.meta.env.DEV) {
               console.info('[BitoHelp][bch-accountsChanged]', {
                 rawAccount: account,
@@ -1525,41 +1538,41 @@ const handleConnect = async () => {
     try {
       connection = await signClient.connect({
         requiredNamespaces: {
+          bch: {
+            methods: ['bch_signMessage', 'bch_signTransaction', 'bch_sendTransaction'],
+            chains: bchChains,
+            events: [],
+          },
+        },
+      })
+    } catch {
+      try {
+        connection = await signClient.connect({
+          requiredNamespaces: {
             bch: {
               methods: ['bch_signMessage', 'bch_signTransaction', 'bch_sendTransaction'],
               chains: bchChains,
               events: [],
             },
+            eip155: {
+              methods: ['eth_getBalance', 'eth_sign', 'personal_sign', 'eth_sendTransaction'],
+              chains: evmChains,
+              events: ['accountsChanged', 'chainChanged'],
+            },
           },
         })
       } catch {
-        try {
-          connection = await signClient.connect({
-            requiredNamespaces: {
-              bch: {
-                methods: ['bch_signMessage', 'bch_signTransaction', 'bch_sendTransaction'],
-                chains: bchChains,
-                events: [],
-              },
-              eip155: {
-                methods: ['eth_getBalance', 'eth_sign', 'personal_sign', 'eth_sendTransaction'],
-                chains: evmChains,
-                events: ['accountsChanged', 'chainChanged'],
-              },
+        connection = await signClient.connect({
+          requiredNamespaces: {
+            eip155: {
+              methods: ['eth_getBalance', 'eth_sign', 'personal_sign', 'eth_sendTransaction'],
+              chains: evmChains,
+              events: ['accountsChanged', 'chainChanged'],
             },
-          })
-        } catch {
-          connection = await signClient.connect({
-            requiredNamespaces: {
-              eip155: {
-                methods: ['eth_getBalance', 'eth_sign', 'personal_sign', 'eth_sendTransaction'],
-                chains: evmChains,
-                events: ['accountsChanged', 'chainChanged'],
-              },
-            },
-          })
-        }
+          },
+        })
       }
+    }
 
     const { uri, approval } = connection
 
