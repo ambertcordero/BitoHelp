@@ -583,7 +583,16 @@ const transactions = computed(() => {
     Date: formatMonthLabel(item.createdAt),
     Amount: formatDonationAmount(item),
     Wallet: formatShortWallet(item?.donor?.walletAddress),
-    Status: item.status === 'sent' ? 'Sent' : 'Recorded',
+    Status:
+      item.status === 'confirmed'
+        ? 'Confirmed'
+        : item.status === 'pending'
+          ? 'Pending'
+          : item.status === 'failed'
+            ? 'Failed'
+            : item.status === 'sent'
+              ? 'Sent'
+              : 'Recorded',
     Time: formatRelativeTime(item.createdAt),
   }))
 })

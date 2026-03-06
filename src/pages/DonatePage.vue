@@ -167,7 +167,20 @@
 import { computed, onMounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { Notify, useQuasar } from 'quasar'
-import { parseEther, parseUnits } from 'ethers'
+import { parseEther } from 'ethers'
+import {
+  broadcastRawTransaction,
+  buildWalletConnectBchSignPayload,
+  decimalBchToSatoshis,
+  extractWalletSignedTransaction,
+  fetchAddressUtxos,
+  getBchRuntimeConfig,
+  isValidChipnetAddress,
+  lockingBytecodeToAddressVariants,
+  normalizeChipnetAddress,
+  selectInputsAndBuildPlan,
+  waitForConfirmations,
+} from '../services/bchChipnet'
 
 import caraIcon from '../../charity/Cara.ico'
 import caritasManilaIcon from '../../charity/Caritas Manila.ico'
@@ -205,6 +218,9 @@ const WALLET_BALANCE_REFRESH_EVENT = 'bitohelp:wallet-balance-refresh'
 const DONATION_SENT_EVENT = 'bitohelp:donation-sent'
 const WALLET_CLIENT_GLOBAL_KEY = '__bitohelpWalletClient__'
 const WALLET_REQUEST_TIMEOUT_MS = 90000
+const BCH_CONFIRMATION_MIN = 1
+
+const bchConfig = getBchRuntimeConfig()
 
 const causeOptions = [
   { label: 'Animals', value: 'Animals' },
@@ -397,26 +413,7 @@ const normalizeRecipientAddress = (value) => String(value ?? '').trim()
 
 const isValidEthAddress = (value) => /^0x[0-9a-fA-F]{40}$/.test(normalizeRecipientAddress(value))
 
-const isValidBchAddress = (value) => {
-  const normalized = normalizeRecipientAddress(value).toLowerCase()
-  return /^(bitcoincash:|bchtest:|bchreg:)?[qpzry9x8gf2tvdw0s3jn54khce6mua7l]{42}$/.test(normalized)
-}
-
 const isDecimalString = (value) => /^\d+(\.\d+)?$/.test(String(value ?? '').trim())
-
-const decimalToBaseUnits = (value, decimals) => {
-  const normalized = String(value ?? '').trim()
-  if (!isDecimalString(normalized)) {
-    return null
-  }
-
-  try {
-    const units = parseUnits(normalized, decimals)
-    return units > 0n ? units : null
-  } catch {
-    return null
-  }
-}
 
 const parseEthAmountToWei = (value) => {
   const normalized = String(value ?? '').trim()
@@ -436,10 +433,165 @@ const toHexQuantity = (value) => `0x${value.toString(16)}`
 
 const getWalletClient = () => window?.[WALLET_CLIENT_GLOBAL_KEY] || null
 
+const serializeErrorDetails = (error) => {
+  if (!error) {
+    return { value: error }
+  }
+
+  if (typeof error === 'string') {
+    return { message: error }
+  }
+
+  if (typeof error !== 'object') {
+    return { value: String(error) }
+  }
+
+  const prototypeName = Object.getPrototypeOf(error)?.constructor?.name || null
+  const symbolKeys = Object.getOwnPropertySymbols(error)
+
+  const propertyNames = Object.getOwnPropertyNames(error)
+  const snapshot = {
+    prototype: prototypeName,
+    toString: typeof error?.toString === 'function' ? String(error.toString()) : null,
+    message: error?.message,
+    code: error?.code,
+    name: error?.name,
+  }
+
+  for (const key of propertyNames) {
+    try {
+      snapshot[key] = error[key]
+    } catch {
+      snapshot[key] = '[unreadable]'
+    }
+  }
+
+  if (symbolKeys.length > 0) {
+    snapshot.symbolProps = {}
+    for (const symbolKey of symbolKeys) {
+      const symbolName = String(symbolKey)
+      try {
+        snapshot.symbolProps[symbolName] = error[symbolKey]
+      } catch {
+        snapshot.symbolProps[symbolName] = '[unreadable]'
+      }
+    }
+  }
+
+  if (error?.cause && typeof error.cause === 'object') {
+    snapshot.cause = serializeErrorDetails(error.cause)
+  }
+
+  if (error?.data && typeof error.data === 'object') {
+    snapshot.data = { ...error.data }
+  }
+
+  return snapshot
+}
+
+const getWalletSessionSummary = (walletClient) => {
+  const session = walletClient?.session
+  const bchNamespace = session?.namespaces?.bch || null
+  return {
+    topic: walletClient?.topic || null,
+    chain: walletClient?.chain || null,
+    address: walletClient?.address || null,
+    transportType: session?.transportType || null,
+    sessionConfig: session?.sessionConfig || null,
+    peerRedirect: session?.peer?.metadata?.redirect || null,
+    methods: Array.isArray(bchNamespace?.methods) ? [...bchNamespace.methods] : [],
+    accounts: Array.isArray(bchNamespace?.accounts) ? [...bchNamespace.accounts] : [],
+  }
+}
+
+const summarizeBchSigningPayload = (payload) => {
+  const transaction = payload?.transaction || {}
+  const inputs = Array.isArray(transaction?.inputs) ? transaction.inputs : []
+  const outputs = Array.isArray(transaction?.outputs) ? transaction.outputs : []
+  const sourceOutputs = Array.isArray(payload?.sourceOutputs) ? payload.sourceOutputs : []
+
+  return {
+    inputCount: inputs.length,
+    outputCount: outputs.length,
+    sourceOutputCount: sourceOutputs.length,
+    everyInputHasInlineSourceOutput: inputs.every((input) => Boolean(input?.sourceOutput)),
+    broadcast: payload?.broadcast,
+    locktime: transaction?.locktime,
+    version: transaction?.version,
+  }
+}
+
+const summarizeBchSigningCompatibility = (payload, walletClient) => {
+  const sourceOutputs = Array.isArray(payload?.sourceOutputs) ? payload.sourceOutputs : []
+  const firstSourceOutput = sourceOutputs[0] || null
+  const sourceAddressVariants = lockingBytecodeToAddressVariants(firstSourceOutput?.lockingBytecode)
+  const walletAddress = normalizeChipnetAddress(walletClient?.address)
+  const walletPayload = walletAddress ? walletAddress.split(':')[1] : null
+
+  return {
+    walletAddress: walletAddress || null,
+    walletPayload,
+    sourceAddressMainnet: sourceAddressVariants?.bitcoincash || null,
+    sourceAddressChipnet: sourceAddressVariants?.bchtest || null,
+    sourcePayload: sourceAddressVariants?.payload || null,
+    samePayloadHash: Boolean(walletPayload && sourceAddressVariants?.payload && walletPayload === sourceAddressVariants.payload),
+    exactChipnetMatch: Boolean(walletAddress && sourceAddressVariants?.bchtest && walletAddress === sourceAddressVariants.bchtest),
+  }
+}
+
+const ensureWalletSessionReachable = async (walletClient, timeoutMs = 10000) => {
+  if (typeof walletClient?.ping !== 'function') {
+    return true
+  }
+
+  await Promise.race([
+    walletClient.ping(),
+    new Promise((_, reject) => {
+      window.setTimeout(() => {
+        reject(new Error('WalletConnect session is not responding. Reconnect wallet and try again.'))
+      }, timeoutMs)
+    }),
+  ])
+
+  return true
+}
+
+const validateBchWalletSession = (walletClient, chainId) => {
+  const summary = getWalletSessionSummary(walletClient)
+  const normalizedAddress = normalizeChipnetAddress(summary.address)
+  const hasMatchingAccount = summary.accounts.some((account) => {
+    const rawAccountAddress = account.includes(':') ? account.slice(account.indexOf(':') + 1) : account
+    return normalizeChipnetAddress(rawAccountAddress) === normalizedAddress
+  })
+
+  if (!summary.topic) {
+    throw new Error('WalletConnect session topic is missing. Reconnect wallet and try again.')
+  }
+
+  if (summary.chain && summary.chain !== chainId) {
+    throw new Error(`WalletConnect session chain mismatch. Expected ${chainId}, got ${summary.chain}. Reconnect wallet and try again.`)
+  }
+
+  if (!summary.methods.includes('bch_signTransaction')) {
+    throw new Error('WalletConnect session does not allow BCH transaction signing. Reconnect wallet and try again.')
+  }
+
+  if (normalizedAddress && summary.accounts.length > 0 && !hasMatchingAccount) {
+    throw new Error('WalletConnect session account does not match the connected BCH address. Reconnect wallet and try again.')
+  }
+
+  return summary
+}
+
 const executeWalletRequest = async (walletClient, chainId, method, candidateParams) => {
   let lastError = null
 
   for (const params of candidateParams) {
+    const requestSentPromise =
+      typeof walletClient?.waitForRequestSent === 'function'
+        ? walletClient.waitForRequestSent(method)
+        : Promise.resolve(null)
+
     try {
       if (import.meta.env.DEV) {
         console.info('[BitoHelp][donation-request:start]', { method, chainId, params })
@@ -462,14 +614,40 @@ const executeWalletRequest = async (walletClient, chainId, method, candidatePara
         }),
       ])
 
+      const requestMeta = await requestSentPromise
+      const historyRecord = requestMeta?.id
+        ? await walletClient?.getHistoryRecord?.(requestMeta.id)
+        : null
+
       if (import.meta.env.DEV) {
-        console.info('[BitoHelp][donation-request:success]', { method, chainId, response })
+        console.info('[BitoHelp][donation-request:success]', {
+          method,
+          chainId,
+          response,
+          requestMeta,
+          historyRecord,
+        })
       }
 
       return response
     } catch (error) {
+      const requestMeta = await requestSentPromise.catch(() => null)
+      const historyRecord = requestMeta?.id
+        ? await walletClient?.getHistoryRecord?.(requestMeta.id)
+        : null
+      const pendingHistory = walletClient?.getPendingHistory?.() || []
+
       if (import.meta.env.DEV) {
-        console.error('[BitoHelp][donation-request:error]', { method, chainId, error })
+        console.error('[BitoHelp][donation-request:error]', {
+          method,
+          chainId,
+          error,
+          errorDetails: serializeErrorDetails(error),
+          requestMeta,
+          historyRecord,
+          pendingHistory,
+          walletSession: method === 'bch_signTransaction' ? getWalletSessionSummary(walletClient) : undefined,
+        })
       }
 
       lastError = error
@@ -481,7 +659,7 @@ const executeWalletRequest = async (walletClient, chainId, method, candidatePara
     }
   }
 
-  throw lastError || new Error(`Wallet rejected ${method} request.`)
+  throw lastError || new Error(`Wallet did not accept ${method} request.`)
 }
 
 const getErrorMessage = (error, fallback) => {
@@ -496,7 +674,7 @@ const getErrorMessage = (error, fallback) => {
     return fallback
   }
 
-  if (/rejected|denied|cancel/i.test(message)) {
+  if (/user rejected|rejected by user|denied by user|cancelled by user|canceled by user/i.test(message)) {
     return 'Transaction was rejected in wallet.'
   }
 
@@ -513,18 +691,6 @@ const extractTxReference = (result) => {
   }
 
   return null
-}
-
-const sendBchDonation = async ({ walletClient, chainId, from, to, satoshis }) => {
-  const satoshiNumber = Number(satoshis)
-  const satoshiString = satoshis.toString()
-
-  return executeWalletRequest(walletClient, chainId, 'bch_sendTransaction', [
-    [{ from, to, value: satoshiNumber }],
-    [{ from, to, value: satoshiString }],
-    { from, to, value: satoshiString },
-    [from, to, satoshiString],
-  ])
 }
 
 const sendEthDonation = async ({ walletClient, chainId, from, to, wei }) =>
@@ -578,6 +744,168 @@ const getStoredDonations = () => {
 const buildDonationId = () =>
   `donation-${Date.now()}-${Math.random().toString(36).slice(2, 8).toUpperCase()}`
 
+const saveDonations = (records) => {
+  localStorage.setItem(DONATIONS_STORAGE_KEY, JSON.stringify(records))
+}
+
+const upsertDonationRecord = (record) => {
+  const existing = getStoredDonations()
+  const withoutCurrent = existing.filter((item) => item?.id !== record.id)
+  saveDonations([record, ...withoutCurrent])
+}
+
+const updateDonationRecord = (donationId, partial) => {
+  const existing = getStoredDonations()
+  const next = existing.map((item) => {
+    if (item?.id !== donationId) {
+      return item
+    }
+    return {
+      ...item,
+      ...partial,
+      updatedAt: new Date().toISOString(),
+    }
+  })
+  saveDonations(next)
+}
+
+const signBchTransactionWithWalletConnect = async ({
+  walletClient,
+  chainId,
+  signingPayload,
+}) => {
+  const resolvedChainId = walletClient?.chain || chainId
+
+  if (import.meta.env.DEV) {
+    console.info('[BitoHelp][bch-session:preflight]', validateBchWalletSession(walletClient, resolvedChainId))
+  } else {
+    validateBchWalletSession(walletClient, resolvedChainId)
+  }
+
+  await ensureWalletSessionReachable(walletClient)
+
+  return executeWalletRequest(walletClient, resolvedChainId, 'bch_signTransaction', [signingPayload])
+}
+
+const runChipnetBchDonationFlow = async ({
+  walletClient,
+  chainId,
+  senderAddress,
+  charityAddress,
+  amountSatoshis,
+  amountCoin,
+  donationId,
+}) => {
+  const feeRate = Number.isFinite(bchConfig.feeRateSatsPerByte)
+    ? bchConfig.feeRateSatsPerByte
+    : 1.2
+
+  const utxos = await fetchAddressUtxos({
+    apiBaseUrl: bchConfig.apiBaseUrl,
+    address: senderAddress,
+  })
+
+  const plan = selectInputsAndBuildPlan({
+    utxos,
+    amountSatoshis,
+    feeRateSatsPerByte: feeRate,
+  })
+
+  const signingPayload = buildWalletConnectBchSignPayload({
+    plan,
+    senderAddress,
+    charityAddress,
+    changeAddress: senderAddress,
+    amountSatoshis,
+    userPrompt: `Donate ${amountCoin} BCH to ${charityAddress}`,
+  })
+
+  if (import.meta.env.DEV) {
+    console.info('[BitoHelp][bch-sign-payload]', summarizeBchSigningPayload(signingPayload))
+    console.info('[BitoHelp][bch-sign-compat]', summarizeBchSigningCompatibility(signingPayload, walletClient))
+  }
+
+  submissionStatus.value = {
+    type: '',
+    message: 'Waiting for wallet signature... confirm in Paytaca.',
+  }
+
+  const signedResult = await signBchTransactionWithWalletConnect({
+    walletClient,
+    chainId,
+    signingPayload,
+  })
+
+  const { rawTxHex, signedTxid } = extractWalletSignedTransaction(signedResult)
+
+  submissionStatus.value = {
+    type: '',
+    message: 'Broadcasting signed transaction to Chipnet...',
+  }
+
+  const broadcast = await broadcastRawTransaction({
+    apiBaseUrl: bchConfig.apiBaseUrl,
+    rawTxHex,
+  })
+
+  const txid = broadcast.txid || signedTxid
+  if (!txid) {
+    throw new Error('Unable to resolve BCH transaction id after broadcast.')
+  }
+
+  updateDonationRecord(donationId, {
+    status: 'pending',
+    txReference: txid,
+    txid,
+    feeSatoshis: plan.fee.toString(),
+    confirmations: 0,
+  })
+
+  window.dispatchEvent(
+    new CustomEvent(DONATION_SENT_EVENT, {
+      detail: {
+        txHash: txid,
+        coin: 'BCH',
+        chain: chainId,
+        recipientAddress: charityAddress,
+        amount: amountCoin,
+      },
+    }),
+  )
+
+  submissionStatus.value = {
+    type: '',
+    message: `Broadcasted. Waiting for ${BCH_CONFIRMATION_MIN} confirmation on Chipnet...`,
+  }
+
+  const confirmation = await waitForConfirmations({
+    apiBaseUrl: bchConfig.apiBaseUrl,
+    txid,
+    minConfirmations: BCH_CONFIRMATION_MIN,
+  })
+
+  if (!confirmation.confirmed) {
+    updateDonationRecord(donationId, {
+      status: 'pending',
+      confirmations: 0,
+      lastError: 'Confirmation timeout',
+    })
+    throw new Error('Transaction broadcasted but confirmation timed out. It may confirm shortly.')
+  }
+
+  updateDonationRecord(donationId, {
+    status: 'confirmed',
+    confirmations: confirmation.confirmations,
+    confirmedAt: new Date().toISOString(),
+  })
+
+  return {
+    txid,
+    confirmations: confirmation.confirmations,
+    feeSatoshis: plan.fee,
+  }
+}
+
 const resetForm = () => {
   form.value = {
     cause: null,
@@ -600,11 +928,13 @@ const submitDonation = async () => {
   submissionStatus.value = { type: '', message: '' }
 
   const selectedCoin = form.value.coin
-  const recipientAddress = normalizeRecipientAddress(form.value.recipientAddress)
-  const amountUnits =
-    selectedCoin === 'ETH'
-      ? parseEthAmountToWei(form.value.amount)
-      : decimalToBaseUnits(form.value.amount, 8)
+  const typedRecipientAddress = normalizeRecipientAddress(form.value.recipientAddress)
+  const recipientAddress =
+    selectedCoin === 'BCH'
+      ? normalizeChipnetAddress(typedRecipientAddress)
+      : typedRecipientAddress
+  const amountUnitsEth = selectedCoin === 'ETH' ? parseEthAmountToWei(form.value.amount) : null
+  const amountUnitsBch = selectedCoin === 'BCH' ? decimalBchToSatoshis(form.value.amount) : null
   const amountCoin = Number.parseFloat(String(form.value.amount ?? '').trim())
   const walletSnapshot = getWalletSnapshot()
   const walletClient = getWalletClient()
@@ -671,6 +1001,18 @@ const submitDonation = async () => {
     return
   }
 
+  if (selectedCoin === 'BCH' && !bchConfig.isChipnet) {
+    submissionStatus.value = {
+      type: 'negative',
+      message: 'BCH donations require BCH_NETWORK=chipnet in app configuration.',
+    }
+    notify({
+      type: 'warning',
+      message: 'Set BCH_NETWORK=chipnet before sending BCH donations.',
+    })
+    return
+  }
+
   if (
     !isWalletCompatibleWithCoin(
       { namespace: walletClient?.namespace || walletSnapshot?.namespace, chain: activeChain },
@@ -688,6 +1030,8 @@ const submitDonation = async () => {
     return
   }
 
+  const amountUnits = selectedCoin === 'BCH' ? amountUnitsBch : amountUnitsEth
+
   if (!Number.isFinite(amountCoin) || amountCoin <= 0 || !amountUnits) {
     submissionStatus.value = { type: 'negative', message: 'Please enter a valid amount to donate.' }
     notify({
@@ -697,14 +1041,14 @@ const submitDonation = async () => {
     return
   }
 
-  if (selectedCoin === 'BCH' && !isValidBchAddress(recipientAddress)) {
+  if (selectedCoin === 'BCH' && !isValidChipnetAddress(typedRecipientAddress)) {
     submissionStatus.value = {
       type: 'negative',
-      message: 'Please enter a valid BCH recipient address.',
+      message: 'Recipient must be a valid BCH Chipnet address (bchtest:...).',
     }
     notify({
       type: 'warning',
-      message: 'Please enter a valid BCH recipient address.',
+      message: 'Recipient must be a valid BCH Chipnet address (bchtest:...).',
     })
     return
   }
@@ -721,7 +1065,42 @@ const submitDonation = async () => {
     return
   }
 
-  let txResult
+  const donationId = buildDonationId()
+  const donationRecord = {
+    id: donationId,
+    createdAt: new Date().toISOString(),
+    status: selectedCoin === 'BCH' ? 'preparing' : 'sent',
+    txReference: null,
+    chain: activeChain,
+    donor: {
+      name: form.value.donorName,
+      email: form.value.email,
+      contactNumber: form.value.contactNumber || '',
+      message: form.value.message || '',
+      walletAddress: activeAccount,
+      coin: selectedCoin,
+    },
+    recipient: {
+      cause: form.value.cause,
+      organization: form.value.organization,
+      address: recipientAddress,
+      addressType: selectedCoin === 'BCH' ? 'bch-chipnet-address' : 'eth',
+    },
+    values: {
+      coin: selectedCoin,
+      amount: amountUnits.toString(),
+      amountCoin,
+    },
+    contract: {
+      version: '0.12.0',
+      ...(selectedCoin === 'BCH'
+        ? { type: 'direct-bch-transfer', contractPath: CASHSCRIPT_CONTRACT_PATH }
+        : { type: 'direct-eth-transfer' }),
+    },
+  }
+
+  upsertDonationRecord(donationRecord)
+
   isSubmittingDonation.value = true
 
   try {
@@ -730,62 +1109,34 @@ const submitDonation = async () => {
       message: 'Waiting for wallet approval... confirm in your wallet app.',
     }
 
+    let txReference = null
+
     if (selectedCoin === 'BCH') {
-      txResult = await sendBchDonation({
+      const bchResult = await runChipnetBchDonationFlow({
         walletClient,
         chainId: activeChain,
-        from: activeAccount,
-        to: recipientAddress,
-        satoshis: amountUnits,
+        senderAddress: activeAccount,
+        charityAddress: recipientAddress,
+        amountSatoshis: amountUnits,
+        amountCoin,
+        donationId,
       })
+
+      txReference = bchResult.txid
     } else {
-      txResult = await sendEthDonation({
+      const txResult = await sendEthDonation({
         walletClient,
         chainId: activeChain,
         from: activeAccount,
         to: recipientAddress,
         wei: amountUnits,
       })
+      txReference = extractTxReference(txResult)
+      updateDonationRecord(donationId, {
+        status: 'sent',
+        txReference,
+      })
     }
-
-    const txReference = extractTxReference(txResult)
-
-    const donationRecord = {
-      id: buildDonationId(),
-      createdAt: new Date().toISOString(),
-      status: 'sent',
-      txReference,
-      chain: activeChain,
-      donor: {
-        name: form.value.donorName,
-        email: form.value.email,
-        contactNumber: form.value.contactNumber || '',
-        message: form.value.message || '',
-        walletAddress: activeAccount,
-        coin: selectedCoin,
-      },
-      recipient: {
-        cause: form.value.cause,
-        organization: form.value.organization,
-        address: recipientAddress,
-        addressType: selectedCoin === 'BCH' ? 'bch-address' : 'eth',
-      },
-      values: {
-        coin: selectedCoin,
-        amount: amountUnits.toString(),
-        amountCoin,
-      },
-      contract: {
-        version: '0.12.0',
-        ...(selectedCoin === 'BCH'
-          ? { type: 'recurring-donation', contractPath: CASHSCRIPT_CONTRACT_PATH }
-          : { type: 'direct-eth-transfer' }),
-      },
-    }
-
-    const existing = getStoredDonations()
-    const nextDonations = [donationRecord, ...existing]
-    localStorage.setItem(DONATIONS_STORAGE_KEY, JSON.stringify(nextDonations))
 
     window.dispatchEvent(
       new CustomEvent(WALLET_BALANCE_ADJUST_EVENT, {
@@ -820,16 +1171,22 @@ const submitDonation = async () => {
 
     notify({
       type: 'positive',
-      message: txReference
-        ? `Donation sent successfully. Tx: ${txReference}`
-        : 'Donation sent successfully.',
+      message:
+        selectedCoin === 'BCH'
+          ? `Donation confirmed on Chipnet. Txid: ${txReference}`
+          : txReference
+            ? `Donation sent successfully. Tx: ${txReference}`
+            : 'Donation sent successfully.',
     })
 
     submissionStatus.value = {
       type: 'positive',
-      message: txReference
-        ? `Donation sent. Transaction hash: ${txReference}`
-        : 'Donation sent successfully.',
+      message:
+        selectedCoin === 'BCH'
+          ? `Donation confirmed (${BCH_CONFIRMATION_MIN}+ conf). Txid: ${txReference}`
+          : txReference
+            ? `Donation sent. Transaction hash: ${txReference}`
+            : 'Donation sent successfully.',
     }
 
     resetForm()
@@ -839,6 +1196,15 @@ const submitDonation = async () => {
       error,
       'Donation transaction failed or was rejected by wallet.',
     )
+
+    const isConfirmationTimeout = /confirmation timed out/i.test(failureMessage)
+    if (selectedCoin === 'BCH' && !isConfirmationTimeout) {
+      updateDonationRecord(donationId, {
+        status: 'failed',
+        lastError: failureMessage,
+      })
+    }
+
     submissionStatus.value = {
       type: 'negative',
       message: failureMessage,

@@ -46,7 +46,12 @@ export default defineConfig((/* ctx */) => {
 
       // publicPath: '/',
       // analyze: true,
-      // env: {},
+      env: {
+        BCH_NETWORK: process.env.BCH_NETWORK,
+        BCH_CHIPNET_API_URL: process.env.BCH_CHIPNET_API_URL,
+        BCH_EXPLORER_BASE_URL: process.env.BCH_EXPLORER_BASE_URL,
+        BCH_FEE_RATE_SATS_PER_BYTE: process.env.BCH_FEE_RATE_SATS_PER_BYTE,
+      },
       // rawDefine: {}
       // ignorePublicFolder: true,
       // minify: false,
