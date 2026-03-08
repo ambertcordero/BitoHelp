@@ -10,6 +10,36 @@ const api = axios.create({
   withCredentials: true
 })
 
+// Add request interceptor for debugging
+api.interceptors.request.use(
+  (config) => {
+    console.log('API Request:', config.method?.toUpperCase(), config.url, config.data)
+    return config
+  },
+  (error) => {
+    console.error('Request Error:', error)
+    return Promise.reject(error)
+  }
+)
+
+// Add response interceptor for debugging and error handling
+api.interceptors.response.use(
+  (response) => {
+    console.log('API Response:', response.status, response.config.url)
+    return response
+  },
+  (error) => {
+    console.error('API Error Details:', {
+      message: error.message,
+      code: error.code,
+      response: error.response?.data,
+      status: error.response?.status,
+      url: error.config?.url
+    })
+    return Promise.reject(error)
+  }
+)
+
 export default defineBoot(({ app }) => {
   // for use inside Vue files (Options API) through this.$axios and this.$api
 

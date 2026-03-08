@@ -27,72 +27,221 @@
           />
         </div>
 
-        <div class="col-12 col-md-5">
-          <q-img src="Donaciones.gif" />
+      </div>
+    </section>
+
+    <!-- FEATURED PROJECTS SECTION -->
+    <section class="featured-projects-section q-py-xl q-px-md">
+      <div class="container">
+        <div class="q-mb-xl">
+          <h2 class="section-title text-h3 text-weight-bold q-mb-sm">Featured Projects</h2>
+          <p class="text-subtitle1 text-grey-6">Support impactful causes and make a difference in communities worldwide.</p>
         </div>
 
+        <!-- Projects Grid -->
+        <div class="row q-col-gutter-lg">
+          <!-- Project Card 1 -->
+          <div class="col-12 col-sm-6 col-md-3">
+            <q-card class="project-card" flat bordered>
+              <div class="project-image">
+                <img src="~assets/scholar.jpg" alt="Project">
+                <q-badge color="primary" class="project-badge">Open</q-badge>
+              </div>
+              <q-card-section>
+                <div class="text-h6 text-weight-bold q-mb-sm">Education Scholarship Program</div>
+                <p class="text-body2 text-grey-7 q-mb-md project-description">
+                  Help provide quality education and school supplies to underprivileged children, empowering them with knowledge and opportunity.
+                </p>
+                
+                <div class="project-progress q-mb-sm">
+                  <div class="row items-center justify-between q-mb-xs">
+                    <span class="text-caption text-grey-7">Progress</span>
+                    <span class="text-caption text-weight-bold">75% Funded</span>
+                  </div>
+                  <q-linear-progress 
+                    :value="0.75" 
+                    color="primary" 
+                    rounded
+                    size="8px"
+                  />
+                </div>
+                
+                <div class="row items-center q-mt-md">
+                  <q-avatar size="24px" color="green-2" text-color="green" icon="verified">
+                  </q-avatar>
+                </div>
+              </q-card-section>
+            </q-card>
+          </div>
+
+          <!-- Project Card 2 -->
+          <div class="col-12 col-sm-6 col-md-3">
+            <q-card class="project-card" flat bordered>
+              <div class="project-image">
+                <img src="~assets/medical.jpg" alt="Project">
+                <q-badge color="positive" class="project-badge">Open</q-badge>
+              </div>
+              <q-card-section>
+                <div class="text-h6 text-weight-bold q-mb-sm">Medical Care Support</div>
+                <p class="text-body2 text-grey-7 q-mb-md project-description">
+                  Provide essential medical supplies, treatments, and healthcare services to communities in need of immediate assistance.
+                </p>
+                
+                <div class="project-progress q-mb-sm">
+                  <div class="row items-center justify-between q-mb-xs">
+                    <span class="text-caption text-grey-7">Progress</span>
+                    <span class="text-caption text-weight-bold">82% Funded</span>
+                  </div>
+                  <q-linear-progress 
+                    :value="0.82" 
+                    color="positive" 
+                    rounded
+                    size="8px"
+                  />
+                </div>
+                
+                <div class="row items-center q-mt-md">
+                  <q-avatar size="24px" color="orange-2" text-color="orange" icon="emoji_events">
+                  </q-avatar>
+                </div>
+              </q-card-section>
+            </q-card>
+          </div>
+
+          <!-- Project Card 3 -->
+          <div class="col-12 col-sm-6 col-md-3">
+            <q-card class="project-card" flat bordered>
+              <div class="project-image">
+                <img src="~assets/typhoon.jpeg" alt="Project">
+                <q-badge color="info" class="project-badge">Open</q-badge>
+              </div>
+              <q-card-section>
+                <div class="text-h6 text-weight-bold q-mb-sm">Disaster Relief Fund</div>
+                <p class="text-body2 text-grey-7 q-mb-md project-description">
+                  Rapid response support for families affected by typhoons, floods, and natural disasters with food, shelter, and supplies.
+                </p>
+                
+                <div class="project-progress q-mb-sm">
+                  <div class="row items-center justify-between q-mb-xs">
+                    <span class="text-caption text-grey-7">Progress</span>
+                    <span class="text-caption text-weight-bold">68% Funded</span>
+                  </div>
+                  <q-linear-progress 
+                    :value="0.68" 
+                    color="info" 
+                    rounded
+                    size="8px"
+                  />
+                </div>
+                
+                <div class="row items-center q-mt-md">
+                  <q-avatar size="24px" color="blue-2" text-color="blue" icon="favorite">
+                  </q-avatar>
+                </div>
+              </q-card-section>
+            </q-card>
+          </div>
+
+          <!-- Project Card 4 -->
+          <div class="col-12 col-sm-6 col-md-3">
+            <q-card class="project-card" flat bordered>
+              <div class="project-image">
+                <img src="~assets/community.jpg" alt="Project">
+                <q-badge color="positive" class="project-badge">Open</q-badge>
+              </div>
+              <q-card-section>
+                <div class="text-h6 text-weight-bold q-mb-sm">Community Development</div>
+                <p class="text-body2 text-grey-7 q-mb-md project-description">
+                  Support sustainable farming, livelihood programs, and skill development projects to lift communities out of poverty.
+                </p>
+                
+                <div class="project-progress q-mb-sm">
+                  <div class="row items-center justify-between q-mb-xs">
+                    <span class="text-caption text-grey-7">Progress</span>
+                    <span class="text-caption text-weight-bold">91% Funded</span>
+                  </div>
+                  <q-linear-progress 
+                    :value="0.91" 
+                    color="positive" 
+                    rounded
+                    size="8px"
+                  />
+                </div>
+                
+                <div class="row items-center q-mt-md">
+                  <q-avatar size="24px" color="orange-2" text-color="orange" icon="local_fire_department">
+                  </q-avatar>
+                </div>
+              </q-card-section>
+            </q-card>
+          </div>
+        </div>
       </div>
     </section>
 
     <!-- OUR MISSION SECTION -->
     <section class="mission-section q-py-xl q-px-md">
       <div class="container">
-        <div class="text-center q-mb-xl">
-          <h2 class="section-title text-h3 text-weight-bold q-mb-md">Our Mission</h2>
-          <p class="text-h6 text-grey-7 q-mb-lg" style="max-width: 800px; margin: 0 auto;">
-            We empower donors and nonprofits by providing a transparent, blockchain-based donation platform where every transaction is verifiable and impactful.
-          </p>
+        <div class="row">
+          <!-- Left Content -->
+          <div class="col-12 col-md-5 q-pr-xl">
+            <h2 class="mission-heading text-weight-bold q-mb-lg">Our Mission</h2>
+            
+            <p class="mission-description text-body1 text-grey-8">
+              We empower donors and nonprofits by providing a transparent, blockchain-based donation platform where every transaction is verifiable and impactful.<br>
+              We empower donors and nonprofits by providing a transparent, blockchain-based donation platform where every transaction is verifiable and impactful.<br>
+              We empower donors and nonprofits.
+            </p>
+
+            <!-- Stats Grid Bottom Left -->
+            <div class="mission-visual-grid q-mt-xl">
+              <div class="row q-col-gutter-sm">
+                <div class="col-6">
+                  <div class="mission-photo-box">
+                    <img src="~assets/unity.jpg" alt="Donation" />
+                  </div>
+                </div>
+                <div class="col-6">
+                  <div class="mission-photo-box">
+                    <img src="~assets/medically.jpg" alt="Community" />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Right Visual Grid -->
+          <div class="col-12 col-md-7">
+            <div class="mission-grid">
+              <!-- Top Right Large Image -->
+              <div class="mission-grid-item mission-large-photo">
+                <img src="~assets/teacher.jpg" alt="Helping Community" />
+              </div>
+
+              <!-- Bottom Grid -->
+              <div class="row q-col-gutter-sm q-mt-sm">
+                <div class="col-4">
+                  <div class="mission-photo-box">
+                    <img src="~assets/medical.jpg" alt="Medical Support" />
+                  </div>
+                </div>
+                <div class="col-4">
+                  <div class="mission-photo-box">
+                    <img src="~assets/rescue.jpg" alt="Team Collaboration" />
+                  </div>
+                </div>
+                <div class="col-4">
+                  <div class="mission-photo-box">
+                    <img src="~assets/planting.jpg" alt="Community Project" />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
 
-       
-        <div class="row q-col-gutter-lg">
-          <div class="col-12 col-md-4">
-            <q-card class="mission-card full-height" flat bordered>
-              <q-card-section class="text-center q-pa-lg">
-                <div class="mission-icon-wrapper q-mb-md">
-                  <q-icon name="visibility" size="64px" color="primary" />
-                </div>
-                <div class="text-h5 text-weight-bold q-mb-md">Full Transparency</div>
-                <p class="text-body1 text-grey-7">
-                  Every donation is recorded on the blockchain, providing complete transparency and accountability. Track your impact in real-time.
-                </p>
-              </q-card-section>
-            </q-card>
-          </div>
-
-        
-          <div class="col-12 col-md-4">
-            <q-card class="mission-card full-height" flat bordered>
-              <q-card-section class="text-center q-pa-lg">
-                <div class="mission-icon-wrapper q-mb-md">
-                  <q-icon name="bolt" size="64px" color="positive" />
-                </div>
-                <div class="text-h5 text-weight-bold q-mb-md">Fast & Secure</div>
-                <p class="text-body1 text-grey-7">
-                  Blockchain-powered donations reach beneficiaries instantly with enterprise-grade security and minimal fees.
-                </p>
-              </q-card-section>
-            </q-card>
-          </div>
-
-          
-          <div class="col-12 col-md-4">
-            <q-card class="mission-card full-height" flat bordered>
-              <q-card-section class="text-center q-pa-lg">
-                <div class="mission-icon-wrapper q-mb-md">
-                  <q-icon name="public" size="64px" color="secondary" />
-                </div>
-                <div class="text-h5 text-weight-bold q-mb-md">Global Impact</div>
-                <p class="text-body1 text-grey-7">
-                  Support verified nonprofits worldwide without borders, currency barriers, or intermediaries.
-                </p>
-              </q-card-section>
-            </q-card>
-          </div>
-        </div>
-
-       
-        <div class="row q-col-gutter-md q-mt-xl">
+        <!-- Stats Section -->
+        <div class="row q-col-gutter-md q-mt-xl q-pt-xl">
           <div class="col-12 col-sm-4 text-center">
             <div class="stat-card q-pa-md">
               <div class="text-h3 text-weight-bold text-primary">$2.5M+</div>
@@ -119,227 +268,335 @@
    
     <section class="why-donate-section q-py-xl q-px-md">
       <div class="container">
-        <div class="text-center q-mb-xl">
-          <h2 class="section-title text-h3 text-weight-bold q-mb-md">Why Donate with Crypto?</h2>
-          <p class="text-h6 text-grey-7 q-mb-lg" style="max-width: 700px; margin: 0 auto;">
-            Your cryptocurrency donations create lasting change across multiple causes with unparalleled transparency and efficiency.
-          </p>
+        <!-- Section Header -->
+        <div class="row q-mb-xl">
+          <div class="col-12 col-md-8">
+            <h2 class="text-h3 text-weight-bold q-mb-md">Why Donate with Cryptocurrency?</h2>
+            <p class="text-body1 text-grey-8" style="line-height: 1.8;">
+              Blockchain technology offers a modern approach to charitable giving. Here's what makes cryptocurrency donations different and why organizations are increasingly adopting this method.
+            </p>
+          </div>
         </div>
 
-        
+        <!-- Main Benefits Grid -->
         <div class="row q-col-gutter-lg q-mb-xl">
-          <div class="col-12 col-sm-6 col-md-3">
-            <q-card class="impact-card full-height text-center" flat>
-              <q-card-section class="q-pa-lg">
-                <div class="impact-icon-container q-mb-md">
-                  <q-icon name="school" size="56px" color="white" />
-                </div>
-                <div class="text-h6 text-weight-bold q-mb-sm">Education</div>
-                <p class="text-body2 text-grey-8">
-                  Fund scholarships, tutoring programs, and school supplies for underserved communities.
-                </p>
-              </q-card-section>
-            </q-card>
+          <!-- Benefit 1 -->
+          <div class="col-12 col-md-6">
+            <div class="crypto-benefit-card">
+              <div class="benefit-header q-mb-md">
+                <div class="benefit-number">01</div>
+                <h3 class="text-h5 text-weight-bold">Complete Transaction Transparency</h3>
+              </div>
+              <p class="text-body1 text-grey-8 q-mb-md" style="line-height: 1.7;">
+                Every donation is permanently recorded on the blockchain. You can track exactly where your funds go, from your wallet to the nonprofit's address, and verify that they were used as intended.
+              </p>
+              <div class="benefit-detail">
+                <q-chip dense color="blue-1" text-color="primary" icon="verified">
+                  <span class="text-weight-medium">100% Verifiable</span>
+                </q-chip>
+                <q-chip dense color="blue-1" text-color="primary" icon="timeline">
+                  <span class="text-weight-medium">Real-time Tracking</span>
+                </q-chip>
+              </div>
+            </div>
           </div>
 
-      
-          <div class="col-12 col-sm-6 col-md-3">
-            <q-card class="impact-card full-height text-center" flat>
-              <q-card-section class="q-pa-lg">
-                <div class="impact-icon-container impact-icon-healthcare q-mb-md">
-                  <q-icon name="local_hospital" size="56px" color="white" />
+          <!-- Benefit 2 -->
+          <div class="col-12 col-md-6">
+            <div class="crypto-benefit-card">
+              <div class="benefit-header q-mb-md">
+                <div class="benefit-number">02</div>
+                <h3 class="text-h5 text-weight-bold">Lower Processing Fees</h3>
+              </div>
+              <p class="text-body1 text-grey-8 q-mb-md" style="line-height: 1.7;">
+                Traditional payment processors charge 2-3% plus fixed fees. Bitcoin Cash transactions typically cost less than $0.01, meaning more of your donation directly supports the cause.
+              </p>
+              <div class="benefit-detail">
+                <div class="fee-comparison">
+                  <div class="fee-item">
+                    <span class="text-caption text-grey-6">Traditional:</span>
+                    <span class="text-weight-bold text-negative">2.9% + $0.30</span>
+                  </div>
+                  <div class="fee-item">
+                    <span class="text-caption text-grey-6">Bitcoin Cash:</span>
+                    <span class="text-weight-bold text-positive">&lt;$0.01</span>
+                  </div>
                 </div>
-                <div class="text-h6 text-weight-bold q-mb-sm">Healthcare</div>
-                <p class="text-body2 text-grey-8">
-                  Provide medical care, supplies, and health education to those in need.
-                </p>
-              </q-card-section>
-            </q-card>
+              </div>
+            </div>
           </div>
 
-         
-          <div class="col-12 col-sm-6 col-md-3">
-            <q-card class="impact-card full-height text-center" flat>
-              <q-card-section class="q-pa-lg">
-                <div class="impact-icon-container impact-icon-relief q-mb-md">
-                  <q-icon name="volunteer_activism" size="56px" color="white" />
-                </div>
-                <div class="text-h6 text-weight-bold q-mb-sm">Disaster Relief</div>
-                <p class="text-body2 text-grey-8">
-                  Rapid response to typhoons, floods, and natural disasters with instant aid.
-                </p>
-              </q-card-section>
-            </q-card>
+          <!-- Benefit 3 -->
+          <div class="col-12 col-md-6">
+            <div class="crypto-benefit-card">
+              <div class="benefit-header q-mb-md">
+                <div class="benefit-number">03</div>
+                <h3 class="text-h5 text-weight-bold">Instant Global Transfers</h3>
+              </div>
+              <p class="text-body1 text-grey-8 q-mb-md" style="line-height: 1.7;">
+                Send funds anywhere in the world without intermediaries, currency conversion fees, or multi-day processing times. Perfect for emergency disaster relief when time is critical.
+              </p>
+              <div class="benefit-detail">
+                <q-chip dense color="green-1" text-color="positive" icon="schedule">
+                  <span class="text-weight-medium">~10 seconds confirmation</span>
+                </q-chip>
+              </div>
+            </div>
           </div>
 
-          
-          <div class="col-12 col-sm-6 col-md-3">
-            <q-card class="impact-card full-height text-center" flat>
-              <q-card-section class="q-pa-lg">
-                <div class="impact-icon-container impact-icon-community q-mb-md">
-                  <q-icon name="groups" size="56px" color="white" />
-                </div>
-                <div class="text-h6 text-weight-bold q-mb-sm">Community</div>
-                <p class="text-body2 text-grey-8">
-                  Support local initiatives, food programs, and skill development projects.
-                </p>
-              </q-card-section>
-            </q-card>
+          <!-- Benefit 4 -->
+          <div class="col-12 col-md-6">
+            <div class="crypto-benefit-card">
+              <div class="benefit-header q-mb-md">
+                <div class="benefit-number">04</div>
+                <h3 class="text-h5 text-weight-bold">No Geographic Restrictions</h3>
+              </div>
+              <p class="text-body1 text-grey-8 q-mb-md" style="line-height: 1.7;">
+                Support nonprofits in any country without dealing with international wire transfer fees, exchange rates, or banking restrictions that can block traditional donations.
+              </p>
+              <div class="benefit-detail">
+                <q-chip dense color="purple-1" text-color="purple" icon="public">
+                  <span class="text-weight-medium">158 countries served</span>
+                </q-chip>
+              </div>
+            </div>
           </div>
         </div>
 
-    
-        <div class="row q-col-gutter-md">
-          <div class="col-12 col-md-6">
-            <q-card class="benefit-card" flat bordered>
-              <q-card-section horizontal>
-                <q-card-section class="col-3 flex items-center justify-center bg-primary">
-                  <q-icon name="lock" size="48px" color="white" />
-                </q-card-section>
-                <q-card-section class="col-9">
-                  <div class="text-h6 text-weight-bold q-mb-sm">Secure & Trustworthy</div>
-                  <p class="text-body2 text-grey-7">
-                    Every transaction is recorded on the blockchain, ensuring complete transparency and preventing fraud.
-                  </p>
-                </q-card-section>
-              </q-card-section>
-            </q-card>
-          </div>
+        <!-- Cause Areas -->
+        <div class="q-mb-xl">
+          <h3 class="text-h5 text-weight-bold q-mb-lg">Where Your Donations Make an Impact</h3>
+          <div class="row q-col-gutter-md">
+            <div class="col-12 col-sm-6 col-md-3">
+              <div class="cause-area-card">
+                <div class="cause-icon-wrapper q-mb-sm">
+                  <img src="~assets/scholar.jpg" alt="Education" class="cause-image" />
+                </div>
+                <div class="text-subtitle1 text-weight-bold q-mb-xs">Education</div>
+                <p class="text-caption text-grey-7">Scholarships & school supplies</p>
+              </div>
+            </div>
 
-          <div class="col-12 col-md-6">
-            <q-card class="benefit-card" flat bordered>
-              <q-card-section horizontal>
-                <q-card-section class="col-3 flex items-center justify-center bg-positive">
-                  <q-icon name="savings" size="48px" color="white" />
-                </q-card-section>
-                <q-card-section class="col-9">
-                  <div class="text-h6 text-weight-bold q-mb-sm">Lower Fees, Higher Impact</div>
-                  <p class="text-body2 text-grey-7">
-                    Minimal transaction fees mean more of your donation reaches those who need it most.
-                  </p>
-                </q-card-section>
-              </q-card-section>
-            </q-card>
+            <div class="col-12 col-sm-6 col-md-3">
+              <div class="cause-area-card">
+                <div class="cause-icon-wrapper q-mb-sm">
+                  <img src="~assets/medical.jpg" alt="Healthcare" class="cause-image" />
+                </div>
+                <div class="text-subtitle1 text-weight-bold q-mb-xs">Healthcare</div>
+                <p class="text-caption text-grey-7">Medical care & supplies</p>
+              </div>
+            </div>
+
+            <div class="col-12 col-sm-6 col-md-3">
+              <div class="cause-area-card">
+                <div class="cause-icon-wrapper q-mb-sm">
+                  <img src="~assets/typhoon.jpeg" alt="Disaster Relief" class="cause-image" />
+                </div>
+                <div class="text-subtitle1 text-weight-bold q-mb-xs">Disaster Relief</div>
+                <p class="text-caption text-grey-7">Emergency response</p>
+              </div>
+            </div>
+
+            <div class="col-12 col-sm-6 col-md-3">
+              <div class="cause-area-card">
+                <div class="cause-icon-wrapper q-mb-sm">
+                  <img src="~assets/community.jpg" alt="Community" class="cause-image" />
+                </div>
+                <div class="text-subtitle1 text-weight-bold q-mb-xs">Community</div>
+                <p class="text-caption text-grey-7">Local development programs</p>
+              </div>
+            </div>
           </div>
         </div>
 
-        
-        <div class="text-center q-mt-xl">
-          <q-btn
-            label="Start Making an Impact"
-            color="primary"
-            size="lg"
-            unelevated
-            rounded
-            padding="12px 48px"
-            to="/donate"
-            class="cta-button"
-          />
+        <!-- CTA -->
+        <div class="crypto-cta-section q-mt-xl q-pt-lg">
+          <div class="row items-center">
+            <div class="col-12 col-md-7">
+              <h3 class="text-h5 text-weight-bold q-mb-sm">Ready to get started?</h3>
+              <p class="text-body2 text-grey-7">
+                Connect your Bitcoin Cash wallet and choose from verified nonprofits.
+              </p>
+            </div>
+            <div class="col-12 col-md-5 text-right">
+              <q-btn
+                label="Explore Projects"
+                color="primary"
+                size="lg"
+                unelevated
+                padding="12px 32px"
+                to="/donate"
+              />
+            </div>
+          </div>
         </div>
       </div>
     </section>
 
-    <section class="donation-matters-section q-py-xl">
-      <div class="parallax-overlay animate-fade-in"></div>
-      <div class="container relative-position z-top">
-        <div class="text-center q-mb-xl animate-slide-up">
-          <h2 class="text-h2 text-weight-bold text-white q-mb-md">Why Your Donation Matters</h2>
-          <p class="text-h6 text-white" style="max-width: 800px; margin: 0 auto; opacity: 0.95;">
-            Every cryptocurrency donation creates a ripple effect of positive change in communities worldwide
-          </p>
+    <section class="donation-matters-section q-py-xl q-px-md">
+      <div class="container">
+        <!-- Section Header -->
+        <div class="q-mb-xl">
+          <div class="row items-center justify-between">
+            <div class="col-12 col-md-7">
+              <h2 class="text-h3 text-weight-bold q-mb-md">Why Your Donation Matters</h2>
+              <p class="text-body1 text-grey-8" style="line-height: 1.8;">
+                Your contribution through blockchain technology ensures transparency, speed, and direct impact. 
+                Every donation is tracked on-chain, providing you with complete visibility into how your funds make a difference.
+              </p>
+            </div>
+            <div class="col-12 col-md-4 text-right">
+              <div class="impact-year-badge">
+                <div class="text-h4 text-weight-bold text-primary">2026</div>
+                <div class="text-subtitle2 text-grey-7">Impact Report</div>
+              </div>
+            </div>
+          </div>
         </div>
 
-    
+        <!-- Key Metrics Grid -->
         <div class="row q-col-gutter-lg q-mb-xl">
-          <div class="col-12 col-md-4 animate-scale-in" style="animation-delay: 0.2s;">
-            <q-card class="impact-metric-card text-center" flat>
-              <q-card-section class="q-pa-xl">
-                <q-icon name="trending_up" size="64px" color="primary" class="q-mb-md" />
-                <div class="text-h3 text-weight-bold text-primary q-mb-sm">100%</div>
-                <div class="text-h6 text-weight-medium q-mb-sm">Traceable</div>
-                <p class="text-body2 text-grey-7">
-                  Track your donation from wallet to beneficiary on the blockchain
-                </p>
-              </q-card-section>
-            </q-card>
+          <div class="col-12 col-md-4">
+            <div class="metric-card">
+              <div class="metric-number text-primary">$2.5M+</div>
+              <div class="metric-label">Total Raised</div>
+              <div class="metric-description">In cryptocurrency donations processed through our platform</div>
+              <div class="metric-trend">
+                <q-icon name="trending_up" color="positive" size="20px" />
+                <span class="text-positive text-caption">+127% from last year</span>
+              </div>
+            </div>
           </div>
-
-          <div class="col-12 col-md-4 animate-scale-in" style="animation-delay: 0.4s;">
-            <q-card class="impact-metric-card text-center" flat>
-              <q-card-section class="q-pa-xl">
-                <q-icon name="timer" size="64px" color="positive" class="q-mb-md" />
-                <div class="text-h3 text-weight-bold text-positive q-mb-sm">&lt;1 Min</div>
-                <div class="text-h6 text-weight-medium q-mb-sm">Processing Time</div>
-                <p class="text-body2 text-grey-7">
-                  Instant transfers ensure help reaches those in need immediately
-                </p>
-              </q-card-section>
-            </q-card>
+          
+          <div class="col-12 col-md-4">
+            <div class="metric-card">
+              <div class="metric-number text-positive">5,273</div>
+              <div class="metric-label">Active Donors</div>
+              <div class="metric-description">Individuals and organizations supporting causes</div>
+              <div class="metric-trend">
+                <q-icon name="trending_up" color="positive" size="20px" />
+                <span class="text-positive text-caption">+89% from last year</span>
+              </div>
+            </div>
           </div>
-
-          <div class="col-12 col-md-4 animate-scale-in" style="animation-delay: 0.6s;">
-            <q-card class="impact-metric-card text-center" flat>
-              <q-card-section class="q-pa-xl">
-                <q-icon name="percent" size="64px" color="orange" class="q-mb-md" />
-                <div class="text-h3 text-weight-bold text-orange q-mb-sm">95%+</div>
-                <div class="text-h6 text-weight-medium q-mb-sm">Goes Direct</div>
-                <p class="text-body2 text-grey-7">
-                  Minimal fees mean maximum impact for every donation you make
-                </p>
-              </q-card-section>
-            </q-card>
+          
+          <div class="col-12 col-md-4">
+            <div class="metric-card">
+              <div class="metric-number text-secondary">158</div>
+              <div class="metric-label">Verified Nonprofits</div>
+              <div class="metric-description">Registered and verified organizations worldwide</div>
+              <div class="metric-trend">
+                <q-icon name="verified" color="positive" size="20px" />
+                <span class="text-grey-7 text-caption">100% verified</span>
+              </div>
+            </div>
           </div>
         </div>
 
-        
-        <div class="row q-col-gutter-md">
-          <div class="col-12 col-md-6 animate-slide-in-left" style="animation-delay: 0.8s;">
-            <q-card class="story-card" flat>
-              <q-card-section class="q-pa-lg">
-                <div class="row items-center q-mb-md">
-                  <q-icon name="school" size="40px" color="primary" class="q-mr-md" />
-                  <div class="text-h5 text-weight-bold">500+ Students Educated</div>
-                </div>
-                <p class="text-body1">
-                  Your crypto donations funded scholarships, school supplies, and tutoring programs, changing the trajectory of hundreds of lives.
-                </p>
-              </q-card-section>
-            </q-card>
+        <!-- Impact Stories -->
+        <div class="row q-col-gutter-lg q-mb-xl">
+          <div class="col-12">
+            <h3 class="text-h5 text-weight-bold q-mb-md">Real Impact, Real Stories</h3>
           </div>
-
-          <div class="col-12 col-md-6 animate-slide-in-right" style="animation-delay: 0.8s;">
-            <q-card class="story-card" flat>
-              <q-card-section class="q-pa-lg">
-                <div class="row items-center q-mb-md">
-                  <q-icon name="favorite" size="40px" color="red" class="q-mr-md" />
-                  <div class="text-h5 text-weight-bold">1,200+ Lives Saved</div>
+          
+          <div class="col-12 col-md-6">
+            <div class="impact-story-card">
+              <div class="row q-col-gutter-md">
+                <div class="col-4">
+                  <div class="story-image">
+                    <img src="~assets/scholar.jpg" alt="Education" />
+                  </div>
                 </div>
-                <p class="text-body1">
-                  Emergency medical care and disaster relief reached families within hours thanks to instant blockchain transfers.
-                </p>
-              </q-card-section>
-            </q-card>
+                <div class="col-8">
+                  <div class="story-stat text-h4 text-weight-bold text-primary">518</div>
+                  <div class="story-title text-subtitle1 text-weight-bold q-mb-sm">Students Received Scholarships</div>
+                  <p class="story-text text-body2 text-grey-7">
+                    Funded full-year scholarships, school supplies, and educational technology for students in underserved communities.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="col-12 col-md-6">
+            <div class="impact-story-card">
+              <div class="row q-col-gutter-md">
+                <div class="col-4">
+                  <div class="story-image">
+                    <img src="~assets/medical.jpg" alt="Healthcare" />
+                  </div>
+                </div>
+                <div class="col-8">
+                  <div class="story-stat text-h4 text-weight-bold text-positive">1,247</div>
+                  <div class="story-title text-subtitle1 text-weight-bold q-mb-sm">Medical Treatments Provided</div>
+                  <p class="story-text text-body2 text-grey-7">
+                    Emergency medical care, essential medications, and health services delivered to families in crisis situations.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="col-12 col-md-6">
+            <div class="impact-story-card">
+              <div class="row q-col-gutter-md">
+                <div class="col-4">
+                  <div class="story-image">
+                    <img src="~assets/typhoon.jpeg" alt="Disaster Relief" />
+                  </div>
+                </div>
+                <div class="col-8">
+                  <div class="story-stat text-h4 text-weight-bold text-orange">892</div>
+                  <div class="story-title text-subtitle1 text-weight-bold q-mb-sm">Families Assisted in Disasters</div>
+                  <p class="story-text text-body2 text-grey-7">
+                    Rapid response support including food, shelter, and essential supplies for families affected by natural disasters.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="col-12 col-md-6">
+            <div class="impact-story-card">
+              <div class="row q-col-gutter-md">
+                <div class="col-4">
+                  <div class="story-image">
+                    <img src="~assets/community.jpg" alt="Community" />
+                  </div>
+                </div>
+                <div class="col-8">
+                  <div class="story-stat text-h4 text-weight-bold text-secondary">43</div>
+                  <div class="story-title text-subtitle1 text-weight-bold q-mb-sm">Community Projects Launched</div>
+                  <p class="story-text text-body2 text-grey-7">
+                    Sustainable farming, clean water, and livelihood programs helping communities build long-term self-sufficiency.
+                  </p>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 
-     
-        <div class="text-center q-mt-xl animate-bounce-in" style="animation-delay: 1s;">
-          <div class="text-h5 text-white text-weight-medium q-mb-lg">
-            Ready to make a difference?
+        <!-- CTA Section -->
+        <div class="impact-cta-section q-mt-xl q-pt-xl">
+          <div class="row items-center q-col-gutter-lg">
+            <div class="col-12 col-md-7">
+              <h3 class="text-h4 text-weight-bold q-mb-sm">Join Us in Making a Difference</h3>
+              <p class="text-body1 text-grey-7">
+                Start your donation journey today and become part of a global community committed to transparent, impactful giving.
+              </p>
+            </div>
+            <div class="col-12 col-md-5 text-right">
+              <q-btn
+                label="Start Donating"
+                size="lg"
+                unelevated
+                color="primary"
+                padding="12px 48px"
+                to="/donate"
+                class="impact-cta-button"
+              />
+            </div>
           </div>
-          <q-btn
-            label="Donate Now"
-            size="xl"
-            unelevated
-            rounded
-            color="white"
-            text-color="primary"
-            padding="16px 64px"
-            to="/donate"
-            class="donation-cta-btn"
-          >
-            <q-icon name="arrow_forward" size="24px" class="q-ml-sm" />
-          </q-btn>
         </div>
       </div>
     </section>
@@ -420,109 +677,90 @@
     
     <section class="about-impact-section q-py-xl q-px-md">
       <div class="container">
-        <div class="row q-col-gutter-xl">
-          <div class="col-12 col-md-6 animate-slide-in-left">
-            <div class="about-content">
-              <div class="section-badge q-mb-md">About BiToHelp</div>
-              <h2 class="text-h3 text-weight-bold q-mb-md">Blockchain-Powered Social Impact</h2>
-              <p class="text-body1 text-grey-8 q-mb-lg" style="line-height: 1.8;">
-                Established in 2026, BiToHelp empowers individuals and transforms communities through transparent cryptocurrency donations. We bridge the gap between crypto innovation and humanitarian causes.
-              </p>
+        <div class="row justify-center">
+          <div class="col-12 col-md-10">
+            <div class="about-content-professional">
+              <div class="row q-col-gutter-xl items-center">
+                <!-- Left Text Content -->
+                <div class="col-12 col-md-6">
+                  <div class="about-badge q-mb-md">About BitoHelp</div>
+                  <h2 class="text-h3 text-weight-bold q-mb-md">Blockchain-Powered Social Impact</h2>
+                  <p class="text-body1 text-grey-8 q-mb-lg" style="line-height: 1.8;">
+                    Founded in 2026, BitoHelp is a cryptocurrency donation platform built on transparency, innovation, and social responsibility. We leverage blockchain technology to create a trusted bridge between donors and verified nonprofits worldwide.
+                  </p>
+                  <p class="text-body1 text-grey-8 q-mb-xl" style="line-height: 1.8;">
+                    Every donation is tracked on-chain, ensuring complete visibility and accountability. Our mission is to make charitable giving more accessible, efficient, and impactful through the power of Bitcoin Cash.
+                  </p>
 
-              
-              <div class="feature-list q-mb-lg">
-                <div class="feature-item q-mb-md animate-slide-in-left" style="animation-delay: 0.3s;">
-                  <q-icon name="check_circle" size="24px" color="positive" class="q-mr-sm" />
-                  <span class="text-body1">100% transparent blockchain transactions</span>
-                </div>
-                <div class="feature-item q-mb-md animate-slide-in-left" style="animation-delay: 0.4s;">
-                  <q-icon name="check_circle" size="24px" color="positive" class="q-mr-sm" />
-                  <span class="text-body1">Direct donations to verified nonprofits</span>
-                </div>
-                <div class="feature-item q-mb-md animate-slide-in-left" style="animation-delay: 0.5s;">
-                  <q-icon name="check_circle" size="24px" color="positive" class="q-mr-sm" />
-                  <span class="text-body1">Real-time impact tracking and reporting</span>
-                </div>
-                <div class="feature-item q-mb-md animate-slide-in-left" style="animation-delay: 0.6s;">
-                  <q-icon name="check_circle" size="24px" color="positive" class="q-mr-sm" />
-                  <span class="text-body1">Global reach, local impact</span>
-                </div>
-              </div>
+                  <!-- Key Features -->
+                  <div class="key-features">
+                    <div class="row q-col-gutter-md q-mb-lg">
+                      <div class="col-12 col-sm-6">
+                        <div class="feature-box">
+                          <q-icon name="verified_user" size="32px" color="primary" class="q-mb-sm" />
+                          <div class="text-subtitle1 text-weight-bold q-mb-xs">100% Transparent</div>
+                          <p class="text-caption text-grey-7">All transactions on blockchain</p>
+                        </div>
+                      </div>
+                      <div class="col-12 col-sm-6">
+                        <div class="feature-box">
+                          <q-icon name="speed" size="32px" color="positive" class="q-mb-sm" />
+                          <div class="text-subtitle1 text-weight-bold q-mb-xs">Instant Transfers</div>
+                          <p class="text-caption text-grey-7">Real-time donation processing</p>
+                        </div>
+                      </div>
+                      <div class="col-12 col-sm-6">
+                        <div class="feature-box">
+                          <q-icon name="public" size="32px" color="secondary" class="q-mb-sm" />
+                          <div class="text-subtitle1 text-weight-bold q-mb-xs">Global Reach</div>
+                          <p class="text-caption text-grey-7">Support causes worldwide</p>
+                        </div>
+                      </div>
+                      <div class="col-12 col-sm-6">
+                        <div class="feature-box">
+                          <q-icon name="security" size="32px" color="orange" class="q-mb-sm" />
+                          <div class="text-subtitle1 text-weight-bold q-mb-xs">Secure Platform</div>
+                          <p class="text-caption text-grey-7">Bank-grade encryption</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
 
-              <div class="q-mt-xl">
-                <q-btn 
-                  label="Learn More About Us" 
-                  color="primary" 
-                  size="lg"
-                  unelevated
-                  rounded
-                  icon-right="arrow_forward"
-                  class="feature-btn animate-scale-in"
-                  style="animation-delay: 0.7s;"
-                />
+                  <div class="q-mt-lg">
+                    <q-btn 
+                      label="Learn More About Our Mission" 
+                      color="primary" 
+                      size="lg"
+                      unelevated
+                      padding="12px 32px"
+                      class="about-cta-btn"
+                    />
+                  </div>
+                </div>
+
+                <!-- Right Image/Visual -->
+                <div class="col-12 col-md-6">
+                  <div class="about-visual-section">
+                    <div class="about-main-image q-mb-md">
+                      <img src="~assets/hero.png" alt="BitoHelp Platform" />
+                    </div>
+                    <div class="row q-col-gutter-sm">
+                      <div class="col-6">
+                        <div class="about-small-image">
+                          <img src="~assets/community.jpg" alt="Community Impact" />
+                        </div>
+                      </div>
+                      <div class="col-6">
+                        <div class="about-small-image">
+                          <img src="~assets/medical.jpg" alt="Healthcare Support" />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
-
-          
-          <div class="col-12 col-md-6 animate-slide-in-right">
-            <div class="impact-content">
-              <div class="section-badge section-badge-impact q-mb-md">Our Impact</div>
-              <h3 class="text-h4 text-weight-bold q-mb-lg">Making a Difference Worldwide</h3>
-
-              <div class="impact-timeline">
-                <div class="timeline-item q-mb-lg animate-fade-slide-up" style="animation-delay: 0.3s;">
-                  <div class="timeline-marker">
-                    <q-icon name="school" size="32px" color="white" />
-                  </div>
-                  <div class="timeline-content">
-                    <h4 class="text-h6 text-weight-bold q-mb-sm">Education Programs</h4>
-                    <p class="text-body2 text-grey-8">
-                      Funded 500+ scholarships, provided school supplies to 2,000+ students, and established 15 tutoring centers across underserved communities.
-                    </p>
-                  </div>
-                </div>
-
-                <div class="timeline-item q-mb-lg animate-fade-slide-up" style="animation-delay: 0.5s;">
-                  <div class="timeline-marker timeline-marker-healthcare">
-                    <q-icon name="local_hospital" size="32px" color="white" />
-                  </div>
-                  <div class="timeline-content">
-                    <h4 class="text-h6 text-weight-bold q-mb-sm">Healthcare Initiatives</h4>
-                    <p class="text-body2 text-grey-8">
-                      Delivered medical supplies to 50+ clinics, funded 1,200+ medical treatments, and provided health education to 3,000+ families.
-                    </p>
-                  </div>
-                </div>
-
-                <div class="timeline-item animate-fade-slide-up" style="animation-delay: 0.7s;">
-                  <div class="timeline-marker timeline-marker-relief">
-                    <q-icon name="volunteer_activism" size="32px" color="white" />
-                  </div>
-                  <div class="timeline-content">
-                    <h4 class="text-h6 text-weight-bold q-mb-sm">Disaster Relief</h4>
-                    <p class="text-body2 text-grey-8">
-                      Rapid response to 12 natural disasters, helped 5,000+ families rebuild, and distributed emergency supplies within 24 hours of crisis.
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              <div class="q-mt-xl">
-                <q-btn 
-                  label="Explore Our Projects" 
-                  color="secondary" 
-                  size="lg"
-                  unelevated
-                  rounded
-                  icon-right="explore"
-                  class="feature-btn animate-scale-in"
-                  style="animation-delay: 0.9s;"
-                />
-              </div>
-            </div>
-          </div>
-
         </div>
       </div>
     </section>
@@ -706,20 +944,259 @@ const testimonials = [
 </script>
 <style scoped>
 
-.mission-section {
-  background: linear-gradient(135deg, #f5f7fa 0%, #ffffff 100%);
+/* Hero Section Styles */
+.hero-section {
+  min-height: 100vh;
   position: relative;
+  display: flex;
+  align-items: center;
   overflow: hidden;
 }
 
-.mission-section::before {
+.hero-section::before {
   content: '';
   position: absolute;
   top: 0;
   left: 0;
-  right: 0;
-  height: 4px;
-  background: linear-gradient(90deg, #1976d2 0%, #21CBF3 100%);
+  width: 100%;
+  height: 100%;
+  background-image: url('../assets/hero.png');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  animation: zoomOut 1.5s ease-out forwards;
+  z-index: 0;
+}
+
+@keyframes zoomOut {
+  from {
+    transform: scale(1.2);
+  }
+  to {
+    transform: scale(1);
+  }
+}
+
+.hero-section .row {
+  position: relative;
+  width: 100%;
+  z-index: 1;
+}
+
+.hero-content {
+  max-width: 600px;
+}
+
+.hero-title {
+  font-size: 3.5rem;
+  font-weight: 800;
+  line-height: 1.2;
+  color: white;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.hero-title .highlight {
+  color: #FFD700;
+  display: inline-block;
+}
+
+.hero-subtitle {
+  font-size: 1.25rem;
+  line-height: 1.6;
+  color: white;
+  margin-top: 1.5rem;
+  text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+.hero-btn {
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  transition: all 0.3s ease;
+}
+
+.hero-btn:hover {
+  transform: scale(1.05);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+}
+
+/* Featured Projects Section */
+.featured-projects-section {
+  background: linear-gradient(180deg, #f8f9fa 0%, #ffffff 100%);
+  padding: 80px 0;
+}
+
+.project-card {
+  border-radius: 20px;
+  overflow: hidden;
+  transition: all 0.3s ease;
+  border: 2px solid #e0e0e0;
+  background: white;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.project-card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.12);
+  border-color: #1976d2;
+}
+
+.project-image {
+  position: relative;
+  width: 100%;
+  height: 200px;
+  overflow: hidden;
+}
+
+.project-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s ease;
+}
+
+.project-card:hover .project-image img {
+  transform: scale(1.1);
+}
+
+.project-badge {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  padding: 6px 16px;
+  border-radius: 20px;
+  font-weight: 600;
+  font-size: 12px;
+}
+
+.project-description {
+  min-height: 60px;
+  line-height: 1.5;
+}
+
+.project-progress {
+  margin-top: auto;
+}
+
+.mission-section {
+  background: #ffffff;
+  position: relative;
+  overflow: hidden;
+}
+
+.mission-brand {
+  display: flex;
+  align-items: center;
+  color: #1976d2;
+}
+
+.mission-heading {
+  font-size: 3.5rem;
+  line-height: 1.1;
+  color: #1a1a1a;
+  margin: 0;
+}
+
+.mission-description {
+  font-size: 1.1rem;
+  line-height: 1.8;
+  color: #666;
+  max-width: 500px;
+}
+
+.mission-grid {
+  position: relative;
+}
+
+.mission-grid-item {
+  position: relative;
+  overflow: hidden;
+  border-radius: 16px;
+}
+
+.mission-large-photo {
+  width: 100%;
+  height: 350px;
+  position: relative;
+}
+
+.mission-large-photo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 16px;
+}
+
+.mission-decorative-icon {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #4caf50 0%, #66bb6a 100%);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+}
+
+.mission-icon-topleft {
+  bottom: -30px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.mission-icon-box {
+  height: 200px;
+  border-radius: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+}
+
+.mission-icon-person {
+  background: linear-gradient(135deg, #1976d2 0%, #42a5f5 100%);
+  box-shadow: 0 4px 20px rgba(25, 118, 210, 0.3);
+}
+
+.mission-icon-community {
+  background: linear-gradient(135deg, #4caf50 0%, #66bb6a 100%);
+  box-shadow: 0 4px 20px rgba(76, 175, 80, 0.3);
+}
+
+.mission-icon-logo {
+  background: linear-gradient(135deg, #9c27b0 0%, #ba68c8 100%);
+  box-shadow: 0 4px 20px rgba(156, 39, 176, 0.3);
+}
+
+.mission-icon-box:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+}
+
+.mission-photo-box {
+  height: 200px;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+}
+
+.mission-photo-box img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.mission-photo-box:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+}
+
+.mission-visual-grid {
+  margin-top: 40px;
 }
 
 .container {
@@ -727,34 +1204,11 @@ const testimonials = [
   margin: 0 auto;
 }
 
-.mission-card {
-  transition: all 0.3s ease;
-  border-radius: 12px;
-  border: 2px solid #e0e0e0;
-  background: white;
-}
-
-.mission-card:hover {
-  transform: translateY(-8px);
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.12);
-  border-color: #1976d2;
-}
-
-.mission-icon-wrapper {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 100px;
-  height: 100px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, #f5f7fa 0%, #e3f2fd 100%);
-  margin: 0 auto;
-}
-
 .stat-card {
   background: white;
-  border-radius: 8px;
+  border-radius: 12px;
   transition: all 0.3s ease;
+  border: 1px solid #e0e0e0;
 }
 
 .stat-card:hover {
@@ -764,117 +1218,206 @@ const testimonials = [
 
 /* Why Donate Section Styles */
 .why-donate-section {
-  background: white;
+  background: #f8f9fa;
   position: relative;
 }
 
-.impact-card {
-  border-radius: 16px;
-  overflow: hidden;
-  background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
-  transition: all 0.3s ease;
-  border: 1px solid #e0e0e0;
-}
-
-.impact-card:hover {
-  transform: translateY(-6px);
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
-}
-
-.impact-icon-container {
-  width: 90px;
-  height: 90px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, #1976d2 0%, #42a5f5 100%);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 4px 15px rgba(25, 118, 210, 0.3);
-}
-
-.impact-icon-healthcare {
-  background: linear-gradient(135deg, #4caf50 0%, #66bb6a 100%);
-  box-shadow: 0 4px 15px rgba(76, 175, 80, 0.3);
-}
-
-.impact-icon-relief {
-  background: linear-gradient(135deg, #ff9800 0%, #ffb74d 100%);
-  box-shadow: 0 4px 15px rgba(255, 152, 0, 0.3);
-}
-
-.impact-icon-community {
-  background: linear-gradient(135deg, #9c27b0 0%, #ba68c8 100%);
-  box-shadow: 0 4px 15px rgba(156, 39, 176, 0.3);
-}
-
-.benefit-card {
+.crypto-benefit-card {
+  background: white;
+  padding: 32px;
   border-radius: 12px;
+  border: 1px solid #e0e0e0;
   transition: all 0.3s ease;
+  height: 100%;
+}
+
+.crypto-benefit-card:hover {
+  border-color: #1976d2;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+  transform: translateY(-4px);
+}
+
+.benefit-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+}
+
+.benefit-number {
+  font-size: 2rem;
+  font-weight: 800;
+  color: #1976d2;
+  line-height: 1;
+  min-width: 50px;
+}
+
+.benefit-detail {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.fee-comparison {
+  display: flex;
+  gap: 24px;
+  padding: 12px 16px;
+  background: #f5f7fa;
+  border-radius: 8px;
+  width: 100%;
+}
+
+.fee-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.cause-area-card {
+  background: white;
+  padding: 20px;
+  border-radius: 12px;
+  border: 1px solid #e0e0e0;
+  transition: all 0.3s ease;
+  text-align: center;
+}
+
+.cause-area-card:hover {
+  border-color: #1976d2;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+}
+
+.cause-icon-wrapper {
+  width: 100%;
+  height: 80px;
+  border-radius: 8px;
   overflow: hidden;
+  background: #f5f7fa;
+  margin: 0 auto;
 }
 
-.benefit-card:hover {
-  transform: translateX(8px);
-  box-shadow: 0 6px 25px rgba(0, 0, 0, 0.12);
+.cause-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
-.cta-button {
-  font-weight: 600;
-  letter-spacing: 0.5px;
-  transition: all 0.3s ease;
-}
-
-.cta-button:hover {
-  transform: scale(1.05);
-  box-shadow: 0 6px 20px rgba(25, 118, 210, 0.4);
+.crypto-cta-section {
+  border-top: 1px solid #e0e0e0;
 }
 
 .donation-matters-section {
-  background-image: url('../assets/bg.jpg');
-  background-size: cover;
-  background-position: center;
-  background-attachment: fixed;
+  background: linear-gradient(180deg, #ffffff 0%, #f8f9fa 100%);
   position: relative;
-  min-height: 600px;
 }
 
-.parallax-overlay {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: linear-gradient(135deg, rgba(25, 118, 210, 0.9) 0%, rgba(33, 203, 243, 0.85) 100%);
-}
-
-.z-top {
-  z-index: 1;
-}
-
-.impact-metric-card {
-  border-radius: 16px;
-  transition: all 0.3s ease;
-  background: white;
-  overflow: hidden;
-}
-
-.impact-metric-card:hover {
-  transform: translateY(-10px) scale(1.02);
-  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.2);
-}
-
-.story-card {
+.impact-year-badge {
+  background: linear-gradient(135deg, #e3f2fd 0%, #f5f7fa 100%);
+  padding: 24px 32px;
   border-radius: 12px;
-  background: rgba(255, 255, 255, 0.98);
-  backdrop-filter: blur(10px);
-  transition: all 0.3s ease;
-  border-left: 4px solid #1976d2;
+  border: 2px solid #1976d2;
 }
 
-.story-card:hover {
-  transform: translateX(8px);
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
-  border-left-color: #21CBF3;
+.metric-card {
+  background: white;
+  padding: 32px 24px;
+  border-radius: 12px;
+  border: 1px solid #e0e0e0;
+  transition: all 0.3s ease;
+  height: 100%;
+}
+
+.metric-card:hover {
+  border-color: #1976d2;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+  transform: translateY(-4px);
+}
+
+.metric-number {
+  font-size: 3rem;
+  font-weight: 800;
+  line-height: 1;
+  margin-bottom: 12px;
+}
+
+.metric-label {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #1a1a1a;
+  margin-bottom: 8px;
+}
+
+.metric-description {
+  font-size: 0.875rem;
+  color: #666;
+  line-height: 1.5;
+  margin-bottom: 16px;
+}
+
+.metric-trend {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding-top: 12px;
+  border-top: 1px solid #f0f0f0;
+}
+
+.impact-story-card {
+  background: white;
+  padding: 24px;
+  border-radius: 12px;
+  border: 1px solid #e0e0e0;
+  transition: all 0.3s ease;
+  height: 100%;
+}
+
+.impact-story-card:hover {
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+  transform: translateY(-4px);
+}
+
+.story-image {
+  width: 100%;
+  height: 140px;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #f5f7fa;
+}
+
+.story-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.story-stat {
+  line-height: 1;
+  margin-bottom: 8px;
+}
+
+.story-title {
+  color: #1a1a1a;
+  line-height: 1.3;
+}
+
+.story-text {
+  line-height: 1.6;
+}
+
+.impact-cta-section {
+  border-top: 2px solid #e0e0e0;
+  padding-top: 48px;
+}
+
+.impact-cta-button {
+  font-weight: 600;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+}
+
+.impact-cta-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(25, 118, 210, 0.3);
 }
 
 .donation-cta-btn {
@@ -1066,119 +1609,84 @@ const testimonials = [
 
 
 .about-impact-section {
-  background: linear-gradient(135deg, #ffffff 0%, #f5f7fa 100%);
+  background: #ffffff;
 }
 
-.section-badge {
+.about-content-professional {
+  background: white;
+  padding: 0;
+}
+
+.about-badge {
   display: inline-block;
   padding: 8px 20px;
-  background: linear-gradient(135deg, #1976d2 0%, #42a5f5 100%);
-  color: white;
-  border-radius: 50px;
+  background: #e3f2fd;
+  color: #1976d2;
+  border-radius: 6px;
   font-weight: 600;
-  font-size: 14px;
+  font-size: 13px;
   letter-spacing: 0.5px;
   text-transform: uppercase;
 }
 
-.section-badge-impact {
-  background: linear-gradient(135deg, #9c27b0 0%, #ba68c8 100%);
+.key-features {
+  margin: 0;
 }
 
-.about-content,
-.impact-content {
-  height: 100%;
-}
-
-.feature-list {
-  margin-left: 0;
-}
-
-.feature-item {
-  display: flex;
-  align-items: center;
-  transition: all 0.2s ease;
-}
-
-.feature-item:hover {
-  transform: translateX(8px);
-}
-
-.feature-btn {
-  font-weight: 600;
-  letter-spacing: 0.5px;
-  transition: all 0.3s ease;
-}
-
-.feature-btn:hover {
-  transform: scale(1.05);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
-}
-
-
-.impact-timeline {
-  position: relative;
-  padding-left: 20px;
-}
-
-.impact-timeline::before {
-  content: '';
-  position: absolute;
-  left: 20px;
-  top: 16px;
-  bottom: 16px;
-  width: 2px;
-  background: linear-gradient(180deg, #1976d2 0%, #9c27b0 100%);
-}
-
-.timeline-item {
-  position: relative;
-  padding-left: 48px;
-}
-
-.timeline-marker {
-  position: absolute;
-  left: 0;
-  top: 0;
-  width: 56px;
-  height: 56px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, #1976d2 0%, #42a5f5 100%);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 4px 12px rgba(25, 118, 210, 0.4);
-  z-index: 1;
-  transition: all 0.3s ease;
-}
-
-.timeline-marker-healthcare {
-  background: linear-gradient(135deg, #4caf50 0%, #66bb6a 100%);
-  box-shadow: 0 4px 12px rgba(76, 175, 80, 0.4);
-}
-
-.timeline-marker-relief {
-  background: linear-gradient(135deg, #ff9800 0%, #ffb74d 100%);
-  box-shadow: 0 4px 12px rgba(255, 152, 0, 0.4);
-}
-
-.timeline-item:hover .timeline-marker {
-  transform: scale(1.1);
-}
-
-.timeline-content {
-  background: white;
+.feature-box {
   padding: 20px;
-  border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  background: #f8f9fa;
+  border-radius: 8px;
   transition: all 0.3s ease;
 }
 
-.timeline-content:hover {
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);
-  transform: translateX(8px);
+.feature-box:hover {
+  background: #e3f2fd;
+  transform: translateY(-4px);
 }
 
+.about-cta-btn {
+  border-radius: 8px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+
+.about-cta-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(25, 118, 210, 0.3);
+}
+
+.about-visual-section {
+  position: relative;
+}
+
+.about-main-image {
+  width: 100%;
+  height: 350px;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+}
+
+.about-main-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.about-small-image {
+  width: 100%;
+  height: 160px;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+}
+
+.about-small-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
 
 .main-footer {
   background: linear-gradient(135deg, #1a237e 0%, #0d47a1 100%);

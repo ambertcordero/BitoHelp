@@ -34,8 +34,9 @@ export const useDonationStore = defineStore('donation', {
       this.error = null
       
       try {
-        // Save to Django API
-        const response = await api.post('donations/', {
+        console.log('Sending donation to API:', donationData)
+        
+        const payload = {
           txid: donationData.txid,
           recipient: donationData.recipient,
           amount: donationData.amount.toString(),
@@ -46,29 +47,31 @@ export const useDonationStore = defineStore('donation', {
           donor_email: donationData.donorEmail || '',
           donor_contact: donationData.donorContact || '',
           explorer_url: donationData.explorerUrl,
-        })
+        }
+        
+        console.log('API Payload:', payload)
+        const response = await api.post('donations/', payload)
+        console.log('API Response:', response)
         
         const donation = response.data
         this.latestDonation = donation
         this.donationHistory.unshift(donation)
         
-        // Keep only last 50 donations in memory
         if (this.donationHistory.length > 50) {
           this.donationHistory = this.donationHistory.slice(0, 50)
         }
         
         this.totalDonated += parseFloat(donation.amount) || 0
-        
-        // Also save to localStorage as backup
         this.saveDonationsToStorage()
         
-        console.log(' Donation saved to Django API:', donation)
         return donation
       } catch (error) {
-        console.error('Failed to save donation to API:', error)
+        console.error('API save failed - Full Error:', error)
+        console.error('Error Response:', error.response)
+        console.error('Error Request:', error.request)
+        console.error('Error Message:', error.message)
         this.error = error.response?.data || error.message
         
-        // Fallback: save to localStorage only
         const localDonation = {
           id: Date.now(),
           ...donationData,
@@ -92,11 +95,9 @@ export const useDonationStore = defineStore('donation', {
       try {
         const response = await api.get(`donations/?limit=${limit}`)
         this.donationHistory = response.data.results || response.data
-        console.log(`✅ Fetched ${this.donationHistory.length} donations from API`)
       } catch (error) {
-        console.error('❌ Failed to fetch donations:', error)
+        console.error('Failed to fetch donations:', error)
         this.error = error.response?.data || error.message
-        // Load from localStorage as fallback
         this.loadDonationsFromStorage()
       } finally {
         this.isLoading = false
@@ -108,7 +109,7 @@ export const useDonationStore = defineStore('donation', {
         const response = await api.get('stats/')
         return response.data
       } catch (error) {
-        console.error('❌ Failed to fetch stats:', error)
+        console.error('Failed to fetch stats:', error)
         return null
       }
     },

@@ -2,7 +2,7 @@
   <q-layout view="lHh Lpr lFf">
 
     <!-- HEADER ini !!!-->
-    <q-header class="app-header">
+    <q-header reveal class="app-header">
       <q-toolbar class="q-px-lg">
 
         <!-- Logo ini !!!-->

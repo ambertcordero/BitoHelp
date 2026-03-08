@@ -1,38 +1,32 @@
 pragma cashscript ^0.12.0;
 
-
-contract DonationContract(
-    bytes20 nonprofitPkh,     
-    bytes20 platformPkh,       
-    int platformFeePercent     
-) {
-    
-    function donate() {
-
-        require(tx.age >= 0);
-        int inputAmount = tx.inputs[this.activeInputIndex].value;
-        require(inputAmount >= 10000);
+contract Mecenas(bytes20 recipient, bytes20 funder, int pledge) {
+    function receive() {
         
-        int platformFee = inputAmount * platformFeePercent / 100;
-        int nonprofitAmount = inputAmount - platformFee - 1000; 
+        // Check that the first output sends to the recipient
+        bytes25 recipientLockingBytecode = new LockingBytecodeP2PKH(recipient);
+        require(tx.outputs[0].lockingBytecode == recipientLockingBytecode);
 
-        bytes34 nonprofitLockingBytecode = new LockingBytecodeP2PKH(nonprofitPkh);
-        bytes34 platformLockingBytecode = new LockingBytecodeP2PKH(platformPkh);
-        
-        require(tx.outputs[0].lockingBytecode == nonprofitLockingBytecode);
-        require(tx.outputs[0].value == nonprofitAmount);
-        
-        if (platformFee > 0) {
-            require(tx.outputs[1].lockingBytecode == platformLockingBytecode);
-            require(tx.outputs[1].value == platformFee);
+        // Calculate the value that's left
+        int minerFee = 1000;
+        int currentValue = tx.inputs[this.activeInputIndex].value;
+        int changeValue = currentValue - pledge - minerFee;
+
+        // If there is not enough left for *another* pledge after this one,
+        // we send the remainder to the recipient. Otherwise we send the
+        // remainder to the recipient and the change back to the contract
+        if (changeValue <= pledge + minerFee) {
+            require(tx.outputs[0].value == currentValue - minerFee);
+        } else {
+            require(tx.outputs[0].value == pledge);
+            bytes changeBytecode = tx.inputs[this.activeInputIndex].lockingBytecode;
+            require(tx.outputs[1].lockingBytecode == changeBytecode);
+            require(tx.outputs[1].value == changeValue);
         }
     }
-    
-    
-    function refund(pubkey donorPk, sig donorSig) {
-      
-        require(hash160(donorPk) == hash160(donorPk));
-        require(checkSig(donorSig, donorPk));
-        require(tx.age >= 4320);
+
+    function reclaim(pubkey pk, sig s) {
+        require(hash160(pk) == funder);
+        require(checkSig(s, pk));
     }
 }
