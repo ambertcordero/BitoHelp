@@ -16,31 +16,36 @@
             Helping the world with fast, transparent blockchain-powered donations.
           </p>
 
-          <q-btn
-            label="Start Donating"
-            color="primary"
-            size="lg"
-            unelevated
-            class="hero-btn q-mt-lg"
-            to="/donate"
-            @click="$router.push('/donate')"
-          />
+          <div class="hero-buttons q-mt-lg">
+            <q-btn
+              label="Start Donating"
+              color="primary"
+              size="lg"
+              unelevated
+              class="hero-btn"
+              to="/donate"
+              @click="$router.push('/donate')"
+            />
+            <q-btn
+              label="Learn More"
+              size="lg"
+              outline
+              class="hero-btn-outline"
+              @click="$router.push('/donate')"
+            />
+          </div>
         </div>
 
       </div>
     </section>
 
-    <!-- FEATURED PROJECTS SECTION -->
     <section class="featured-projects-section q-py-xl q-px-md">
       <div class="container">
         <div class="q-mb-xl">
           <h2 class="section-title text-h3 text-weight-bold q-mb-sm">Featured Projects</h2>
           <p class="text-subtitle1 text-grey-6">Support impactful causes and make a difference in communities worldwide.</p>
         </div>
-
-        <!-- Projects Grid -->
         <div class="row q-col-gutter-lg">
-          <!-- Project Card 1 -->
           <div class="col-12 col-sm-6 col-md-3">
             <q-card class="project-card" flat bordered>
               <div class="project-image">
@@ -65,7 +70,6 @@
                     size="8px"
                   />
                 </div>
-                
                 <div class="row items-center q-mt-md">
                   <q-avatar size="24px" color="green-2" text-color="green" icon="verified">
                   </q-avatar>
@@ -74,7 +78,7 @@
             </q-card>
           </div>
 
-          <!-- Project Card 2 -->
+          
           <div class="col-12 col-sm-6 col-md-3">
             <q-card class="project-card" flat bordered>
               <div class="project-image">
@@ -108,7 +112,7 @@
             </q-card>
           </div>
 
-          <!-- Project Card 3 -->
+        
           <div class="col-12 col-sm-6 col-md-3">
             <q-card class="project-card" flat bordered>
               <div class="project-image">
@@ -142,7 +146,7 @@
             </q-card>
           </div>
 
-          <!-- Project Card 4 -->
+      
           <div class="col-12 col-sm-6 col-md-3">
             <q-card class="project-card" flat bordered>
               <div class="project-image">
@@ -179,11 +183,10 @@
       </div>
     </section>
 
-    <!-- OUR MISSION SECTION -->
+  
     <section class="mission-section q-py-xl q-px-md">
       <div class="container">
         <div class="row">
-          <!-- Left Content -->
           <div class="col-12 col-md-5 q-pr-xl">
             <h2 class="mission-heading text-weight-bold q-mb-lg">Our Mission</h2>
             
@@ -193,7 +196,7 @@
               We empower donors and nonprofits.
             </p>
 
-            <!-- Stats Grid Bottom Left -->
+      
             <div class="mission-visual-grid q-mt-xl">
               <div class="row q-col-gutter-sm">
                 <div class="col-6">
@@ -210,15 +213,12 @@
             </div>
           </div>
 
-          <!-- Right Visual Grid -->
+         
           <div class="col-12 col-md-7">
             <div class="mission-grid">
-              <!-- Top Right Large Image -->
               <div class="mission-grid-item mission-large-photo">
                 <img src="~assets/teacher.jpg" alt="Helping Community" />
               </div>
-
-              <!-- Bottom Grid -->
               <div class="row q-col-gutter-sm q-mt-sm">
                 <div class="col-4">
                   <div class="mission-photo-box">
@@ -240,7 +240,7 @@
           </div>
         </div>
 
-        <!-- Stats Section -->
+    
         <div class="row q-col-gutter-md q-mt-xl q-pt-xl">
           <div class="col-12 col-sm-4 text-center">
             <div class="stat-card q-pa-md">
@@ -268,7 +268,6 @@
    
     <section class="why-donate-section q-py-xl q-px-md">
       <div class="container">
-        <!-- Section Header -->
         <div class="row q-mb-xl">
           <div class="col-12 col-md-8">
             <h2 class="text-h3 text-weight-bold q-mb-md">Why Donate with Cryptocurrency?</h2>
@@ -278,9 +277,8 @@
           </div>
         </div>
 
-        <!-- Main Benefits Grid -->
+  
         <div class="row q-col-gutter-lg q-mb-xl">
-          <!-- Benefit 1 -->
           <div class="col-12 col-md-6">
             <div class="crypto-benefit-card">
               <div class="benefit-header q-mb-md">
@@ -301,7 +299,6 @@
             </div>
           </div>
 
-          <!-- Benefit 2 -->
           <div class="col-12 col-md-6">
             <div class="crypto-benefit-card">
               <div class="benefit-header q-mb-md">
@@ -326,7 +323,7 @@
             </div>
           </div>
 
-          <!-- Benefit 3 -->
+      
           <div class="col-12 col-md-6">
             <div class="crypto-benefit-card">
               <div class="benefit-header q-mb-md">
@@ -344,7 +341,7 @@
             </div>
           </div>
 
-          <!-- Benefit 4 -->
+    
           <div class="col-12 col-md-6">
             <div class="crypto-benefit-card">
               <div class="benefit-header q-mb-md">
@@ -363,7 +360,7 @@
           </div>
         </div>
 
-        <!-- Cause Areas -->
+    
         <div class="q-mb-xl">
           <h3 class="text-h5 text-weight-bold q-mb-lg">Where Your Donations Make an Impact</h3>
           <div class="row q-col-gutter-md">
@@ -409,7 +406,7 @@
           </div>
         </div>
 
-        <!-- CTA -->
+      
         <div class="crypto-cta-section q-mt-xl q-pt-lg">
           <div class="row items-center">
             <div class="col-12 col-md-7">
@@ -425,7 +422,7 @@
                 size="lg"
                 unelevated
                 padding="12px 32px"
-                to="/donate"
+                to="/charities"
               />
             </div>
           </div>
@@ -435,7 +432,6 @@
 
     <section class="donation-matters-section q-py-xl q-px-md">
       <div class="container">
-        <!-- Section Header -->
         <div class="q-mb-xl">
           <div class="row items-center justify-between">
             <div class="col-12 col-md-7">
@@ -454,7 +450,7 @@
           </div>
         </div>
 
-        <!-- Key Metrics Grid -->
+
         <div class="row q-col-gutter-lg q-mb-xl">
           <div class="col-12 col-md-4">
             <div class="metric-card">
@@ -493,7 +489,7 @@
           </div>
         </div>
 
-        <!-- Impact Stories -->
+      
         <div class="row q-col-gutter-lg q-mb-xl">
           <div class="col-12">
             <h3 class="text-h5 text-weight-bold q-mb-md">Real Impact, Real Stories</h3>
@@ -576,7 +572,7 @@
           </div>
         </div>
 
-        <!-- CTA Section -->
+    
         <div class="impact-cta-section q-mt-xl q-pt-xl">
           <div class="row items-center q-col-gutter-lg">
             <div class="col-12 col-md-7">
@@ -681,7 +677,6 @@
           <div class="col-12 col-md-10">
             <div class="about-content-professional">
               <div class="row q-col-gutter-xl items-center">
-                <!-- Left Text Content -->
                 <div class="col-12 col-md-6">
                   <div class="about-badge q-mb-md">About BitoHelp</div>
                   <h2 class="text-h3 text-weight-bold q-mb-md">Blockchain-Powered Social Impact</h2>
@@ -692,7 +687,7 @@
                     Every donation is tracked on-chain, ensuring complete visibility and accountability. Our mission is to make charitable giving more accessible, efficient, and impactful through the power of Bitcoin Cash.
                   </p>
 
-                  <!-- Key Features -->
+                
                   <div class="key-features">
                     <div class="row q-col-gutter-md q-mb-lg">
                       <div class="col-12 col-sm-6">
@@ -738,7 +733,7 @@
                   </div>
                 </div>
 
-                <!-- Right Image/Visual -->
+                
                 <div class="col-12 col-md-6">
                   <div class="about-visual-section">
                     <div class="about-main-image q-mb-md">
@@ -944,7 +939,7 @@ const testimonials = [
 </script>
 <style scoped>
 
-/* Hero Section Styles */
+
 .hero-section {
   min-height: 100vh;
   position: relative;
@@ -988,9 +983,10 @@ const testimonials = [
 }
 
 .hero-title {
-  font-size: 3.5rem;
+  font-size: 4.5rem;
   font-weight: 800;
-  line-height: 1.2;
+  margin-left: 10%;
+  line-height: 1;
   color: white;
   text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
 }
@@ -1005,7 +1001,15 @@ const testimonials = [
   line-height: 1.6;
   color: white;
   margin-top: 1.5rem;
+  margin-left: 10%;
   text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+.hero-buttons {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  margin-left: 10%;
 }
 
 .hero-btn {
@@ -1019,7 +1023,24 @@ const testimonials = [
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
 }
 
-/* Featured Projects Section */
+.hero-btn-outline {
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  border: 2px solid rgba(255, 255, 255, 0.8);
+  color: white;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  transition: all 0.3s ease;
+}
+
+.hero-btn-outline:hover {
+  background: rgba(255, 255, 255, 0.2);
+  border-color: white;
+  transform: scale(1.05);
+}
+
+
 .featured-projects-section {
   background: linear-gradient(180deg, #f8f9fa 0%, #ffffff 100%);
   padding: 80px 0;

@@ -2,7 +2,7 @@
 
 A blockchain-powered donation platform built with Quasar (Vue 3) and Django REST Framework. Enables transparent cryptocurrency donations to verified nonprofits using Bitcoin Cash (BCH) and CashScript smart contracts.
 
-## 🏗️ Project Structure
+##  Project Structure
 
 ```
 bitohelp/
@@ -24,7 +24,7 @@ bitohelp/
 └── package.json               # Node dependencies
 ```
 
-## 🚀 Quick Start
+##  Quick Start
 
 ### Option 1: Run Both Servers Automatically
 
@@ -54,7 +54,7 @@ pnpm dev
 npm run dev
 ```
 
-## 📦 Installation
+##  Installation
 
 ### Frontend Dependencies
 ```bash
@@ -73,14 +73,14 @@ python manage.py migrate
 python manage.py createsuperuser  # Optional: for admin panel
 ```
 
-## 🌐 Access Points
+##  Access Points
 
 - **Frontend**: http://localhost:9000
 - **Backend API**: http://localhost:8000/api/
 - **Django Admin**: http://localhost:8000/admin/
 - **API Docs**: http://localhost:8000/
 
-## 🔑 Key Features
+##  Key Features
 
 - ✅ **CashScript Integration**: Smart contract-based donations
 - ✅ **BCH Wallet Support**: Bitcoin.com wallet + TestNetWallet
@@ -89,13 +89,13 @@ python manage.py createsuperuser  # Optional: for admin panel
 - ✅ **Real-time Updates**: Vue 3 Composition API + Pinia
 - ✅ **Blockchain Explorer**: Direct transaction links
 
-## 📚 Documentation
+##  Documentation
 
 - [CashScript Integration Guide](BCH_INTEGRATION_GUIDE.md)
 - [Test Mode Guide](TEST_MODE_GUIDE.md)
 - [Backend API Documentation](backend/README.md)
 
-## 🛠️ Development
+##  Development
 
 ### Frontend Commands
 ```bash
@@ -114,7 +114,7 @@ python manage.py migrate              # Apply migrations
 python manage.py createsuperuser     # Create admin user
 ```
 
-## 🔧 Tech Stack
+##  Tech Stack
 
 ### Frontend
 - **Framework**: Quasar v2 + Vue 3
@@ -128,7 +128,7 @@ python manage.py createsuperuser     # Create admin user
 - **Database**: SQLite (dev) / PostgreSQL (production)
 - **CORS**: django-cors-headers
 
-## 📝 API Endpoints
+##  API Endpoints
 
 - `GET  /api/donations/` - List all donations
 - `POST /api/donations/` - Create donation
@@ -136,7 +136,7 @@ python manage.py createsuperuser     # Create admin user
 - `GET  /api/stats/` - Donation statistics
 - `GET  /api/health/` - Health check
 
-## 🎯 Environment
+##  Environment
 
 **Test Mode** is enabled by default in `src/composables/useBCHContract.js`:
 ```javascript
@@ -144,10 +144,10 @@ const isTestMode = ref(true)  // Set to false for real transactions
 const isTestnet = ref(true)   // chipnet vs mainnet
 ```
 
-## 📄 License
+##  License
 
 MIT License
 
-## 👥 Contributors
+##  Contributors
 
 Built with ❤️ for transparent charitable giving
