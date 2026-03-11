@@ -413,6 +413,8 @@ export const buildWalletConnectBchSignPayload = ({
   changeAddress,
   amountSatoshis,
   userPrompt,
+  signingAccount,
+  includeInlineSourceOutputs = false,
 }) => {
   const senderLockingBytecode = toLockingBytecode(senderAddress)
   const charityLockingBytecode = toLockingBytecode(charityAddress)
@@ -429,16 +431,22 @@ export const buildWalletConnectBchSignPayload = ({
     valueSatoshis: toExtendedJsonBigInt(utxo.valueSatoshis),
   }))
 
-  const inputs = plan.inputs.map((utxo, index) => ({
-    outpointIndex: utxo.vout,
-    outpointTransactionHash: toExtendedJsonUint8Array(hexToBytes(utxo.txid)),
-    sequenceNumber: walletConnectSequenceNumber,
-    unlockingBytecode: emptyUnlockingBytecode,
-    // Some Paytaca builds reconstruct input.sourceOutput from the separate
-    // sourceOutputs array, while others read it directly from each input.
-    // Include both forms for compatibility.
-    sourceOutput: sourceOutputs[index],
-  }))
+  const inputs = plan.inputs.map((utxo, index) => {
+    const input = {
+      outpointIndex: utxo.vout,
+      outpointTransactionHash: toExtendedJsonUint8Array(hexToBytes(utxo.txid)),
+      sequenceNumber: walletConnectSequenceNumber,
+      unlockingBytecode: emptyUnlockingBytecode,
+    }
+
+    // Default to Paytaca's current documented request shape (no inline sourceOutput).
+    // Keep an opt-in path for older wallet implementations.
+    if (includeInlineSourceOutputs) {
+      input.sourceOutput = sourceOutputs[index]
+    }
+
+    return input
+  })
 
   const outputs = [
     {
@@ -454,7 +462,7 @@ export const buildWalletConnectBchSignPayload = ({
     })
   }
 
-  return {
+  const payload = {
     transaction: {
       version: 2,
       locktime: 0,
@@ -465,6 +473,13 @@ export const buildWalletConnectBchSignPayload = ({
     broadcast: false,
     userPrompt,
   }
+
+  const normalizedAccount = normalizeChipnetAddress(signingAccount || senderAddress)
+  if (normalizedAccount) {
+    payload.account = normalizedAccount
+  }
+
+  return payload
 }
 
 export const extractWalletSignedTransaction = (result) => {

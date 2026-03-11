@@ -515,6 +515,8 @@ const summarizeBchSigningPayload = (payload) => {
     outputCount: outputs.length,
     sourceOutputCount: sourceOutputs.length,
     everyInputHasInlineSourceOutput: inputs.every((input) => Boolean(input?.sourceOutput)),
+    hasAccount: Boolean(payload?.account),
+    account: payload?.account || null,
     broadcast: payload?.broadcast,
     locktime: transaction?.locktime,
     version: transaction?.version,
@@ -526,19 +528,22 @@ const summarizeBchSigningCompatibility = (payload, walletClient) => {
   const firstSourceOutput = sourceOutputs[0] || null
   const sourceAddressVariants = lockingBytecodeToAddressVariants(firstSourceOutput?.lockingBytecode)
   const walletAddress = normalizeChipnetAddress(walletClient?.address)
-  const walletPayload = walletAddress ? walletAddress.split(':')[1] : null
+  const walletHashOnly = walletAddress ? walletAddress.split(':')[1] : null
+
+  const getHashOnly = (address) => {
+    const normalized = normalizeChipnetAddress(address)
+    return normalized ? normalized.split(':')[1] : null
+  }
+
+  const sourceHashOnly = getHashOnly(sourceAddressVariants?.bchtest)
 
   return {
     walletAddress: walletAddress || null,
-    walletPayload,
+    walletHashOnly,
     sourceAddressMainnet: sourceAddressVariants?.bitcoincash || null,
     sourceAddressChipnet: sourceAddressVariants?.bchtest || null,
-    sourcePayload: sourceAddressVariants?.payload || null,
-    samePayloadHash: Boolean(
-      walletPayload &&
-      sourceAddressVariants?.payload &&
-      walletPayload === sourceAddressVariants.payload,
-    ),
+    sourceHashOnly,
+    sameHash: Boolean(walletHashOnly && sourceHashOnly && walletHashOnly === sourceHashOnly),
     exactChipnetMatch: Boolean(
       walletAddress &&
       sourceAddressVariants?.bchtest &&
@@ -603,6 +608,7 @@ const validateBchWalletSession = (walletClient, chainId) => {
 
 const executeWalletRequest = async (walletClient, chainId, method, candidateParams) => {
   let lastError = null
+  let sawOpaqueWalletReject = false
 
   for (const params of candidateParams) {
     const requestSentPromise =
@@ -669,6 +675,15 @@ const executeWalletRequest = async (walletClient, chainId, method, candidatePara
         })
       }
 
+      if (
+        method === 'bch_signTransaction' &&
+        error &&
+        typeof error === 'object' &&
+        Object.keys(error).length === 0
+      ) {
+        sawOpaqueWalletReject = true
+      }
+
       lastError = error
 
       const message = String(error?.message || '')
@@ -676,6 +691,12 @@ const executeWalletRequest = async (walletClient, chainId, method, candidatePara
         break
       }
     }
+  }
+
+  if (method === 'bch_signTransaction' && sawOpaqueWalletReject) {
+    throw new Error(
+      'Paytaca rejected BCH signing without error details. This appears to be a wallet-side chipnet signing issue.',
+    )
   }
 
   throw lastError || new Error(`Wallet did not accept ${method} request.`)
@@ -840,6 +861,8 @@ const runChipnetBchDonationFlow = async ({
     changeAddress: senderAddress,
     amountSatoshis,
     userPrompt: `Donate ${amountCoin} BCH to ${charityAddress}`,
+    signingAccount: senderAddress,
+    includeInlineSourceOutputs: false,
   })
 
   if (import.meta.env.DEV) {
