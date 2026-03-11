@@ -10,10 +10,10 @@
               <div class="stat-icon">
                 <img src="~assets/bch.png" alt="Bitcoin" class="stat-icon-img" />
               </div>
-              <div class="stat-value">{{ totalDonations }} BCH</div>
+              <div class="stat-value">{{ totalReceived }} BCH</div>
               <div class="stat-badge">
                 <img src="~assets/donation.png" alt="Donate" class="stat-badge-img" />
-                <div class="badge-text">DONATE</div>
+                <div class="badge-text">{{ totalDonationCount }} DONATIONS</div>
               </div>
             </div>
           </q-card-section>
@@ -52,7 +52,7 @@
           <q-card-section>
             <div class="panel-title">DONATION MANAGANENT</div>
             <div class="fund-list">
-              <div v-for="fund in funds" :key="fund.name" class="fund-item">
+              <div v-for="fund in displayedFunds" :key="fund.name" class="fund-item">
                 <div class="fund-icon">
                   <img src="~assets/paytaca.png" alt="Fund" class="fund-icon-img" />
                 </div>
@@ -69,11 +69,14 @@
                 />
               </div>
             </div>
+            <div class="see-more" v-if="funds.length > 5" @click="toggleFunds">
+              {{ showAllFunds ? 'Show Less' : 'See More' }}
+            </div>
           </q-card-section>
         </q-card>
 
         <q-card class="wallet-panel">
-          <q-card-section>
+          <q-card-section class="wallet-panel-section">
             <div class="panel-title-with-info">
               <span>WALLET TRANSACTION</span>
               <q-icon name="info" size="20px" class="info-icon" />
@@ -89,33 +92,41 @@
                 </div>
                 <div class="wallet-info-section">
                   <div class="info-row">
-                    <span class="info-label">CONTRACT:</span>
-                    <span class="info-value">5 YEARS</span>
+                    <span class="info-label">CHARITY NAME:</span>
+                    <span class="info-value">{{ latestDonation?.cause || 'No donations yet' }}</span>
                   </div>
                   <div class="info-row">
-                    <span class="info-label">PERIOD OF WITHDRAWAL:</span>
-                    <span class="info-value">AFTER 30 DAYS</span>
+                    <span class="info-label">RECIPIENT ADDRESS:</span>
+                    <span class="info-value">{{ latestDonation ? CHARITY_WALLET.substring(0, 20) + '...' : 'No donations yet' }}</span>
+                  </div>
+                  <div class="info-row">
+                    <span class="info-label">COIN:</span>
+                    <span class="info-value">{{ latestDonation?.coin || 'Bitcoin Cash (BCH)' }}</span>
                   </div>
                   <div class="info-row">
                     <span class="info-label">AMOUNT:</span>
-                    <span class="info-value">1 MILLION</span>
-                  </div>
-                  <div class="info-row">
-                    <span class="info-label">BALANCE:</span>
-                    <span class="info-value highlight">4.5 MILLION</span>
+                    <span class="info-value highlight">{{ latestDonation?.amount || '0' }} {{ latestDonation?.coin || 'Bitcoin Cash (BCH)' }}</span>
                   </div>
                 </div>
               </div>
               <div class="wallet-addresses">
                 <div class="address-row">
-                  <span class="address-label">CONTRACT ADDRESS:</span>
-                  <span class="address-text">bitcoincash:qp3wjpa3tjlj042z2wv7hahsldgwhwy0rq9sywjpyy</span>
-                  <q-icon name="content_copy" size="14px" class="copy-icon" />
+                  <span class="address-label">CHARITY WALLET ADDRESS:</span>
+                  <span class="address-text">{{ CHARITY_WALLET }}</span>
+                  <q-btn 
+                    flat 
+                    dense 
+                    round 
+                    icon="content_copy" 
+                    size="xs"
+                    @click="copyToClipboard(CHARITY_WALLET)"
+                  >
+                    <q-tooltip>Copy address</q-tooltip>
+                  </q-btn>
                 </div>
                 <div class="address-row">
-                  <span class="address-label">DONOR ADDRESS:</span>
-                  <span class="address-text">bitcoincash:qp3wjpa3tjlj042z2wv7hahsldgwhwy0rq9sywjpyy</span>
-                  <q-icon name="content_copy" size="14px" class="copy-icon" />
+                  <span class="address-label">TOTAL RECEIVED:</span>
+                  <span class="address-text">{{ totalReceived }} BCH</span>
                 </div>
               </div>
             </div>
@@ -123,29 +134,117 @@
             <div class="recent-section">
               <div class="section-header">
                 <div class="section-title">RECENT DONATION</div>
-                <div class="section-type">BCH Transaction</div>
+                <div style="display: flex; gap: 8px; align-items: center;">
+                  <div class="section-type">BCH Transaction</div>
+                  <q-btn 
+                    flat
+                    dense
+                    round
+                    icon="refresh" 
+                    size="sm"
+                    color="primary"
+                    @click="refreshDonations"
+                    :loading="donationStore.isLoading"
+                  >
+                    <q-tooltip>Refresh donations</q-tooltip>
+                  </q-btn>
+                </div>
               </div>
 
-              <div v-for="(donation, index) in recentDonations" :key="index" class="donation-item">
-                <div class="donation-icon">
-                  <img :src="donation.image" alt="Paytaca" class="donation-icon-img" />
-                </div>
-                <div class="donation-info">
-                  <div class="donation-name">{{ donation.cause }}</div>
-                  <div class="donation-date">{{ donation.date }}</div>
-                </div>
-                <div class="donation-amount">{{ donation.amount }}BCH</div>
-                <q-btn 
-                  :label="donation.status" 
-                  :color="donation.status === 'Recieve' ? 'negative' : 'primary'" 
-                  size="sm" 
-                  unelevated 
-                  rounded
-                  class="donation-btn"
-                />
+              <div v-if="recentDonations.length === 0" class="no-donations">
+                <q-icon name="inbox" size="48px" color="grey-5" />
+                <div class="no-donations-text">No donations received yet</div>
               </div>
 
-              <div class="see-more">See More</div>
+              <q-expansion-item
+                v-for="(donation, index) in displayedDonations" 
+                :key="index"
+                class="donation-expansion-item"
+              >
+                <template v-slot:header>
+                  <div class="donation-item">
+                    <div class="donation-icon">
+                      <img src="~assets/paytaca.png" alt="BCH" class="donation-icon-img" />
+                    </div>
+                    <div class="donation-info">
+                      <div class="donation-name">{{ donation.cause }}</div>
+                      <div class="donation-date">{{ formatDate(donation.timestamp) }}</div>
+                    </div>
+                    <div class="donation-amount">{{ donation.amount }} BCH</div>
+                    <q-badge color="positive" rounded>Received</q-badge>
+                  </div>
+                </template>
+
+                <q-card flat bordered class="donor-details-card">
+                  <q-card-section>
+                    <div class="donor-title">Donor Information</div>
+                    
+                    <div class="donor-info-grid">
+                      <div class="donor-field">
+                        <q-icon name="person" color="primary" size="20px" />
+                        <div class="donor-field-content">
+                          <div class="donor-field-label">Name</div>
+                          <div class="donor-field-value">{{ donation.donor_name || 'Anonymous' }}</div>
+                        </div>
+                      </div>
+
+                      <div class="donor-field">
+                        <q-icon name="email" color="primary" size="20px" />
+                        <div class="donor-field-content">
+                          <div class="donor-field-label">Email</div>
+                          <div class="donor-field-value">{{ donation.donor_email || 'Not provided' }}</div>
+                        </div>
+                      </div>
+
+                      <div class="donor-field">
+                        <q-icon name="phone" color="primary" size="20px" />
+                        <div class="donor-field-content">
+                          <div class="donor-field-label">Contact</div>
+                          <div class="donor-field-value">{{ donation.donor_contact || 'Not provided' }}</div>
+                        </div>
+                      </div>
+
+                      <div class="donor-field">
+                        <q-icon name="description" color="primary" size="20px" />
+                        <div class="donor-field-content">
+                          <div class="donor-field-label">Message</div>
+                          <div class="donor-field-value">{{ donation.message || 'No message' }}</div>
+                        </div>
+                      </div>
+
+                      <div class="donor-field full-width">
+                        <q-icon name="link" color="primary" size="20px" />
+                        <div class="donor-field-content">
+                          <div class="donor-field-label">Transaction ID</div>
+                          <div class="donor-field-value txid">
+                            {{ donation.txid }}
+                            <q-btn 
+                              flat 
+                              dense 
+                              round 
+                              icon="content_copy" 
+                              size="xs"
+                              @click.stop="copyToClipboard(donation.txid)"
+                            />
+                            <q-btn 
+                              flat 
+                              dense 
+                              round 
+                              icon="open_in_new" 
+                              size="xs"
+                              @click.stop="openExplorer(donation.explorer_url)"
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </q-card-section>
+                </q-card>
+              </q-expansion-item>
+
+              <div class="see-more" v-if="recentDonations.length > 5" @click="toggleDonations">
+                {{ showAllDonations ? 'Show Less' : 'See More' }}
+              </div>
             </div>
           </q-card-section>
         </q-card>
@@ -212,14 +311,21 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useDonationStore } from '../stores/donation-store'
+import { useQuasar } from 'quasar'
 
+const $q = useQuasar()
 const donationStore = useDonationStore()
 
-const totalDonations = ref('5000')
+
+const CHARITY_WALLET = 'bitcoincash:qp3wjpa3tjlj042z2wv7hahsldgwhwy0rq9sywjpyy'
 const totalProjects = ref('100')
 const totalTransactions = ref('100')
+
+
+const showAllFunds = ref(false)
+const showAllDonations = ref(false)
 
 const funds = ref([
   { name: 'Medical Fund', icon: 'volunteer_activism', color: 'red', hours: '5 Years cont...', amount: '0.5BCH' },
@@ -232,14 +338,53 @@ const funds = ref([
   { name: 'Medical Fund', icon: 'health_and_safety', color: 'purple', hours: '5 Years cont...', amount: '0.57BCH' },
 ])
 
-const recentDonations = ref([
-  { cause: 'Medical Fund', date: 'Month of January', amount: '0.10', status: 'Recieve', image: new URL('../assets/paytaca.png', import.meta.url).href },
-  { cause: 'Medical Fund', date: 'Month of February', amount: '0.10', status: 'Recieve', image: new URL('../assets/paytaca.png', import.meta.url).href },
-  { cause: 'Medical Fund', date: 'Month of March', amount: '0.10', status: 'Claim', image: new URL('../assets/paytaca.png', import.meta.url).href },
-  { cause: 'Medical Fund', date: 'Month of April', amount: '0.10', status: 'Unclaimed', image: new URL('../assets/paytaca.png', import.meta.url).href },
-  { cause: 'Medical Fund', date: 'Month of May', amount: '0.10', status: 'Unclaimed', image: new URL('../assets/paytaca.png', import.meta.url).href },
-  { cause: 'Medical Fund', date: 'Month of June', amount: '0.10', status: 'Unclaimed', image: new URL('../assets/paytaca.png', import.meta.url).href },
-])
+
+const recentDonations = computed(() => {
+  const filtered = donationStore.donationHistory
+    .filter(d => d.recipient === CHARITY_WALLET)
+  
+  console.log('=== CHARITY PAGE DEBUG ===')
+  console.log('Total donations in history:', donationStore.donationHistory.length)
+  console.log('All donations:', donationStore.donationHistory)
+  console.log('CHARITY_WALLET:', CHARITY_WALLET)
+  console.log('Filtered donations for this charity:', filtered.length)
+  console.log('Filtered donations:', filtered)
+  
+  return filtered
+})
+
+
+
+const latestDonation = computed(() => {
+  return recentDonations.value.length > 0 ? recentDonations.value[0] : null
+})
+
+const displayedFunds = computed(() => {
+  return showAllFunds.value ? funds.value : funds.value.slice(0, 5)
+})
+
+const displayedDonations = computed(() => {
+  return showAllDonations.value ? recentDonations.value : recentDonations.value.slice(0, 5)
+})
+
+function toggleFunds() {
+  showAllFunds.value = !showAllFunds.value
+}
+
+function toggleDonations() {
+  showAllDonations.value = !showAllDonations.value
+}
+
+
+
+const totalReceived = computed(() => {
+  const total = recentDonations.value.reduce((sum, d) => {
+    return sum + parseFloat(d.amount || 0)
+  }, 0)
+  return total .toFixed(2)
+})
+
+const totalDonationCount = computed(() => recentDonations.value.length)
 
 const projects = ref([
   { name: 'Medical Fund', image: new URL('../assets/medical.jpg', import.meta.url).href },
@@ -273,8 +418,56 @@ const chartData = ref([
   },
 ])
 
+
+function formatDate(timestamp) {
+  if (!timestamp) return 'Unknown date'
+  const date = new Date(timestamp)
+  return date.toLocaleString('en-US', { 
+    month: 'short', 
+    day: 'numeric', 
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
+  })
+}
+
+function copyToClipboard(text) {
+  navigator.clipboard.writeText(text)
+  $q.notify({
+    type: 'positive',
+    message: 'Copied to clipboard!',
+    position: 'top',
+    timeout: 2000
+  })
+}
+
+function openExplorer(url) {
+  if (url) {
+    window.open(url, '_blank')
+  }
+}
+
+async function refreshDonations() {
+  console.log('Manually refreshing donations...')
+  await donationStore.fetchDonations(50)
+  $q.notify({
+    type: 'positive',
+    message: 'Donations refreshed',
+    position: 'top',
+    timeout: 1000
+  })
+}
+
 onMounted(async () => {
-  await donationStore.fetchDonations()
+  await donationStore.fetchDonations(50)
+  console.log('CharityPage mounted - donations fetched')
+})
+
+watch(() => donationStore.latestDonation, (newDonation) => {
+  if (newDonation) {
+    console.log('New donation detected:', newDonation)
+    donationStore.fetchDonations(50)
+  }
 })
 </script>
 
@@ -412,7 +605,7 @@ onMounted(async () => {
 /* Main Content */
 .main-content-row {
   display: grid;
-  grid-template-columns: 380px 1fr;
+  grid-template-columns: repeat(3, 1fr);
   gap: 20px;
   margin-bottom: 20px;
 }
@@ -420,6 +613,19 @@ onMounted(async () => {
 .management-panel,
 .wallet-panel {
   border-radius: 20px;
+}
+
+.management-panel {
+  grid-column: 1 / 3;
+  max-width: none;
+}
+
+.wallet-panel {
+  max-width: 420px;
+}
+
+.wallet-panel-section {
+  padding: 16px !important;
 }
 
 .panel-title {
@@ -442,8 +648,8 @@ onMounted(async () => {
 .info-icon {
   cursor: pointer;
   opacity: 0.7;
+  
 }
-
 /* Fund List */
 .fund-list {
   display: flex;
@@ -454,8 +660,8 @@ onMounted(async () => {
 .fund-item {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 12px;
+  gap: 8px;
+  padding: 10px;
   background: #f8f9fa;
   border-radius: 12px;
 }
@@ -463,73 +669,82 @@ onMounted(async () => {
 .fund-icon {
   background: white;
   border-radius: 50%;
-  padding: 8px;
+  padding: 6px;
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 40px;
-  height: 40px;
+  width: 35px;
+  height: 35px;
+  flex-shrink: 0;
 }
 
 .fund-icon-img {
-  width: 84px;
-  height: 84px;
+  width: 50px;
+  height: 50px;
   object-fit: contain;
 }
 
 .fund-info {
   flex: 1;
+  min-width: 0;
 }
 
 .fund-name {
   font-weight: 600;
-  font-size: 24px;
+  font-size: 14px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .fund-details {
-  font-size: 16px;
+  font-size: 12px;
   color: #666;
   margin-top: 2px;
-    font-style: italic;
+  font-style: italic;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .withdraw-btn {
   border-radius: 8px;
-  padding: 12px 34px;
-  
+  padding: 8px 16px;
+  flex-shrink: 0;
 }
 
-/* Wallet Box */
+
 .wallet-box {
   background: linear-gradient(135deg, #85acea 0%, #2563eb 100%);
-  border-radius: 20px;
-  padding: 25px;
+  border-radius: 15px;
+  padding: 15px;
   color: white;
-  margin-bottom: 20px;
+  margin-bottom: 15px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
-  border: 4px solid #fffdf9;
+  border: 3px solid #fffdf9;
+  width: 100%;
 }
 
 .wallet-content {
   display: flex;
-  gap: 30px;
-  margin-bottom: 20px;
-  align-items: center;
+  gap: 15px;
+  margin-bottom: 12px;
+  align-items: flex-start;
 }
 
 .wallet-icon-section {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 10px;
-  min-width: 120px;
+  gap: 6px;
+  min-width: 80px;
 }
 
 .wallet-icon-wrapper {
-  width: 100px;
-  height: 100px;
+  width: 70px;
+  height: 70px;
   background: linear-gradient(135deg, #7cb5fa85 0%, #89afec8b 100%);
-  border-radius: 20px;
+  border-radius: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -538,79 +753,82 @@ onMounted(async () => {
 }
 
 .wallet-icon {
-  width: 50px;
-  height: 50px;
+  width: 40px;
+  height: 40px;
   color: white;
 }
 
 .wallet-icon-img {
-  width: 160px;
-  height: 160px;
+  width: 100px;
+  height: 100px;
   object-fit: contain;
 }
 
 .wallet-title {
-  font-size: 18px;
+  font-size: 14px;
   font-weight: bold;
-  letter-spacing: 2px;
+  letter-spacing: 1px;
 }
 
 .wallet-info-section {
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 6px;
 }
 
 .info-row {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 4px 0;
+  padding: 1px 0;
 }
 
 .info-label {
-  font-size: 14px;
-  opacity: 0.95;
+  font-size: 10px;
+  opacity: 0.9;
   font-weight: 500;
+  letter-spacing: 0.3px;
 }
 
 .info-value {
-  font-size: 13px;
+  font-size: 11px;
   font-weight: bold;
   text-align: right;
 }
 
 .info-value.highlight {
   color: #fbbf24;
-  font-size: 14px;
+  font-size: 12px;
 }
 
 .wallet-addresses {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 6px;
   border-top: 1px solid rgba(255, 255, 255, 0.2);
-  padding-top: 15px;
+  padding-top: 10px;
+  margin-top: 6px;
 }
 
 .address-row {
   display: flex;
   align-items: center;
-  gap: 8px;
-  font-size: 10px;
+  gap: 6px;
+  font-size: 9px;
 }
 
 .address-label {
   font-weight: 600;
-  min-width: 130px;
-  opacity: 0.95;
+  min-width: 150px;
+  opacity: 0.9;
+  font-size: 9px;
 }
 
 .address-text {
   flex: 1;
-  font-family: monospace;
   word-break: break-all;
+  font-size: 8px;
   opacity: 0.9;
 }
 
@@ -624,36 +842,40 @@ onMounted(async () => {
   opacity: 1;
 }
 
-/* Recent Section */
+
 .recent-section {
-  margin-top: 20px;
+  margin-top: 0;
+  width: 100%;
+  max-height: 400px;
+  overflow-y: auto;
 }
 
 .section-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 15px;
+  margin-bottom: 12px;
 }
 
 .section-title {
-  font-size: 14px;
+  font-size: 13px;
   font-weight: bold;
 }
 
 .section-type {
-  font-size: 12px;
+  font-size: 11px;
   color: #666;
 }
 
 .donation-item {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 12px;
+  gap: 10px;
+  padding: 10px;
   background: #f8f9fa;
-  border-radius: 12px;
-  margin-bottom: 10px;
+  border-radius: 10px;
+  margin-bottom: 8px;
+  width: 100%;
 }
 
 .donation-icon {
@@ -671,8 +893,8 @@ onMounted(async () => {
 }
 
 .donation-icon-img {
-  width: 84px;
-  height: 84px;
+  width: 60px;
+  height: 60px;
   object-fit: contain;
 }
 
@@ -682,11 +904,11 @@ onMounted(async () => {
 
 .donation-name {
   font-weight: 600;
-  font-size: 14px;
+  font-size: 13px;
 }
 
 .donation-date {
-  font-size: 12px;
+  font-size: 11px;
   color: #666;
   margin-top: 2px;
   font-style: italic;
@@ -694,8 +916,8 @@ onMounted(async () => {
 
 .donation-amount {
   font-weight: bold;
-  margin-right: 10px;
-  font-size: 14px;
+  margin-right: 8px;
+  font-size: 13px;
 }
 
 .donation-btn {
@@ -712,10 +934,82 @@ onMounted(async () => {
   cursor: pointer;
   margin-top: 10px;
   padding: 8px;
+  width: 100%;
 }
 
 .see-more:hover {
   text-decoration: underline;
+}
+
+
+.donation-expansion-item {
+  margin-bottom: 8px;
+  width: 100%;
+}
+
+.no-donations {
+  text-align: center;
+  padding: 40px 20px;
+  color: #999;
+}
+
+.no-donations-text {
+  margin-top: 12px;
+  font-size: 14px;
+}
+
+.donor-details-card {
+  margin-top: 8px;
+  background: #fafbfc;
+}
+
+.donor-title {
+  font-size: 16px;
+  font-weight: bold;
+  margin-bottom: 16px;
+  color: #2c3e50;
+}
+
+.donor-info-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.donor-field {
+  display: flex;
+  gap: 12px;
+  align-items: start;
+}
+
+.donor-field.full-width {
+  grid-column: 1 / -1;
+}
+
+.donor-field-content {
+  flex: 1;
+}
+
+.donor-field-label {
+  font-size: 12px;
+  color: #666;
+  margin-bottom: 4px;
+  font-weight: 500;
+}
+
+.donor-field-value {
+  font-size: 14px;
+  color: #2c3e50;
+  font-weight: 600;
+  word-break: break-word;
+}
+
+.donor-field-value.txid {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  font-family: monospace;
 }
 
 /* Bottom Row - Projects and Chart */
@@ -726,7 +1020,7 @@ onMounted(async () => {
   margin-bottom: 20px;
 }
 
-/* Projects Section */
+
 .projects-section {
   display: flex;
   flex-direction: column;
@@ -775,7 +1069,7 @@ onMounted(async () => {
   font-size: 18px;
 }
 
-/* Chart */
+
 .chart-card {
   border-radius: 20px;
 }
@@ -864,6 +1158,22 @@ onMounted(async () => {
   color: #666;
 }
 
+@media (max-width: 1400px) {
+  .main-content-row {
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+  }
+
+  .management-panel {
+    grid-column: 1 / 2;
+  }
+
+  .wallet-panel {
+    grid-column: 2 / 3;
+    max-width: 100%;
+  }
+}
+
 @media (max-width: 1024px) {
   .stats-row {
     grid-template-columns: 1fr;
@@ -873,9 +1183,152 @@ onMounted(async () => {
     grid-template-columns: 1fr;
   }
 
+  .management-panel {
+    grid-column: 1;
+  }
+
+  .wallet-panel {
+    max-width: 100%;
+  }
+
+  .wallet-box {
+    max-width: 100%;
+  }
+
   .bottom-row {
     grid-template-columns: 1fr;
   }
 }
+
+@media (max-width: 768px) {
+  .charity-dashboard {
+    padding: 15px;
+  }
+
+  .stats-row {
+    gap: 15px;
+  }
+
+  .main-content-row {
+    gap: 15px;
+  }
+
+  .stat-card {
+    padding: 15px;
+  }
+
+  .wallet-content {
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .wallet-icon-section {
+    width: 100%;
+    flex-direction: row;
+    justify-content: center;
+  }
+
+  .wallet-info-section {
+    width: 100%;
+  }
+
+  .address-row {
+    flex-direction: column;
+    gap: 4px;
+    align-items: flex-start;
+  }
+
+  .address-label {
+    min-width: auto;
+  }
+
+  .info-row {
+    flex-direction: column;
+    gap: 2px;
+    align-items: flex-start;
+  }
+
+  .info-label {
+    font-size: 9px;
+  }
+
+  .info-value {
+    font-size: 10px;
+    text-align: left;
+  }
+
+  .donation-item {
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 8px;
+  }
+
+  .donation-icon-img {
+    width: 50px;
+    height: 50px;
+  }
+
+  .fund-item {
+    flex-wrap: wrap;
+    padding: 8px;
+  }
+
+  .fund-name {
+    font-size: 13px;
+  }
+
+  .recent-section {
+    max-width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .charity-dashboard {
+    padding: 10px;
+  }
+
+  .dashboard-container {
+    padding: 0;
+  }
+
+  .wallet-box {
+    padding: 12px;
+  }
+
+  .wallet-icon-wrapper {
+    width: 60px;
+    height: 60px;
+  }
+
+  .wallet-icon-img {
+    width: 80px;
+    height: 80px;
+  }
+
+  .wallet-title {
+    font-size: 12px;
+  }
+
+  .panel-title,
+  .panel-title-with-info {
+    font-size: 14px;
+  }
+
+  .donation-name,
+  .fund-name {
+    font-size: 12px;
+  }
+
+  .donation-date,
+  .fund-details {
+    font-size: 10px;
+  }
+
+  .address-text {
+    font-size: 7px;
+  }
+}
+
 </style>
 
