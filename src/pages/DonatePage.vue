@@ -68,16 +68,32 @@
           </div>
 
           <div class="mini-grid q-mt-md">
-            <div class="floating-field mini-field" :class="{ 'is-filled': form.amount !== '' }">
+            <div class="floating-field mini-field" :class="{ 'is-filled': form.deposit !== '' }">
               <input
-                :value="form.amount"
+                :value="form.deposit"
                 type="text"
                 inputmode="decimal"
                 placeholder=" "
-                @input="onDecimalInput('amount', $event)"
+                @input="onDecimalInput('deposit', $event)"
               />
-              <label>Amount to Donate</label>
-              <span class="php-conversion">{{ amountPhp }}</span>
+              <label>Deposit (BCH)</label>
+              <span class="php-conversion">{{ depositPhp }}</span>
+            </div>
+
+            <div class="floating-field mini-field is-filled">
+              <input value="5 minutes" type="text" readonly placeholder=" " />
+              <label>Interval</label>
+            </div>
+
+            <div class="floating-field mini-field" :class="{ 'is-filled': form.withdrawal !== '' }">
+              <input
+                :value="form.withdrawal"
+                type="text"
+                inputmode="decimal"
+                placeholder=" "
+                @input="onDecimalInput('withdrawal', $event)"
+              />
+              <label>Withdrawal (BCH)</label>
             </div>
           </div>
 
@@ -140,15 +156,25 @@
           </div>
 
           <div class="summary-row">
-            <span>Amount</span>
+            <span>Deposit</span>
             <span>{{ summaryAmount }}</span>
+          </div>
+
+          <div class="summary-row">
+            <span>Interval</span>
+            <span>5 minutes</span>
+          </div>
+
+          <div class="summary-row">
+            <span>Withdrawal</span>
+            <span>{{ summaryWithdrawal }}</span>
           </div>
 
           <div class="summary-divider"></div>
 
           <q-btn
             class="donate-now-btn"
-            label="DONATE NOW"
+            label="DEPOSIT NOW"
             unelevated
             :loading="isSubmittingDonation"
             :disable="isSubmittingDonation"
@@ -286,7 +312,8 @@ const form = ref({
   organization: null,
   coin: 'BCH',
   recipientAddress: '',
-  amount: '',
+  deposit: '',
+  withdrawal: '',
   donorName: '',
   email: '',
   contactNumber: '',
@@ -342,12 +369,21 @@ const summaryContract = computed(() => {
 })
 
 const summaryAmount = computed(() => {
-  const amount = Number(form.value.amount)
+  const amount = Number(form.value.deposit)
   if (!amount) {
     return '—'
   }
 
-  return `${amount.toFixed(8)} ${form.value.coin || ''}`
+  return `${amount.toFixed(8)} BCH`
+})
+
+const summaryWithdrawal = computed(() => {
+  const withdrawal = Number(form.value.withdrawal)
+  if (!withdrawal) {
+    return '—'
+  }
+
+  return `${withdrawal.toFixed(8)} BCH`
 })
 
 const formatPhp = (amount) =>
@@ -358,9 +394,9 @@ const formatPhp = (amount) =>
     maximumFractionDigits: 2,
   })
 
-const amountPhp = computed(() => {
-  const amount = Number(form.value.amount)
-  const rate = conversionRates.value[form.value.coin] || 0
+const depositPhp = computed(() => {
+  const amount = Number(form.value.deposit)
+  const rate = conversionRates.value.BCH || 0
   if (!amount || !rate) {
     return 'PHP —'
   }
@@ -838,7 +874,7 @@ const runChipnetBchDonationFlow = async ({
   senderAddress,
   charityAddress,
   amountSatoshis,
-  amountCoin,
+  depositCoin,
   donationId,
 }) => {
   const feeRate = Number.isFinite(bchConfig.feeRateSatsPerByte) ? bchConfig.feeRateSatsPerByte : 1.2
@@ -860,7 +896,7 @@ const runChipnetBchDonationFlow = async ({
     charityAddress,
     changeAddress: senderAddress,
     amountSatoshis,
-    userPrompt: `Donate ${amountCoin} BCH to ${charityAddress}`,
+    userPrompt: `Deposit ${depositCoin} BCH vault for ${charityAddress} (interval 5 minutes, withdrawal ${form.value.withdrawal || '0'} BCH)`,
     signingAccount: senderAddress,
     includeInlineSourceOutputs: false,
   })
@@ -916,7 +952,7 @@ const runChipnetBchDonationFlow = async ({
         coin: 'BCH',
         chain: chainId,
         recipientAddress: charityAddress,
-        amount: amountCoin,
+        amount: depositCoin,
       },
     }),
   )
@@ -960,7 +996,8 @@ const resetForm = () => {
     organization: null,
     coin: 'BCH',
     recipientAddress: '',
-    amount: '',
+    deposit: '',
+    withdrawal: '',
     donorName: '',
     email: '',
     contactNumber: '',
@@ -979,9 +1016,11 @@ const submitDonation = async () => {
   const typedRecipientAddress = normalizeRecipientAddress(form.value.recipientAddress)
   const recipientAddress =
     selectedCoin === 'BCH' ? normalizeChipnetAddress(typedRecipientAddress) : typedRecipientAddress
-  const amountUnitsEth = selectedCoin === 'ETH' ? parseEthAmountToWei(form.value.amount) : null
-  const amountUnitsBch = selectedCoin === 'BCH' ? decimalBchToSatoshis(form.value.amount) : null
-  const amountCoin = Number.parseFloat(String(form.value.amount ?? '').trim())
+  const depositUnitsEth = selectedCoin === 'ETH' ? parseEthAmountToWei(form.value.deposit) : null
+  const depositUnitsBch = selectedCoin === 'BCH' ? decimalBchToSatoshis(form.value.deposit) : null
+  const depositCoin = Number.parseFloat(String(form.value.deposit ?? '').trim())
+  const withdrawalUnitsBch = decimalBchToSatoshis(form.value.withdrawal)
+  const withdrawalCoin = Number.parseFloat(String(form.value.withdrawal ?? '').trim())
   const walletSnapshot = getWalletSnapshot()
   const walletClient = getWalletClient()
   const activeAccount = walletClient?.address || walletSnapshot?.address || ''
@@ -1076,13 +1115,43 @@ const submitDonation = async () => {
     return
   }
 
-  const amountUnits = selectedCoin === 'BCH' ? amountUnitsBch : amountUnitsEth
+  const amountUnits = selectedCoin === 'BCH' ? depositUnitsBch : depositUnitsEth
 
-  if (!Number.isFinite(amountCoin) || amountCoin <= 0 || !amountUnits) {
-    submissionStatus.value = { type: 'negative', message: 'Please enter a valid amount to donate.' }
+  if (!Number.isFinite(depositCoin) || depositCoin <= 0 || !amountUnits) {
+    submissionStatus.value = {
+      type: 'negative',
+      message: 'Please enter a valid BCH deposit amount.',
+    }
     notify({
       type: 'warning',
-      message: 'Please enter a valid amount to donate.',
+      message: 'Please enter a valid BCH deposit amount.',
+    })
+    return
+  }
+
+  if (
+    selectedCoin === 'BCH' &&
+    (!Number.isFinite(withdrawalCoin) || withdrawalCoin <= 0 || !withdrawalUnitsBch)
+  ) {
+    submissionStatus.value = {
+      type: 'negative',
+      message: 'Please enter a valid BCH withdrawal amount.',
+    }
+    notify({
+      type: 'warning',
+      message: 'Please enter a valid BCH withdrawal amount.',
+    })
+    return
+  }
+
+  if (selectedCoin === 'BCH' && withdrawalUnitsBch > amountUnits) {
+    submissionStatus.value = {
+      type: 'negative',
+      message: 'Withdrawal amount cannot be greater than deposit amount.',
+    }
+    notify({
+      type: 'warning',
+      message: 'Withdrawal amount cannot be greater than deposit amount.',
     })
     return
   }
@@ -1135,12 +1204,17 @@ const submitDonation = async () => {
     values: {
       coin: selectedCoin,
       amount: amountUnits.toString(),
-      amountCoin,
+      amountCoin: depositCoin,
+      deposit: amountUnits.toString(),
+      depositCoin,
+      withdrawal: withdrawalUnitsBch ? withdrawalUnitsBch.toString() : null,
+      withdrawalCoin: Number.isFinite(withdrawalCoin) ? withdrawalCoin : null,
+      intervalMinutes: 5,
     },
     contract: {
       version: '0.12.0',
       ...(selectedCoin === 'BCH'
-        ? { type: 'direct-bch-transfer', contractPath: CASHSCRIPT_CONTRACT_PATH }
+        ? { type: 'recurring-bch-vault', contractPath: CASHSCRIPT_CONTRACT_PATH }
         : { type: 'direct-eth-transfer' }),
     },
   }
@@ -1164,7 +1238,7 @@ const submitDonation = async () => {
         senderAddress: activeAccount,
         charityAddress: recipientAddress,
         amountSatoshis: amountUnits,
-        amountCoin,
+        depositCoin,
         donationId,
       })
 
@@ -1187,7 +1261,7 @@ const submitDonation = async () => {
     window.dispatchEvent(
       new CustomEvent(WALLET_BALANCE_ADJUST_EVENT, {
         detail: {
-          delta: -amountCoin,
+          delta: -depositCoin,
           chain: activeChain,
           address: activeAccount,
         },
@@ -1210,7 +1284,7 @@ const submitDonation = async () => {
           coin: selectedCoin,
           chain: activeChain,
           recipientAddress,
-          amount: amountCoin,
+          amount: depositCoin,
         },
       }),
     )

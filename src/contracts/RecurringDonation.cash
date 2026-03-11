@@ -1,7 +1,19 @@
 pragma cashscript ^0.12.0;
 
-contract RecurringDonation(bytes20 pubkeyhash, int withdrawalAmount) {
+contract RecurringDonation(
+    bytes20 pubkeyhash,
+    int withdrawalAmount,
+    int intervalBlocks
+) {
     function withdraw(pubkey pk, sig s) {
+        // Relative timelock via BIP68 needs tx version 2
+        require(tx.version == 2);
+
+        // Interval must be greater than 0 blocks
+        require(intervalBlocks > 0);
+
+        // The contract UTXO must be old enough before withdrawal is allowed
+        require(this.age >= intervalBlocks);
 
         bytes25 recipientLock = new LockingBytecodeP2PKH(pubkeyhash);
 
@@ -11,8 +23,23 @@ contract RecurringDonation(bytes20 pubkeyhash, int withdrawalAmount) {
         // Ensure the public key matches the stored pubkeyhash
         require(new LockingBytecodeP2PKH(hash160(pk)) == recipientLock);
 
-        // Ensure correct withdrawal amount
+        int currentValue = tx.inputs[this.activeInputIndex].value;
+        int minerFee = 1000;
+
+        // Must have enough balance for payout + fee
+        require(currentValue >= withdrawalAmount + minerFee);
+
+        int remaining = currentValue - withdrawalAmount - minerFee;
+
+        // Output 0: send withdrawal to recipient
         require(tx.outputs[0].value == withdrawalAmount);
         require(tx.outputs[0].lockingBytecode == recipientLock);
+
+        // Output 1: send remaining balance back to this same contract
+        // so the timer resets after every withdrawal
+        if (remaining >= 546) {
+            require(tx.outputs[1].lockingBytecode == this.activeBytecode);
+            require(tx.outputs[1].value == remaining);
+        }
     }
 }
