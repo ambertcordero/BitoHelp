@@ -17,16 +17,30 @@
 
         <q-select 
           v-model="form.cause" 
-          :options="nonprofitOptions" 
+          :options="nonprofitOptions"
+          option-label="label"
+          option-value="value"
+          emit-value
+          map-options
           outlined 
           label="Choose non-profit or a cause" 
           class="q-mb-md"
-        />
+        >
+          <template v-slot:option="scope">
+            <q-item v-bind="scope.itemProps">
+              <q-item-section>
+                <q-item-label>{{ scope.opt.label }}</q-item-label>
+                <q-item-label caption>{{ scope.opt.address }}</q-item-label>
+              </q-item-section>
+            </q-item>
+          </template>
+        </q-select>
         <q-input 
           v-model="form.recipientAddress" 
           outlined 
           label="Recipient BCH Address" 
-          hint="Enter the nonprofit's Bitcoin Cash address"
+          hint="Address auto-filled when nonprofit is selected"
+          readonly
           class="q-mb-md" 
         />
         <div class="row q-col-gutter-md">
@@ -144,7 +158,7 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, watch } from 'vue'
 import { useBCHContract } from '../composables/useBCHContract'
 import { useDonationStore } from '../stores/donation-store'
 import { useQuasar } from 'quasar'
@@ -154,12 +168,30 @@ const $q = useQuasar()
 const router = useRouter()
 const donationStore = useDonationStore()
 
-const nonprofitOptions = ref([
-  'Typhoon Relief Fund',
-  'Educational Fund',
-  'Medical Fund',
-  'Health Fund'
+const nonprofits = ref([
+  {
+    label: 'Typhoon Relief Fund',
+    value: 'Typhoon Relief Fund',
+    address: 'bitcoincash:qp3wjpa3tjlj042z2wv7hahsldgwhwy0rq9sywjpyy'
+  },
+  {
+    label: 'Educational Fund',
+    value: 'Educational Fund',
+    address: 'bitcoincash:qr4aadjrpu73d2wxwkxkcrt6gqxgu6a7usxfm96fst'
+  },
+  {
+    label: 'Medical Fund',
+    value: 'Medical Fund',
+    address: 'bitcoincash:qpwngrc5j8d7vvz0a0mn0z5yak4axf8mvqnkzgd4n8'
+  },
+  {
+    label: 'Health Fund',
+    value: 'Health Fund',
+    address: 'bitcoincash:qzj5zu6fgg8v2we82gh76xnrk9njcregluzgaztm45'
+  }
 ])
+
+const nonprofitOptions = ref(nonprofits.value)
 
 const cryptoOptions = ref([
   'Bitcoin Cash (BCH)',
@@ -190,14 +222,17 @@ const {
 const processing = ref(false)
 const txResult = ref(null)
 
+// Watch for nonprofit selection and auto-fill address
+watch(() => form.value.cause, (newCause) => {
+  if (newCause) {
+    const selectedNonprofit = nonprofits.value.find(np => np.value === newCause)
+    if (selectedNonprofit) {
+      form.value.recipientAddress = selectedNonprofit.address
+    }
+  }
+})
 
 const handleDonation = async () => {
-  console.log(' handleDonation called')
-  console.log('Test Mode:', isTestMode.value)
-  console.log('Connected:', isConnected.value)
-  console.log('Form data:', form.value)
-  
-  
   if (!isTestMode.value && !isConnected.value) {
     $q.notify({
       type: 'warning',
@@ -234,7 +269,6 @@ const handleDonation = async () => {
   processing.value = true
   
   try {
-    console.log('🔹 Starting donation process...')
     const donationData = {
       recipient: form.value.recipientAddress,
       amount: form.value.amount,
@@ -246,12 +280,9 @@ const handleDonation = async () => {
       donorContact: form.value.contact
     }
 
-    console.log(' Sending donation with data:', donationData)
     const result = await sendDonation(donationData)
-    console.log(' sendDonation result:', result)
     txResult.value = result
 
-    // Save donation to store (Django API)
     await donationStore.addDonation({
       ...donationData,
       txid: result.txid,
@@ -275,34 +306,24 @@ const handleDonation = async () => {
       ]
     })
 
- 
-    console.log(' Donation completed:', {
+    console.log('Donation completed:', {
       cause: form.value.cause,
       amount: form.value.amount,
-      coin: form.value.coin,
-      donor: form.value.name,
       txid: result.txid
     })
 
-   
-    console.log(' Redirecting to /continue in 2 seconds...')
     setTimeout(() => {
-      console.log(' Executing router.push(/continue)')
       router.push('/continue')
-        .then(() => console.log(' Navigation successful'))
-        .catch(err => console.error(' Navigation failed:', err))
     }, 2000)
 
   } catch (error) {
-    console.error(' Donation error:', error)
-    console.error('Error details:', error.message, error.stack)
+    console.error('Donation error:', error)
     $q.notify({
       type: 'negative',
       message: 'Failed to send donation',
       caption: error.message
     })
   } finally {
-    console.log(' Setting processing to false')
     processing.value = false
   }
 }
