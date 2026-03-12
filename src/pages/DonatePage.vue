@@ -68,32 +68,16 @@
           </div>
 
           <div class="mini-grid q-mt-md">
-            <div class="floating-field mini-field" :class="{ 'is-filled': form.deposit !== '' }">
+            <div class="floating-field mini-field" :class="{ 'is-filled': form.amount !== '' }">
               <input
-                :value="form.deposit"
+                :value="form.amount"
                 type="text"
                 inputmode="decimal"
                 placeholder=" "
-                @input="onDecimalInput('deposit', $event)"
+                @input="onDecimalInput('amount', $event)"
               />
-              <label>Deposit (BCH)</label>
-              <span class="php-conversion">{{ depositPhp }}</span>
-            </div>
-
-            <div class="floating-field mini-field is-filled">
-              <input value="5 minutes" type="text" readonly placeholder=" " />
-              <label>Interval</label>
-            </div>
-
-            <div class="floating-field mini-field" :class="{ 'is-filled': form.withdrawal !== '' }">
-              <input
-                :value="form.withdrawal"
-                type="text"
-                inputmode="decimal"
-                placeholder=" "
-                @input="onDecimalInput('withdrawal', $event)"
-              />
-              <label>Withdrawal (BCH)</label>
+              <label>Amount to Donate</label>
+              <span class="php-conversion">{{ amountPhp }}</span>
             </div>
           </div>
 
@@ -156,25 +140,15 @@
           </div>
 
           <div class="summary-row">
-            <span>Deposit</span>
+            <span>Amount</span>
             <span>{{ summaryAmount }}</span>
-          </div>
-
-          <div class="summary-row">
-            <span>Interval</span>
-            <span>5 minutes</span>
-          </div>
-
-          <div class="summary-row">
-            <span>Withdrawal</span>
-            <span>{{ summaryWithdrawal }}</span>
           </div>
 
           <div class="summary-divider"></div>
 
           <q-btn
             class="donate-now-btn"
-            label="DEPOSIT NOW"
+            label="DONATE NOW"
             unelevated
             :loading="isSubmittingDonation"
             :disable="isSubmittingDonation"
@@ -245,6 +219,8 @@ const DONATION_SENT_EVENT = 'bitohelp:donation-sent'
 const WALLET_CLIENT_GLOBAL_KEY = '__bitohelpWalletClient__'
 const WALLET_REQUEST_TIMEOUT_MS = 90000
 const BCH_CONFIRMATION_MIN = 1
+const PAYTACA_BCH_CHIPNET_WC_LIMITATION_MESSAGE =
+  'Paytaca approved the request but did not return a signed BCH chipnet transaction over WalletConnect. No funds were sent. This appears to be a wallet-side issue.'
 
 const bchConfig = getBchRuntimeConfig()
 
@@ -312,8 +288,7 @@ const form = ref({
   organization: null,
   coin: 'BCH',
   recipientAddress: '',
-  deposit: '',
-  withdrawal: '',
+  amount: '',
   donorName: '',
   email: '',
   contactNumber: '',
@@ -369,21 +344,12 @@ const summaryContract = computed(() => {
 })
 
 const summaryAmount = computed(() => {
-  const amount = Number(form.value.deposit)
+  const amount = Number(form.value.amount)
   if (!amount) {
     return '—'
   }
 
-  return `${amount.toFixed(8)} BCH`
-})
-
-const summaryWithdrawal = computed(() => {
-  const withdrawal = Number(form.value.withdrawal)
-  if (!withdrawal) {
-    return '—'
-  }
-
-  return `${withdrawal.toFixed(8)} BCH`
+  return `${amount.toFixed(8)} ${form.value.coin || ''}`
 })
 
 const formatPhp = (amount) =>
@@ -394,9 +360,9 @@ const formatPhp = (amount) =>
     maximumFractionDigits: 2,
   })
 
-const depositPhp = computed(() => {
-  const amount = Number(form.value.deposit)
-  const rate = conversionRates.value.BCH || 0
+const amountPhp = computed(() => {
+  const amount = Number(form.value.amount)
+  const rate = conversionRates.value[form.value.coin] || 0
   if (!amount || !rate) {
     return 'PHP —'
   }
@@ -490,6 +456,7 @@ const serializeErrorDetails = (error) => {
     prototype: prototypeName,
     toString: typeof error?.toString === 'function' ? String(error.toString()) : null,
     message: error?.message,
+    reason: error?.reason,
     code: error?.code,
     name: error?.name,
   }
@@ -644,7 +611,6 @@ const validateBchWalletSession = (walletClient, chainId) => {
 
 const executeWalletRequest = async (walletClient, chainId, method, candidateParams) => {
   let lastError = null
-  let sawOpaqueWalletReject = false
 
   for (const params of candidateParams) {
     const requestSentPromise =
@@ -698,10 +664,15 @@ const executeWalletRequest = async (walletClient, chainId, method, candidatePara
       const pendingHistory = walletClient?.getPendingHistory?.() || []
 
       if (import.meta.env.DEV) {
+        // Paytaca bug: error responses use `reason` instead of `message`.
+        // Extract it from the history record if available.
+        const historyError = historyRecord?.response?.error
+        const walletReason = historyError?.reason || error?.reason
         console.error('[BitoHelp][donation-request:error]', {
           method,
           chainId,
           error,
+          walletReason: walletReason || '(not present)',
           errorDetails: serializeErrorDetails(error),
           requestMeta,
           historyRecord,
@@ -709,15 +680,6 @@ const executeWalletRequest = async (walletClient, chainId, method, candidatePara
           walletSession:
             method === 'bch_signTransaction' ? getWalletSessionSummary(walletClient) : undefined,
         })
-      }
-
-      if (
-        method === 'bch_signTransaction' &&
-        error &&
-        typeof error === 'object' &&
-        Object.keys(error).length === 0
-      ) {
-        sawOpaqueWalletReject = true
       }
 
       lastError = error
@@ -729,21 +691,21 @@ const executeWalletRequest = async (walletClient, chainId, method, candidatePara
     }
   }
 
-  if (method === 'bch_signTransaction' && sawOpaqueWalletReject) {
-    throw new Error(
-      'Paytaca rejected BCH signing without error details. This appears to be a wallet-side chipnet signing issue.',
-    )
-  }
-
   throw lastError || new Error(`Wallet did not accept ${method} request.`)
 }
 
 const getErrorMessage = (error, fallback) => {
+  // Paytaca uses a non-standard `reason` field instead of `message` in its
+  // WalletConnect JSON-RPC error responses (known upstream bug).  Surface it.
   const message =
     error?.message ||
+    error?.reason ||
     error?.cause?.message ||
+    error?.cause?.reason ||
     error?.data?.message ||
+    error?.data?.reason ||
     error?.error?.message ||
+    error?.error?.reason ||
     fallback
 
   if (typeof message !== 'string') {
@@ -863,9 +825,33 @@ const signBchTransactionWithWalletConnect = async ({ walletClient, chainId, sign
 
   await ensureWalletSessionReachable(walletClient)
 
-  return executeWalletRequest(walletClient, resolvedChainId, 'bch_signTransaction', [
-    signingPayload,
-  ])
+  try {
+    return await executeWalletRequest(walletClient, resolvedChainId, 'bch_signTransaction', [
+      signingPayload,
+    ])
+  } catch (error) {
+    const details = serializeErrorDetails(error)
+
+    // Paytaca sends { code, reason } instead of { code, message } — check
+    // whether the non-standard `reason` field leaked through the SDK.
+    const walletReason = details?.reason || error?.reason
+    if (walletReason && typeof walletReason === 'string') {
+      throw new Error(`Wallet signing error: ${walletReason}`)
+    }
+
+    const hasOpaqueWalletError =
+      details?.prototype === 'Object' &&
+      details?.message === undefined &&
+      details?.reason === undefined &&
+      details?.code === undefined &&
+      details?.name === undefined
+
+    if (resolvedChainId === 'bch:bchtest' && hasOpaqueWalletError) {
+      throw new Error(PAYTACA_BCH_CHIPNET_WC_LIMITATION_MESSAGE)
+    }
+
+    throw error
+  }
 }
 
 const runChipnetBchDonationFlow = async ({
@@ -874,7 +860,7 @@ const runChipnetBchDonationFlow = async ({
   senderAddress,
   charityAddress,
   amountSatoshis,
-  depositCoin,
+  amountCoin,
   donationId,
 }) => {
   const feeRate = Number.isFinite(bchConfig.feeRateSatsPerByte) ? bchConfig.feeRateSatsPerByte : 1.2
@@ -896,8 +882,10 @@ const runChipnetBchDonationFlow = async ({
     charityAddress,
     changeAddress: senderAddress,
     amountSatoshis,
-    userPrompt: `Deposit ${depositCoin} BCH vault for ${charityAddress} (interval 5 minutes, withdrawal ${form.value.withdrawal || '0'} BCH)`,
+    userPrompt: `Donate ${amountCoin} BCH to ${charityAddress}`,
     signingAccount: senderAddress,
+    // Paytaca's parseSessionRequest matches inputs→sourceOutputs by
+    // outpointTransactionHash+outpointIndex; inline sourceOutput is redundant.
     includeInlineSourceOutputs: false,
   })
 
@@ -952,7 +940,7 @@ const runChipnetBchDonationFlow = async ({
         coin: 'BCH',
         chain: chainId,
         recipientAddress: charityAddress,
-        amount: depositCoin,
+        amount: amountCoin,
       },
     }),
   )
@@ -996,8 +984,7 @@ const resetForm = () => {
     organization: null,
     coin: 'BCH',
     recipientAddress: '',
-    deposit: '',
-    withdrawal: '',
+    amount: '',
     donorName: '',
     email: '',
     contactNumber: '',
@@ -1016,11 +1003,9 @@ const submitDonation = async () => {
   const typedRecipientAddress = normalizeRecipientAddress(form.value.recipientAddress)
   const recipientAddress =
     selectedCoin === 'BCH' ? normalizeChipnetAddress(typedRecipientAddress) : typedRecipientAddress
-  const depositUnitsEth = selectedCoin === 'ETH' ? parseEthAmountToWei(form.value.deposit) : null
-  const depositUnitsBch = selectedCoin === 'BCH' ? decimalBchToSatoshis(form.value.deposit) : null
-  const depositCoin = Number.parseFloat(String(form.value.deposit ?? '').trim())
-  const withdrawalUnitsBch = decimalBchToSatoshis(form.value.withdrawal)
-  const withdrawalCoin = Number.parseFloat(String(form.value.withdrawal ?? '').trim())
+  const amountUnitsEth = selectedCoin === 'ETH' ? parseEthAmountToWei(form.value.amount) : null
+  const amountUnitsBch = selectedCoin === 'BCH' ? decimalBchToSatoshis(form.value.amount) : null
+  const amountCoin = Number.parseFloat(String(form.value.amount ?? '').trim())
   const walletSnapshot = getWalletSnapshot()
   const walletClient = getWalletClient()
   const activeAccount = walletClient?.address || walletSnapshot?.address || ''
@@ -1115,43 +1100,13 @@ const submitDonation = async () => {
     return
   }
 
-  const amountUnits = selectedCoin === 'BCH' ? depositUnitsBch : depositUnitsEth
+  const amountUnits = selectedCoin === 'BCH' ? amountUnitsBch : amountUnitsEth
 
-  if (!Number.isFinite(depositCoin) || depositCoin <= 0 || !amountUnits) {
-    submissionStatus.value = {
-      type: 'negative',
-      message: 'Please enter a valid BCH deposit amount.',
-    }
+  if (!Number.isFinite(amountCoin) || amountCoin <= 0 || !amountUnits) {
+    submissionStatus.value = { type: 'negative', message: 'Please enter a valid amount to donate.' }
     notify({
       type: 'warning',
-      message: 'Please enter a valid BCH deposit amount.',
-    })
-    return
-  }
-
-  if (
-    selectedCoin === 'BCH' &&
-    (!Number.isFinite(withdrawalCoin) || withdrawalCoin <= 0 || !withdrawalUnitsBch)
-  ) {
-    submissionStatus.value = {
-      type: 'negative',
-      message: 'Please enter a valid BCH withdrawal amount.',
-    }
-    notify({
-      type: 'warning',
-      message: 'Please enter a valid BCH withdrawal amount.',
-    })
-    return
-  }
-
-  if (selectedCoin === 'BCH' && withdrawalUnitsBch > amountUnits) {
-    submissionStatus.value = {
-      type: 'negative',
-      message: 'Withdrawal amount cannot be greater than deposit amount.',
-    }
-    notify({
-      type: 'warning',
-      message: 'Withdrawal amount cannot be greater than deposit amount.',
+      message: 'Please enter a valid amount to donate.',
     })
     return
   }
@@ -1204,17 +1159,12 @@ const submitDonation = async () => {
     values: {
       coin: selectedCoin,
       amount: amountUnits.toString(),
-      amountCoin: depositCoin,
-      deposit: amountUnits.toString(),
-      depositCoin,
-      withdrawal: withdrawalUnitsBch ? withdrawalUnitsBch.toString() : null,
-      withdrawalCoin: Number.isFinite(withdrawalCoin) ? withdrawalCoin : null,
-      intervalMinutes: 5,
+      amountCoin,
     },
     contract: {
       version: '0.12.0',
       ...(selectedCoin === 'BCH'
-        ? { type: 'recurring-bch-vault', contractPath: CASHSCRIPT_CONTRACT_PATH }
+        ? { type: 'direct-bch-transfer', contractPath: CASHSCRIPT_CONTRACT_PATH }
         : { type: 'direct-eth-transfer' }),
     },
   }
@@ -1238,7 +1188,7 @@ const submitDonation = async () => {
         senderAddress: activeAccount,
         charityAddress: recipientAddress,
         amountSatoshis: amountUnits,
-        depositCoin,
+        amountCoin,
         donationId,
       })
 
@@ -1261,7 +1211,7 @@ const submitDonation = async () => {
     window.dispatchEvent(
       new CustomEvent(WALLET_BALANCE_ADJUST_EVENT, {
         detail: {
-          delta: -depositCoin,
+          delta: -amountCoin,
           chain: activeChain,
           address: activeAccount,
         },
@@ -1284,7 +1234,7 @@ const submitDonation = async () => {
           coin: selectedCoin,
           chain: activeChain,
           recipientAddress,
-          amount: depositCoin,
+          amount: amountCoin,
         },
       }),
     )
@@ -1316,6 +1266,8 @@ const submitDonation = async () => {
       error,
       'Donation transaction failed or was rejected by wallet.',
     )
+    const isKnownPaytacaChipnetLimitation =
+      failureMessage === PAYTACA_BCH_CHIPNET_WC_LIMITATION_MESSAGE
 
     const isConfirmationTimeout = /confirmation timed out/i.test(failureMessage)
     if (selectedCoin === 'BCH' && !isConfirmationTimeout) {
@@ -1326,13 +1278,15 @@ const submitDonation = async () => {
     }
 
     submissionStatus.value = {
-      type: 'negative',
+      type: isKnownPaytacaChipnetLimitation ? 'warning' : 'negative',
       message: failureMessage,
     }
-    notify({
-      type: 'negative',
-      message: failureMessage,
-    })
+    if (!isKnownPaytacaChipnetLimitation) {
+      notify({
+        type: 'negative',
+        message: failureMessage,
+      })
+    }
   } finally {
     isSubmittingDonation.value = false
   }

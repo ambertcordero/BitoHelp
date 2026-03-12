@@ -323,6 +323,12 @@ const toLockingBytecode = (address) => {
   throw new Error('Unsupported BCH address type for donation outputs.')
 }
 
+// const reverseBytes = (bytes) => {
+//   const copy = new Uint8Array(bytes)
+//   copy.reverse()
+//   return copy
+// }
+
 const bytesToHex = (bytes) =>
   Array.from(bytes)
     .map((b) => b.toString(16).padStart(2, '0'))
@@ -420,10 +426,17 @@ export const buildWalletConnectBchSignPayload = ({
   const charityLockingBytecode = toLockingBytecode(charityAddress)
   const changeLockingBytecode = toLockingBytecode(changeAddress)
   const emptyUnlockingBytecode = '<Uint8Array: 0x>'
+  // Paytaca's own WalletConnect example uses sequenceNumber 0.
+  // Using 0xfffffffe caused 'missing-inputs' in some combos.
   const walletConnectSequenceNumber = 0
 
   const sourceOutputs = plan.inputs.map((utxo) => ({
     outpointIndex: utxo.vout,
+    // Watchtower API returns txid in display (big-endian) order.
+    // libauth internally uses little-endian, but Paytaca's parseSessionRequest
+    // only compares bytes via binToHex for matching — order doesn't matter
+    // for matching.  Try display order first (no reversal); if signing
+    // still fails with "missing-inputs", the byte order isn't the cause.
     outpointTransactionHash: toExtendedJsonUint8Array(hexToBytes(utxo.txid)),
     sequenceNumber: walletConnectSequenceNumber,
     unlockingBytecode: emptyUnlockingBytecode,
@@ -439,8 +452,6 @@ export const buildWalletConnectBchSignPayload = ({
       unlockingBytecode: emptyUnlockingBytecode,
     }
 
-    // Default to Paytaca's current documented request shape (no inline sourceOutput).
-    // Keep an opt-in path for older wallet implementations.
     if (includeInlineSourceOutputs) {
       input.sourceOutput = sourceOutputs[index]
     }
