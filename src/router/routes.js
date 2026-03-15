@@ -14,10 +14,10 @@ const routes = [
     ],
   },
   {
-    path: '/continue',
+    path: '/donor',
     component: () => import('layouts/MainLayout.vue'), 
     children: [
-      { path: '', component: () => import('pages/UserPage.vue') }
+      { path: '', component: () => import('pages/DonorPage.vue') }
     ],
   },
   {
@@ -28,10 +28,24 @@ const routes = [
     ],
   },
   {
+    path: '/dashboard',
+    component: () => import('layouts/MainLayout.vue'), 
+    children: [
+      { path: '', component: () => import('pages/DashboardPage.vue') }
+    ],
+  },
+  {
     path: '/charities',
     component: () => import('layouts/MainLayout.vue'), 
     children: [
       { path: '', component: () => import('pages/ProjectPage.vue') }
+    ],
+  },
+  {
+    path: '/donor',
+    component: () => import('layouts/MainLayout.vue'), 
+    children: [
+      { path: '', component: () => import('pages/DonorPage.vue') }
     ],
   },
 
