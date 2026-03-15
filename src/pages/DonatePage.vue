@@ -68,59 +68,68 @@
           class="q-mt-md"
         />
 
-        <div class="section-title q-mt-lg">Donation Schedule</div>
+        <!-- Horizontal Layout for Donation Schedule and Contract Agreement -->
+        <div class="row q-col-gutter-md q-mt-lg">
+          <!-- Donation Schedule Column -->
+          <div class="col-12 col-md-6">
+            <div class="section-title">Donation Schedule</div>
 
-        <q-select
-          v-model="form.interval"
-          :options="intervalOptions"
-          outlined
-          label="Donation Interval"
-          hint="Select how often you want to donate"
-          placeholder="Choose donation frequency"
-          clearable
-          class="q-mb-md"
-        >
-          <template v-slot:prepend>
-            <q-icon name="schedule" />
-          </template>
-        </q-select>
+            <q-select
+              v-model="form.interval"
+              :options="intervalOptions"
+              outlined
+              label="Donation Interval"
+              hint="Select how often you want to donate"
+              placeholder="Choose donation frequency"
+              clearable
+              class="q-mb-md"
+            >
+              <template v-slot:prepend>
+                <q-icon name="schedule" />
+              </template>
+            </q-select>
+          </div>
 
-        <div class="section-title q-mt-md">Contract Agreement</div>
-        <p class="text-caption text-grey-7 q-mb-md">Set the duration of your donation commitment</p>
+          <!-- Contract Agreement Column -->
+          <div class="col-12 col-md-6">
+            <div class="section-title">Contract Agreement</div>
+            
+            <q-select
+              v-model="form.contractAgreement"
+              :options="contractOptions"
+              outlined
+              label="Contract Agreement Duration"
+              placeholder="Choose contract duration"
+              clearable
+              hint="Set the duration of your donation commitment"
+              class="q-mb-md"
+            >
+              <template v-slot:prepend>
+                <q-icon name="assignment" />
+              </template>
+            </q-select>
 
-        <q-select
-          v-model="form.contractAgreement"
-          :options="contractOptions"
-          outlined
-          label="Contract Agreement Duration"
-          placeholder="Choose contract duration"
-          clearable
-          class="q-mb-md"
-        >
-          <template v-slot:prepend>
-            <q-icon name="assignment" />
-          </template>
-        </q-select>
+            <q-checkbox
+              v-model="useCustomContract"
+              label="Or specify custom duration"
+              class="q-mb-sm"
+            />
 
-        <q-checkbox
-          v-model="useCustomContract"
-          label="Or specify custom duration"
-          class="q-mb-sm"
-        />
-
-        <q-input
-          v-if="useCustomContract"
-          v-model="form.customContractDuration"
-          outlined
-          label="Custom Contract Duration"
-          placeholder="e.g., 3 months, 6 months, 2 years"
-          hint="Enter your preferred contract duration"
-          class="q-mb-md"
-        >
-          <template v-slot:prepend>
-            <q-icon name="edit_calendar" />
-          </template>
-        </q-input>
+            <q-input
+              v-if="useCustomContract"
+              v-model="form.customContractDuration"
+              outlined
+              label="Custom Contract Duration"
+              placeholder="e.g., 3 months, 6 months, 2 years"
+              hint="Enter your preferred contract duration"
+              class="q-mb-md"
+            >
+              <template v-slot:prepend>
+                <q-icon name="edit_calendar" />
+              </template>
+            </q-input>
+          </div>
+        </div>
        
         <div class="section-title">Donor Contact Info</div>
 
