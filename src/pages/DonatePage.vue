@@ -67,6 +67,60 @@
           label="Message here for non-profit (area of intent)"
           class="q-mt-md"
         />
+
+        <div class="section-title q-mt-lg">Donation Schedule</div>
+
+        <q-select
+          v-model="form.interval"
+          :options="intervalOptions"
+          outlined
+          label="Donation Interval"
+          hint="Select how often you want to donate"
+          placeholder="Choose donation frequency"
+          clearable
+          class="q-mb-md"
+        >
+          <template v-slot:prepend>
+            <q-icon name="schedule" />
+          </template>
+        </q-select>
+
+        <div class="section-title q-mt-md">Contract Agreement</div>
+        <p class="text-caption text-grey-7 q-mb-md">Set the duration of your donation commitment</p>
+
+        <q-select
+          v-model="form.contractAgreement"
+          :options="contractOptions"
+          outlined
+          label="Contract Agreement Duration"
+          placeholder="Choose contract duration"
+          clearable
+          class="q-mb-md"
+        >
+          <template v-slot:prepend>
+            <q-icon name="assignment" />
+          </template>
+        </q-select>
+
+        <q-checkbox
+          v-model="useCustomContract"
+          label="Or specify custom duration"
+          class="q-mb-sm"
+        />
+
+        <q-input
+          v-if="useCustomContract"
+          v-model="form.customContractDuration"
+          outlined
+          label="Custom Contract Duration"
+          placeholder="e.g., 3 months, 6 months, 2 years"
+          hint="Enter your preferred contract duration"
+          class="q-mb-md"
+        >
+          <template v-slot:prepend>
+            <q-icon name="edit_calendar" />
+          </template>
+        </q-input>
        
         <div class="section-title">Donor Contact Info</div>
 
@@ -103,6 +157,16 @@
             <span>{{ form.amount || 0 }} {{ form.coin || 'BCH' }}</span>
           </div>
 
+          <div class="summary-row">
+            <span>Interval</span>
+            <span>{{ form.interval || 'Not selected' }}</span>
+          </div>
+
+          <div class="summary-row">
+            <span>Contract</span>
+            <span>{{ useCustomContract ? (form.customContractDuration || 'Not entered') : (form.contractAgreement || 'Not selected') }}</span>
+          </div>
+
           <div class="summary-divider"></div>
 
           <q-btn
@@ -111,6 +175,7 @@
             unelevated
             @click="handleDonation"
             :loading="processing"
+            to="/donor"
             :disable="(!isTestMode && !isConnected) || !form.cause || !form.recipientAddress || !form.amount"
           />
 
@@ -193,25 +258,46 @@ const nonprofits = ref([
 
 const nonprofitOptions = ref(nonprofits.value)
 
+const intervalOptions = ref([
+  '5 mins',
+  'Weekly',
+  'Monthly',
+  'Yearly'
+])
+
+const contractOptions = ref([
+  '5 mins',
+  'Monthly',
+  'Yearly'
+])
+
 const cryptoOptions = ref([
-  'Bitcoin Cash (BCH)',
-  'Bitcoin (BTC)',
+  'Paytaca Wallet (BCH)',
   'Ethereum (ETH)',
+  'MetaMask (ETH)',
+  'Bitcoin (BTC)',
+  'Polygon (MATIC)',
+  'Binance Smart Chain (BNB)',
+  'Solana (SOL)',
   'Tether (USDT)',
-  'BNB',
   'USD Coin (USDC)'
 ])
 
 const form = ref({
   cause: null,
   recipientAddress: '',
-  coin: 'Bitcoin Cash (BCH)',
+  coin: 'Paytaca Wallet (BCH)',
   amount: null,
   message: '',
+  interval: null,
+  contractAgreement: null,
+  customContractDuration: '',
   email: '',
   name: '',
   contact: ''
 })
+
+const useCustomContract = ref(false)
 
 const {
   isConnected,
@@ -222,7 +308,6 @@ const {
 const processing = ref(false)
 const txResult = ref(null)
 
-// Watch for nonprofit selection and auto-fill address
 watch(() => form.value.cause, (newCause) => {
   if (newCause) {
     const selectedNonprofit = nonprofits.value.find(np => np.value === newCause)
@@ -275,6 +360,8 @@ const handleDonation = async () => {
       message: form.value.message,
       cause: form.value.cause,
       coin: form.value.coin,
+      interval: form.value.interval,
+      contractAgreement: useCustomContract.value ? form.value.customContractDuration : form.value.contractAgreement,
       donorName: form.value.name,
       donorEmail: form.value.email,
       donorContact: form.value.contact
