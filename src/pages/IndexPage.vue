@@ -588,7 +588,7 @@
                 unelevated
                 color="primary"
                 padding="12px 48px"
-                to="/donate"
+                to="/donor"
                 class="impact-cta-button"
               />
             </div>
@@ -946,6 +946,7 @@ const testimonials = [
   display: flex;
   align-items: center;
   overflow: hidden;
+  padding-top: 64px; /* Add padding to account for header height */
 }
 
 .hero-section::before {
@@ -971,6 +972,7 @@ const testimonials = [
     transform: scale(1);
   }
 }
+
 
 .hero-section .row {
   position: relative;
@@ -1453,7 +1455,6 @@ const testimonials = [
   box-shadow: 0 12px 32px rgba(255, 255, 255, 0.5);
 }
 
-/* Section 4 Animations */
 @keyframes fadeIn {
   from {
     opacity: 0;
@@ -1567,7 +1568,7 @@ const testimonials = [
   opacity: 0;
 }
 
-/* Testimonials Section */
+
 .testimonials-section {
   background: linear-gradient(180deg, #f8f9fa 0%, #ffffff 100%);
 }
@@ -1873,5 +1874,18 @@ const testimonials = [
 
 .separator {
   color: rgba(255, 255, 255, 0.4);
+}
+
+/* Responsive padding for header overlap fix */
+@media (max-width: 599px) {
+  .hero-section {
+    padding-top: 56px; /* Smaller padding for mobile */
+  }
+}
+
+@media (min-width: 600px) and (max-width: 1023px) {
+  .hero-section {
+    padding-top: 60px; /* Medium padding for tablets */
+  }
 }
 </style>
