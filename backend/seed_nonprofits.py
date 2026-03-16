@@ -1,17 +1,11 @@
-"""
-Seed script to populate nonprofits database
-Run with: python seed_nonprofits.py
-"""
 import os
 import django
 
-# Setup Django environment
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'bitohelp_api.settings')
 django.setup()
 
 from nonprofits.models import Nonprofit
 
-# Sample nonprofits data
 nonprofits_data = [
     {
         'name': 'Typhoon Relief Fund',
@@ -96,29 +90,27 @@ nonprofits_data = [
 ]
 
 def seed_nonprofits():
-    """Create nonprofits in the database"""
     print("Seeding nonprofits database...")
     
     created_count = 0
     skipped_count = 0
     
     for data in nonprofits_data:
-        # Check if nonprofit already exists
         existing = Nonprofit.objects.filter(bch_address=data['bch_address']).first()
         
         if existing:
-            print(f"⏭️  Skipped: {data['name']} (already exists)")
+            print(f"  Skipped: {data['name']} (already exists)")
             skipped_count += 1
         else:
             nonprofit = Nonprofit.objects.create(**data)
-            print(f"✅ Created: {nonprofit.name}")
+            print(f" Created: {nonprofit.name}")
             created_count += 1
     
-    print(f"\n📊 Summary:")
+    print(f"\n Summary:")
     print(f"   Created: {created_count}")
     print(f"   Skipped: {skipped_count}")
     print(f"   Total nonprofits in database: {Nonprofit.objects.count()}")
-    print("\n✨ Database seeding complete!")
+    print("\n Database seeding complete!")
 
 if __name__ == '__main__':
     seed_nonprofits()
