@@ -170,52 +170,50 @@
                 <div class="col-12 col-sm-6 col-lg-4">
                   <div class="detail-section">
                     <div class="detail-item q-mb-md">
-                      <div class="text-caption text-grey-6 q-mb-xs">Contract Address</div>
-                      <div class="text-weight-medium">{{ selectedAccount.fullNumber }}</div>
+                      <div class="text-caption text-grey-6 q-mb-xs">Wallet Address</div>
+                      <div class="text-weight-medium">{{ selectedAccount.address }}</div>
                     </div>
-                    <div class="detail-item q-mb-md">
-                      <div class="text-caption text-grey-6 q-mb-xs">Donor Address</div>
-                      <div class="text-weight-medium">{{ selectedAccount.iban }}</div>
-                    </div>
-                    <div class="detail-item q-mb-md">
-                      <div class="text-caption text-grey-6 q-mb-xs">Network Fee </div>
-                      <div class="text-weight-medium">{{ selectedAccount.creditRate }}</div>
-                    </div>
-                  </div>
-                </div>
-
-               
-                <div class="col-12 col-sm-6 col-lg-4">
-                  <div class="detail-section">
-                    <div class="detail-item q-mb-md">
-                      <div class="text-caption text-grey-6 q-mb-xs">Account name</div>
-                      <div class="text-weight-medium">{{ selectedAccount.accountName }}</div>
-                    </div>
-                    <div class="detail-item q-mb-md">
-                      <div class="text-caption text-grey-6 q-mb-xs">Contract Code</div>
-                      <div class="text-weight-medium">{{ selectedAccount.swift }}</div>
-                    </div>
-                    <div class="detail-item q-mb-md">
-                      <div class="text-caption text-grey-6 q-mb-xs">Amount Balance</div>
-                      <div class="text-weight-medium">{{ selectedAccount.debitRate }}</div>
-                    </div>
-                  </div>
-                </div>
-
-         
-                <div class="col-12 col-sm-6 col-lg-4">
-                  <div class="detail-section">
                     <div class="detail-item q-mb-md">
                       <div class="text-caption text-grey-6 q-mb-xs">Wallet Type</div>
-                      <div class="text-weight-medium">{{ selectedAccount.product }}</div>
+                      <div class="text-weight-medium">{{ selectedAccount.type }}</div>
                     </div>
                     <div class="detail-item q-mb-md">
-                      <div class="text-caption text-grey-6 q-mb-xs">Donor Name</div>
-                      <div class="text-weight-medium">{{ selectedAccount.branch }}</div>
+                      <div class="text-caption text-grey-6 q-mb-xs">Network Fee Paid</div>
+                      <div class="text-weight-medium">{{ selectedAccount.totalFees }} BCH</div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="col-12 col-sm-6 col-lg-4">
+                  <div class="detail-section">
+                    <div class="detail-item q-mb-md">
+                      <div class="text-caption text-grey-6 q-mb-xs">Charity Name</div>
+                      <div class="text-weight-medium">{{ selectedAccount.charityName }}</div>
                     </div>
                     <div class="detail-item q-mb-md">
-                      <div class="text-caption text-grey-6 q-mb-xs">Total Contract</div>
-                      <div class="text-weight-medium">BCH-{{ selectedAccount.overdraftLimit }}</div>
+                      <div class="text-caption text-grey-6 q-mb-xs">Email</div>
+                      <div class="text-weight-medium">{{ selectedAccount.email }}</div>
+                    </div>
+                    <div class="detail-item q-mb-md">
+                      <div class="text-caption text-grey-6 q-mb-xs">Total Received</div>
+                      <div class="text-weight-medium">{{ formatCurrency(selectedAccount.totalReceived) }} BCH</div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="col-12 col-sm-6 col-lg-4">
+                  <div class="detail-section">
+                    <div class="detail-item q-mb-md">
+                      <div class="text-caption text-grey-6 q-mb-xs">First Donation Received</div>
+                      <div class="text-weight-medium">{{ selectedAccount.firstDonation }}</div>
+                    </div>
+                    <div class="detail-item q-mb-md">
+                      <div class="text-caption text-grey-6 q-mb-xs">Last Donation Received</div>
+                      <div class="text-weight-medium">{{ selectedAccount.lastDonation }}</div>
+                    </div>
+                    <div class="detail-item q-mb-md">
+                      <div class="text-caption text-grey-6 q-mb-xs">Total Transactions</div>
+                      <div class="text-weight-medium">{{ selectedAccount.transactionCount }}</div>
                     </div>
                   </div>
                 </div>
@@ -224,7 +222,7 @@
              
               <div class="q-mt-xl">
                 <div class="row items-center justify-between q-mb-md">
-                  <h6 class="q-my-none">Wallet Cards</h6>
+                  <h6 class="q-my-none">Charity Impact</h6>
                   <q-btn flat dense icon="expand_less" />
                 </div>
 
@@ -538,18 +536,17 @@ const accounts = ref([
     id: 1,
     name: 'Kapamilya Donor',
     number: '',
-    fullNumber: 'qr5agtachyxvm8pqg2z7z8z9z5z6z7z8z9zdef789',
+    address: 'qr5agtachyxvm8pqg2z7z8z9z5z6z7z8z9zdef789',
     current: 122267.85,
     available: 122267.85,
-    accountName: 'Kapamilya Donor',
-    product: 'Paytaca',
-    iban: 'qp3wjpa3tjlj042z2wv7hahsldgwhwy0rq9sywjpyy',
-    swift: 'BCYPCY2N',
-    branch: 'Tanggol Dalisay',
-    donorAddress: 'qp3wjpa3tjlj042z2wv7hahsldgwhwy0rq9sywjpyy',
-    creditRate: '1000',
-    debitRate: '856,00',
-    overdraftLimit: '122,267.85',
+    type: 'Paytaca',
+    totalFees: 1000,
+    charityName: 'Kapamilya Foundation',
+    email: 'contact@kapamilya.org',
+    totalReceived: 122267.85,
+    firstDonation: 'Jan 10, 2026',
+    lastDonation: 'Mar 13, 2026',
+    transactionCount: 200,
     cards: [
       {
         id: 1,
@@ -584,36 +581,34 @@ const accounts = ref([
     id: 2,
     name: 'GMA Kapuso Donor',
     number: '',
-    fullNumber: 'qr5agtachyxvm8pqg2z7z8z9z5z6z7z8z9zdef789',
+    address: 'qq8z6kx7qzj3zjz5qz9z5z6z7z8z9zabc123456',
     current: 95420.50,
     available: 95420.50,
-    accountName: 'GMA Kapuso Donor',
-    product: 'Paytaca',
-    iban: 'qp3wjpa3tjlj042z2wv7hahsldgwhwy0rq9sywjpyy',
-    swift: 'BCYPCY2N',
-    branch: 'Pacquiao',
-    donorAddress: 'bitcoincash:qq8z6kx7qzj3zjz5qz9z5z6z7z8z9zabc123456',
-    creditRate: '1000',
-    debitRate: '856,00',
-    overdraftLimit: '3,000,000.00',
+    type: 'Paytaca',
+    totalFees: 850,
+    charityName: 'GMA Kapuso Foundation',
+    email: 'info@kapuso.org',
+    totalReceived: 95420.50,
+    firstDonation: 'Dec 5, 2025',
+    lastDonation: 'Mar 12, 2026',
+    transactionCount: 175,
     cards: []
   },
   {
     id: 3,
     name: 'Tulong Dunong ',
     number: '',
-    fullNumber: 'qr5agtachyxvm8pqg2z7z8z9z5z6z7z8z9zdef789',
+    address: 'qr5agtachyxvm8pqg2z7z8z9z5z6z7z8z9zdef789',
     current: 78350.25,
     available: 78350.25,
-    accountName: 'Tulong Dunong Donor',
-    product: 'Paytaca',
-    iban: 'qp3wjpa3tjlj042z2wv7hahsldgwhwy0rq9sywjpyy',
-    swift: 'BCYPCY2N',
-    branch: 'Casimero',
-    donorAddress: 'bitcoincash:qr5agtachyxvm8pqg2z7z8z9z5z6z7z8z9zdef789',
-    creditRate: '1000',
-    debitRate: '856,00',
-    overdraftLimit: '1,234,900.00',
+    type: 'Paytaca',
+    totalFees: 650,
+    charityName: 'Tulong Dunong Foundation',
+    email: 'support@tulongdunong.org',
+    totalReceived: 78350.25,
+    firstDonation: 'Jan 20, 2026',
+    lastDonation: 'Mar 11, 2026',
+    transactionCount: 150,
     cards: []
   }
 ])
@@ -762,9 +757,45 @@ const handleWithdraw = async () => {
 
     
     $q.dialog({
-      title: 'Confirm Withdrawal',
-      message: `Withdraw ${amount} BCH to ${donor.substring(0, 20)}...?`,
-      cancel: true,
+      title: '',
+      message: `
+        <div style="font-family: 'Roboto', sans-serif;">
+          <div style="padding: 16px 0; border-bottom: 1px solid #e0e0e0; margin-bottom: 20px;">
+            <div style="font-size: 18px; font-weight: 600; color: #212121;">Confirm Withdrawal</div>
+            <div style="font-size: 13px; color: #757575; margin-top: 4px;">Please review the details before proceeding</div>
+          </div>
+          
+          <div style="background: #f5f5f5; padding: 16px; border-radius: 8px; border: 1px solid #e0e0e0; margin-bottom: 16px;">
+            <div style="margin-bottom: 12px;">
+              <div style="font-size: 12px; color: #757575; font-weight: 500; margin-bottom: 4px;">WITHDRAWAL AMOUNT</div>
+              <div style="font-size: 20px; font-weight: 700; color: #1976d2;">${amount} BCH</div>
+            </div>
+            <div style="padding-top: 12px; border-top: 1px solid #e0e0e0;">
+              <div style="font-size: 12px; color: #757575; font-weight: 500; margin-bottom: 4px;">RECIPIENT ADDRESS</div>
+              <div style="font-size: 12px; font-weight: 600; color: #424242; font-family: monospace; word-break: break-all;">${donor}</div>
+            </div>
+          </div>
+          
+          <div style="padding: 12px 16px; background: #fff3cd; border-left: 3px solid #ff9800; border-radius: 4px;">
+            <div style="color: #856404; font-size: 12px; line-height: 1.6;">
+              <strong>Warning:</strong> This transaction cannot be reversed. Please verify the recipient address carefully.
+            </div>
+          </div>
+        </div>
+      `,
+      html: true,
+      cancel: {
+        label: 'Cancel',
+        color: 'grey-7',
+        flat: true,
+        noCaps: true
+      },
+      ok: {
+        label: 'Confirm Withdrawal',
+        color: 'primary',
+        unelevated: true,
+        noCaps: true
+      },
       persistent: true
     }).onOk(async () => {
       try {
@@ -825,21 +856,77 @@ const refreshTransactions = () => {
 }
 
 const viewTransactionDetails = (transaction) => {
+  const transactionDate = new Date(transaction.date).toLocaleDateString('en-US', { 
+    year: 'numeric', 
+    month: 'long', 
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
+  })
+  
+  const formattedAmount = formatCurrency(parseFloat(transaction.amount))
+  const statusColor = transaction.status === 'completed' ? 'positive' : transaction.status === 'pending' ? 'warning' : 'negative'
+  const typeColor = transaction.type === 'credit' ? '#4caf50' : '#f44336'
+  
   $q.dialog({
-    title: 'Transaction Details',
+    title: '',
     message: `
-      <div style="text-align: left;">
-        <p><strong>Date:</strong> ${transaction.date}</p>
-        <p><strong>Description:</strong> ${transaction.description}</p>
-        <p><strong>Type:</strong> ${transaction.type.toUpperCase()}</p>
-        <p><strong>Amount:</strong> ${transaction.amount} BCH</p>
-        <p><strong>Status:</strong> ${transaction.status.toUpperCase()}</p>
+      <div style="max-width: 550px; margin: 0 auto; font-family: 'Roboto', sans-serif;">
+        <!-- Header -->
+        <div style="padding: 20px 24px; background: white; border-bottom: 1px solid #e0e0e0; margin: -16px -16px 0 -16px;">
+          <div style="font-size: 20px; font-weight: 600; color: #212121; margin-bottom: 4px;">Transaction Details</div>
+          <div style="font-size: 13px; color: #757575;">BiToHelp Charity Dashboard</div>
+        </div>
+        
+        <!-- Content -->
+        <div style="padding: 24px; background: white;">
+          <!-- Status Badge -->
+          <div style="margin-bottom: 24px;">
+            <div style="display: inline-block; background: ${statusColor === 'positive' ? '#4caf50' : statusColor === 'warning' ? '#ff9800' : '#f44336'}; color: white; padding: 6px 16px; border-radius: 4px; font-size: 13px; font-weight: 600; text-transform: uppercase;">
+              ${transaction.status}
+            </div>
+          </div>
+          
+          <!-- Details Table -->
+          <div style="border: 1px solid #e0e0e0; border-radius: 8px; overflow: hidden;">
+            <table style="width: 100%; border-collapse: collapse;">
+              <tr style="background: #fafafa; border-bottom: 1px solid #e0e0e0;">
+                <td style="padding: 14px 16px; font-size: 13px; color: #757575; font-weight: 500; width: 40%;">Transaction Date</td>
+                <td style="padding: 14px 16px; font-size: 14px; color: #212121; font-weight: 500; text-align: right;">${transactionDate}</td>
+              </tr>
+              <tr style="border-bottom: 1px solid #e0e0e0;">
+                <td style="padding: 14px 16px; font-size: 13px; color: #757575; font-weight: 500;">Description</td>
+                <td style="padding: 14px 16px; font-size: 14px; color: #212121; font-weight: 500; text-align: right;">${transaction.description}</td>
+              </tr>
+              <tr style="border-bottom: 1px solid #e0e0e0;">
+                <td style="padding: 14px 16px; font-size: 13px; color: #757575; font-weight: 500;">Transaction Type</td>
+                <td style="padding: 14px 16px; font-size: 14px; color: ${typeColor}; font-weight: 600; text-align: right; text-transform: uppercase;">${transaction.type}</td>
+              </tr>
+              <tr style="background: #f5f5f5;">
+                <td style="padding: 18px 16px; font-size: 14px; color: #424242; font-weight: 600;">Amount</td>
+                <td style="padding: 18px 16px; font-size: 18px; color: ${typeColor}; font-weight: 700; text-align: right;">
+                  ${transaction.type === 'credit' ? '+' : '-'}${formattedAmount} BCH
+                </td>
+              </tr>
+            </table>
+          </div>
+          
+          <!-- Footer Note -->
+          <div style="margin-top: 20px; padding: 12px 16px; background: #f5f5f5; border-left: 3px solid #1976d2; border-radius: 4px;">
+            <div style="color: #424242; font-size: 12px; line-height: 1.6;">
+              <strong>Note:</strong> This transaction is recorded on the Bitcoin Cash blockchain and can be verified through the transaction hash.
+            </div>
+          </div>
+        </div>
       </div>
     `,
     html: true,
     ok: {
       label: 'Close',
-      color: 'primary'
+      color: 'primary',
+      flat: false,
+      unelevated: true,
+      noCaps: true
     }
   })
 }
