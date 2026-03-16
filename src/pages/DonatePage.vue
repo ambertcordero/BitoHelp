@@ -25,6 +25,8 @@
           outlined 
           label="Choose non-profit or a cause" 
           class="q-mb-md"
+          :loading="loadingNonprofits"
+          :disable="loadingNonprofits"
         >
           <template v-slot:option="scope">
             <q-item v-bind="scope.itemProps">
@@ -68,67 +70,24 @@
           class="q-mt-md"
         />
 
-        <!-- Horizontal Layout for Donation Schedule and Contract Agreement -->
-        <div class="row q-col-gutter-md q-mt-lg">
-          <!-- Donation Schedule Column -->
-          <div class="col-12 col-md-6">
-            <div class="section-title">Donation Schedule</div>
+        <!-- Donation Schedule -->
+        <div class="q-mt-lg">
+          <div class="section-title">Donation Schedule</div>
 
-            <q-select
-              v-model="form.interval"
-              :options="intervalOptions"
-              outlined
-              label="Donation Interval"
-              hint="Select how often you want to donate"
-              placeholder="Choose donation frequency"
-              clearable
-              class="q-mb-md"
-            >
-              <template v-slot:prepend>
-                <q-icon name="schedule" />
-              </template>
-            </q-select>
-          </div>
-
-          <!-- Contract Agreement Column -->
-          <div class="col-12 col-md-6">
-            <div class="section-title">Contract Agreement</div>
-            
-            <q-select
-              v-model="form.contractAgreement"
-              :options="contractOptions"
-              outlined
-              label="Contract Agreement Duration"
-              placeholder="Choose contract duration"
-              clearable
-              hint="Set the duration of your donation commitment"
-              class="q-mb-md"
-            >
-              <template v-slot:prepend>
-                <q-icon name="assignment" />
-              </template>
-            </q-select>
-
-            <q-checkbox
-              v-model="useCustomContract"
-              label="Or specify custom duration"
-              class="q-mb-sm"
-            />
-
-            <q-input
-              v-if="useCustomContract"
-              v-model="form.customContractDuration"
-              outlined
-              label="Custom Contract Duration"
-              placeholder="e.g., 3 months, 6 months, 2 years"
-              hint="Enter your preferred contract duration"
-              class="q-mb-md"
-            >
-              <template v-slot:prepend>
-                <q-icon name="edit_calendar" />
-              </template>
-            </q-input>
-          </div>
+          <q-select
+            v-model="form.interval"
+            :options="intervalOptions"
+            outlined
+            label="Donation Interval"
+            hint="Select how often you want to donate"
+            placeholder="Choose donation frequency"
+            clearable
+            class="q-mb-md"
+          >
+            <template v-slot:prepend>
+              <q-icon name="schedule" />
+            </template>
+          </q-select>
         </div>
        
         <div class="section-title">Donor Contact Info</div>
@@ -169,11 +128,6 @@
           <div class="summary-row">
             <span>Interval</span>
             <span>{{ form.interval || 'Not selected' }}</span>
-          </div>
-
-          <div class="summary-row">
-            <span>Contract</span>
-            <span>{{ useCustomContract ? (form.customContractDuration || 'Not entered') : (form.contractAgreement || 'Not selected') }}</span>
           </div>
 
           <div class="summary-divider"></div>
@@ -232,50 +186,61 @@
 </template>
 
 <script setup>
-import { ref, watch } from 'vue'
+import { ref, watch, onMounted } from 'vue'
 import { useBCHContract } from '../composables/useBCHContract'
 import { useDonationStore } from '../stores/donation-store'
 import { useQuasar } from 'quasar'
 import { useRouter } from 'vue-router'
+import { api } from 'boot/axios'
 
 const $q = useQuasar()
 const router = useRouter()
 const donationStore = useDonationStore()
 
-const nonprofits = ref([
-  {
-    label: 'Typhoon Relief Fund',
-    value: 'Typhoon Relief Fund',
-    address: 'bitcoincash:qp3wjpa3tjlj042z2wv7hahsldgwhwy0rq9sywjpyy'
-  },
-  {
-    label: 'Educational Fund',
-    value: 'Educational Fund',
-    address: 'bitcoincash:qr4aadjrpu73d2wxwkxkcrt6gqxgu6a7usxfm96fst'
-  },
-  {
-    label: 'Medical Fund',
-    value: 'Medical Fund',
-    address: 'bitcoincash:qpwngrc5j8d7vvz0a0mn0z5yak4axf8mvqnkzgd4n8'
-  },
-  {
-    label: 'Health Fund',
-    value: 'Health Fund',
-    address: 'bitcoincash:qzj5zu6fgg8v2we82gh76xnrk9njcregluzgaztm45'
-  }
-])
 
-const nonprofitOptions = ref(nonprofits.value)
+const nonprofits = ref([])
+const nonprofitOptions = ref([])
+const loadingNonprofits = ref(false)
+
+
+const fetchNonprofits = async () => {
+  loadingNonprofits.value = true
+  try {
+    const response = await api.get('nonprofits/verified/')
+    nonprofits.value = response.data.map(np => ({
+      id: np.id,
+      label: np.name,
+      value: np.name,
+      address: np.bch_address,
+      description: np.description,
+      category: np.category,
+      verified: np.verified
+    }))
+    nonprofitOptions.value = nonprofits.value
+    console.log('Loaded nonprofits from API:', nonprofits.value.length)
+  } catch (error) {
+    console.error('Failed to load nonprofits:', error)
+    $q.notify({
+      type: 'negative',
+      message: 'Failed to load nonprofit organizations',
+      caption: 'Please refresh the page to try again'
+    })
+
+    nonprofits.value = []
+    nonprofitOptions.value = []
+  } finally {
+    loadingNonprofits.value = false
+  }
+}
+
+
+onMounted(() => {
+  fetchNonprofits()
+})
 
 const intervalOptions = ref([
   '5 mins',
   'Weekly',
-  'Monthly',
-  'Yearly'
-])
-
-const contractOptions = ref([
-  '5 mins',
   'Monthly',
   'Yearly'
 ])
@@ -294,19 +259,16 @@ const cryptoOptions = ref([
 
 const form = ref({
   cause: null,
+  nonprofitId: null,
   recipientAddress: '',
   coin: 'Paytaca Wallet (BCH)',
   amount: null,
   message: '',
   interval: null,
-  contractAgreement: null,
-  customContractDuration: '',
   email: '',
   name: '',
   contact: ''
 })
-
-const useCustomContract = ref(false)
 
 const {
   isConnected,
@@ -322,7 +284,11 @@ watch(() => form.value.cause, (newCause) => {
     const selectedNonprofit = nonprofits.value.find(np => np.value === newCause)
     if (selectedNonprofit) {
       form.value.recipientAddress = selectedNonprofit.address
+      form.value.nonprofitId = selectedNonprofit.id
     }
+  } else {
+    form.value.recipientAddress = ''
+    form.value.nonprofitId = null
   }
 })
 
@@ -370,21 +336,40 @@ const handleDonation = async () => {
       cause: form.value.cause,
       coin: form.value.coin,
       interval: form.value.interval,
-      contractAgreement: useCustomContract.value ? form.value.customContractDuration : form.value.contractAgreement,
       donorName: form.value.name,
       donorEmail: form.value.email,
       donorContact: form.value.contact
     }
-
     const result = await sendDonation(donationData)
     txResult.value = result
-
     await donationStore.addDonation({
       ...donationData,
       txid: result.txid,
       explorerUrl: result.explorerUrl,
       timestamp: new Date().toISOString()
     })
+
+    
+    try {
+      await api.post('donations/', {
+        txid: result.txid,
+        recipient: form.value.recipientAddress,
+        amount: form.value.amount,
+        coin: form.value.coin,
+        cause: form.value.cause,
+        message: form.value.message,
+        donor_name: form.value.name,
+        donor_email: form.value.email,
+        donor_contact: form.value.contact,
+        explorer_url: result.explorerUrl,
+        nonprofit: form.value.nonprofitId,
+        interval: form.value.interval
+      })
+      console.log('Donation saved to database')
+    } catch (dbError) {
+      console.error('Failed to save donation to database:', dbError)
+     
+    }
 
     $q.notify({
       type: 'positive',
