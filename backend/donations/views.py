@@ -16,7 +16,6 @@ class DonationViewSet(viewsets.ModelViewSet):
     
     @action(detail=False, methods=['get'])
     def recent(self, request):
-        """Get recent donations"""
         limit = int(request.query_params.get('limit', 10))
         donations = self.queryset[:limit]
         serializer = self.get_serializer(donations, many=True)
@@ -24,7 +23,6 @@ class DonationViewSet(viewsets.ModelViewSet):
     
     @action(detail=False, methods=['get'])
     def by_cause(self, request):
-        """Get donations filtered by cause"""
         cause = request.query_params.get('cause')
         if cause:
             donations = self.queryset.filter(cause__icontains=cause)
@@ -35,13 +33,12 @@ class DonationViewSet(viewsets.ModelViewSet):
 
 @api_view(['GET'])
 def donation_stats(request):
-    """Get donation statistics"""
     total_donations = Donation.objects.count()
     total_amount = Donation.objects.aggregate(
         total=Sum('amount')
     )['total'] or 0
     
-    # Group by cause
+
     by_cause = {}
     causes = Donation.objects.values('cause').annotate(
         total=Sum('amount'),
@@ -53,7 +50,6 @@ def donation_stats(request):
             'count': item['count']
         }
     
-    # Group by coin
     by_coin = {}
     coins = Donation.objects.values('coin').annotate(
         total=Sum('amount'),
@@ -75,7 +71,6 @@ def donation_stats(request):
 
 @api_view(['GET'])
 def health_check(request):
-    """Simple health check endpoint"""
     return Response({
         'status': 'healthy',
         'message': 'BiToHelp API is running'
