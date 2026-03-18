@@ -1,6 +1,6 @@
 pragma cashscript ^0.12.0;
 
-contract Mecenas(bytes20 recipient,int pledge int interval) {
+contract Mecenas(bytes20 recipient,int pledge, int interval) {
     function receive() {
         
         // Check that the first output sends to the recipient
