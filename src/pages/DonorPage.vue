@@ -54,7 +54,7 @@
               </q-item-section>
               <q-item-section>
                 <q-item-label class="text-weight-medium">{{ wallet.name }}</q-item-label>
-                <q-item-label caption>{{ wallet.address.substring(0, 20) }}...</q-item-label>
+                <q-item-label caption class="text-caption">{{ wallet.address.substring(0, 12) }}...</q-item-label>
                 <div class="row q-mt-sm">
                   <div class="col">
                     <q-item-label caption>Total Donated</q-item-label>
@@ -130,19 +130,26 @@
                 :pagination="{ rowsPerPage: 10 }"
                 class="transactions-table"
               >
-                <template v-slot:body-cell-status="props">
+                <template v-slot:body-cell-interval="props">
                   <q-td :props="props">
                     <q-badge
-                      :color="props.row.status === 'completed' ? 'positive' : props.row.status === 'pending' ? 'warning' : 'negative'"
-                      :label="props.row.status"
+                      v-if="props.row.interval"
+                      color="blue-7"
+                      :label="props.row.interval"
                     />
+                    <span v-else class="text-grey-6">One-time</span>
                   </q-td>
                 </template>
                 <template v-slot:body-cell-amount="props">
                   <q-td :props="props">
-                    <span class="text-weight-medium text-negative">
-                      -{{ formatCurrency(props.row.amount) }} BCH
+                    <span class="text-weight-medium text-positive">
+                      {{ formatCurrency(props.row.amount) }}
                     </span>
+                  </q-td>
+                </template>
+                <template v-slot:body-cell-coin="props">
+                  <q-td :props="props">
+                    <q-badge color="primary" :label="props.row.coin || 'BCH'" />
                   </q-td>
                 </template>
                 <template v-slot:body-cell-actions="props">
@@ -153,8 +160,11 @@
                           <q-item clickable v-close-popup @click="viewDonationDetails(props.row)">
                             <q-item-section>View Details</q-item-section>
                           </q-item>
-                          <q-item clickable v-close-popup>
+                          <q-item clickable v-close-popup @click="viewReceipt(props.row)">
                             <q-item-section>View Receipt</q-item-section>
+                          </q-item>
+                          <q-item clickable v-close-popup @click="downloadReceipt(props.row)">
+                            <q-item-section>Download Receipt</q-item-section>
                           </q-item>
                         </q-list>
                       </q-menu>
@@ -170,50 +180,52 @@
                 <div class="col-12 col-sm-6 col-lg-4">
                   <div class="detail-section">
                     <div class="detail-item q-mb-md">
-                      <div class="text-caption text-grey-6 q-mb-xs">Wallet Address</div>
-                      <div class="text-weight-medium">{{ selectedWallet.address }}</div>
+                      <div class="text-caption text-grey-6 q-mb-xs">Contract Address</div>
+                      <div class="text-weight-medium">{{ selectedWallet.fullNumber }}</div>
                     </div>
+                    <div class="detail-item q-mb-md">
+                      <div class="text-caption text-grey-6 q-mb-xs">Donor Address</div>
+                      <div class="text-weight-medium">{{ selectedWallet.iban }}</div>
+                    </div>
+                    <div class="detail-item q-mb-md">
+                      <div class="text-caption text-grey-6 q-mb-xs">Network Fee </div>
+                      <div class="text-weight-medium">{{ selectedWallet.creditRate }}</div>
+                    </div>
+                  </div>
+                </div>
+
+               
+                <div class="col-12 col-sm-6 col-lg-4">
+                  <div class="detail-section">
+                    <div class="detail-item q-mb-md">
+                      <div class="text-caption text-grey-6 q-mb-xs">Account name</div>
+                      <div class="text-weight-medium">{{ selectedWallet.accountName }}</div>
+                    </div>
+                    <div class="detail-item q-mb-md">
+                      <div class="text-caption text-grey-6 q-mb-xs">Contract Code</div>
+                      <div class="text-weight-medium">{{ selectedWallet.swift }}</div>
+                    </div>
+                    <div class="detail-item q-mb-md">
+                      <div class="text-caption text-grey-6 q-mb-xs">Amount Balance</div>
+                      <div class="text-weight-medium">{{ selectedWallet.debitRate }}</div>
+                    </div>
+                  </div>
+                </div>
+
+         
+                <div class="col-12 col-sm-6 col-lg-4">
+                  <div class="detail-section">
                     <div class="detail-item q-mb-md">
                       <div class="text-caption text-grey-6 q-mb-xs">Wallet Type</div>
-                      <div class="text-weight-medium">{{ selectedWallet.type }}</div>
+                      <div class="text-weight-medium">{{ selectedWallet.product }}</div>
                     </div>
-                    <div class="detail-item q-mb-md">
-                      <div class="text-caption text-grey-6 q-mb-xs">Network Fee Paid</div>
-                      <div class="text-weight-medium">{{ selectedWallet.totalFees }} BCH</div>
-                    </div>
-                  </div>
-                </div>
-
-                <div class="col-12 col-sm-6 col-lg-4">
-                  <div class="detail-section">
                     <div class="detail-item q-mb-md">
                       <div class="text-caption text-grey-6 q-mb-xs">Donor Name</div>
-                      <div class="text-weight-medium">{{ selectedWallet.donorName }}</div>
+                      <div class="text-weight-medium">{{ selectedWallet.branch }}</div>
                     </div>
                     <div class="detail-item q-mb-md">
-                      <div class="text-caption text-grey-6 q-mb-xs">Email</div>
-                      <div class="text-weight-medium">{{ selectedWallet.email }}</div>
-                    </div>
-                    <div class="detail-item q-mb-md">
-                      <div class="text-caption text-grey-6 q-mb-xs">Total Donated</div>
-                      <div class="text-weight-medium">{{ formatCurrency(selectedWallet.totalDonated) }} BCH</div>
-                    </div>
-                  </div>
-                </div>
-
-                <div class="col-12 col-sm-6 col-lg-4">
-                  <div class="detail-section">
-                    <div class="detail-item q-mb-md">
-                      <div class="text-caption text-grey-6 q-mb-xs">First Donation</div>
-                      <div class="text-weight-medium">{{ selectedWallet.firstDonation }}</div>
-                    </div>
-                    <div class="detail-item q-mb-md">
-                      <div class="text-caption text-grey-6 q-mb-xs">Last Donation</div>
-                      <div class="text-weight-medium">{{ selectedWallet.lastDonation }}</div>
-                    </div>
-                    <div class="detail-item q-mb-md">
-                      <div class="text-caption text-grey-6 q-mb-xs">Total Transactions</div>
-                      <div class="text-weight-medium">{{ selectedWallet.donationCount }}</div>
+                      <div class="text-caption text-grey-6 q-mb-xs">Total Contract</div>
+                      <div class="text-weight-medium">BCH-{{ selectedWallet.overdraftLimit }}</div>
                     </div>
                   </div>
                 </div>
@@ -222,7 +234,7 @@
               
               <div class="q-mt-xl">
                 <div class="row items-center justify-between q-mb-md">
-                  <h6 class="q-my-none">Your Impact</h6>
+                  <h6 class="q-my-none">Wallet Cards</h6>
                   <q-btn flat dense icon="expand_less" />
                 </div>
 
@@ -289,9 +301,9 @@
                         <q-avatar size="48px" color="primary" text-color="white">
                           <q-icon name="account_balance" size="28px" />
                         </q-avatar>
-                        <div class="q-ml-md">
-                          <div class="text-h6">{{ recipient.name }}</div>
-                          <div class="text-caption text-grey-6">{{ recipient.cause }}</div>
+                        <div class="q-ml-md flex-1" style="min-width: 0;">
+                          <div class="text-subtitle1 text-weight-bold ellipsis">{{ recipient.cause }}</div>
+                          <div class="text-caption text-grey-6">{{ recipient.name }}</div>
                         </div>
                       </div>
                       
@@ -455,19 +467,26 @@
                 :pagination="{ rowsPerPage: 15 }"
                 class="transactions-table"
               >
-                <template v-slot:body-cell-status="props">
+                <template v-slot:body-cell-interval="props">
                   <q-td :props="props">
                     <q-badge
-                      :color="props.row.status === 'completed' ? 'positive' : props.row.status === 'pending' ? 'warning' : 'negative'"
-                      :label="props.row.status"
+                      v-if="props.row.interval"
+                      color="blue-7"
+                      :label="props.row.interval"
                     />
+                    <span v-else class="text-grey-6">One-time</span>
                   </q-td>
                 </template>
                 <template v-slot:body-cell-amount="props">
                   <q-td :props="props">
-                    <span class="text-weight-medium text-negative">
-                      -{{ formatCurrency(props.row.amount) }} BCH
+                    <span class="text-weight-medium text-positive">
+                      {{ formatCurrency(props.row.amount) }}
                     </span>
+                  </q-td>
+                </template>
+                <template v-slot:body-cell-coin="props">
+                  <q-td :props="props">
+                    <q-badge color="primary" :label="props.row.coin || 'BCH'" />
                   </q-td>
                 </template>
                 <template v-slot:body-cell-actions="props">
@@ -487,7 +506,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useDonationStore } from '../stores/donation-store'
 import { useQuasar } from 'quasar'
 import bchImg from 'src/assets/bch.png'
@@ -511,6 +530,7 @@ const wallets = ref([
     id: 1,
     name: 'Personal Wallet',
     address: 'qp3wjpa3tjlj042z2wv7hahsldgwhwy0rq9sywjpyy',
+    fullNumber: 'qr5agtachyxvm8pqg2z7z8z9z5z6z7z8z9zdef789',
     type: 'Paytaca',
     totalDonated: 5.75,
     donationCount: 12,
@@ -519,6 +539,14 @@ const wallets = ref([
     email: 'juan@example.com',
     firstDonation: 'Jan 15, 2026',
     lastDonation: 'Mar 13, 2026',
+    accountName: 'Personal Wallet',
+    product: 'Paytaca',
+    iban: 'qp3wjpa3tjlj042z2wv7hahsldgwhwy0rq9sywjpyy',
+    swift: 'BCYPCY2N',
+    branch: 'Juan Dela Cruz',
+    creditRate: '1000',
+    debitRate: '5.75',
+    overdraftLimit: '5.75',
     impactCards: [
       {
         id: 1,
@@ -550,6 +578,7 @@ const wallets = ref([
     id: 2,
     name: 'Business Wallet',
     address: 'qq8z6kx7qzj3zjz5qz9z5z6z7z8z9zabc123456',
+    fullNumber: 'qq8z6kx7qzj3zjz5qz9z5z6z7z8z9zabc123456',
     type: 'Paytaca',
     totalDonated: 12.50,
     donationCount: 25,
@@ -558,12 +587,21 @@ const wallets = ref([
     email: 'corporate@example.com',
     firstDonation: 'Dec 1, 2025',
     lastDonation: 'Mar 12, 2026',
+    accountName: 'Business Wallet',
+    product: 'Paytaca',
+    iban: 'qq8z6kx7qzj3zjz5qz9z5z6z7z8z9zabc123456',
+    swift: 'BCYPCY2N',
+    branch: 'ABC Corporation',
+    creditRate: '1000',
+    debitRate: '12.50',
+    overdraftLimit: '12.50',
     impactCards: []
   },
   {
     id: 3,
     name: 'Family Fund',
     address: 'qr5agtachyxvm8pqg2z7z8z9z5z6z7z8z9zdef789',
+    fullNumber: 'qr5agtachyxvm8pqg2z7z8z9z5z6z7z8z9zdef789',
     type: 'Paytaca',
     totalDonated: 3.25,
     donationCount: 8,
@@ -572,46 +610,106 @@ const wallets = ref([
     email: 'family@example.com',
     firstDonation: 'Feb 10, 2026',
     lastDonation: 'Mar 11, 2026',
+    accountName: 'Family Fund',
+    product: 'Paytaca',
+    iban: 'qr5agtachyxvm8pqg2z7z8z9z5z6z7z8z9zdef789',
+    swift: 'BCYPCY2N',
+    branch: 'Dela Cruz Family',
+    creditRate: '1000',
+    debitRate: '3.25',
+    overdraftLimit: '3.25',
     impactCards: []
   }
 ])
 
 const selectedWallet = ref(wallets.value[0])
 
-
 const donationColumns = [
-  { name: 'date', label: 'Date', field: 'date', align: 'left', sortable: true },
+  { name: 'date', label: 'Date', field: row => formatDate(row.timestamp), align: 'left', sortable: true },
   { name: 'recipient', label: 'Recipient', field: 'recipient', align: 'left' },
-  { name: 'cause', label: 'Cause', field: 'cause', align: 'left' },
+  { name: 'donor', label: 'Donor Name', field: 'donor_name', align: 'left' },
   { name: 'amount', label: 'Amount', field: 'amount', align: 'right', sortable: true },
-  { name: 'status', label: 'Status', field: 'status', align: 'center' },
+  { name: 'interval', label: 'Interval', field: 'interval', align: 'center' },
+  { name: 'coin', label: 'Coin', field: 'coin', align: 'center' },
   { name: 'actions', label: 'Actions', field: 'actions', align: 'center' }
 ]
 
 
-const donationHistory = ref([
-  { id: 1, date: '2026-03-13', recipient: 'Medical Fund', cause: 'Healthcare', amount: 0.75, status: 'completed' },
-  { id: 2, date: '2026-03-12', recipient: 'Education Fund', cause: 'Education', amount: 1.2, status: 'completed' },
-  { id: 3, date: '2026-03-11', recipient: 'Typhoon Relief', cause: 'Relief', amount: 0.5, status: 'completed' },
-  { id: 4, date: '2026-03-10', recipient: 'Medical Fund', cause: 'Healthcare', amount: 0.85, status: 'completed' },
-  { id: 5, date: '2026-03-09', recipient: 'Environment Fund', cause: 'Environment', amount: 0.35, status: 'completed' },
-  { id: 6, date: '2026-03-08', recipient: 'Education Fund', cause: 'Education', amount: 1.0, status: 'completed' },
-  { id: 7, date: '2026-03-07', recipient: 'Medical Fund', cause: 'Healthcare', amount: 0.6, status: 'completed' },
-  { id: 8, date: '2026-03-06', recipient: 'Relief Fund', cause: 'Relief', amount: 0.45, status: 'pending' },
-])
+const sampleDonations = [
+  {
+    id: 1,
+    txid: 'sample_tx_001',
+    recipient: 'Typhoon Relief Fund',
+    donor_name: 'John Doe',
+    amount: '0.50',
+    coin: 'BCH',
+    cause: 'Disaster Relief',
+    interval: 'One-time',
+    timestamp: '2026-03-15T10:30:00Z',
+    message: 'Hope this helps!'
+  },
+  {
+    id: 2,
+    txid: 'sample_tx_002',
+    recipient: 'Medical Emergency Fund',
+    donor_name: 'Maria Santos',
+    amount: '1.25',
+    coin: 'BCH',
+    cause: 'Healthcare',
+    interval: 'Monthly',
+    timestamp: '2026-03-14T14:20:00Z',
+    message: 'Supporting healthcare'
+  },
+  {
+    id: 3,
+    txid: 'sample_tx_003',
+    recipient: 'Education Scholarship',
+    donor_name: 'Anonymous',
+    amount: '0.75',
+    coin: 'BCH',
+    cause: 'Education',
+    interval: 'Quarterly',
+    timestamp: '2026-03-10T09:15:00Z',
+    message: ''
+  }
+]
 
-const allDonations = ref([
-  { id: 1, date: '2026-03-13', recipient: 'Medical Fund', cause: 'Healthcare', amount: 0.75, status: 'completed' },
-  { id: 2, date: '2026-03-12', recipient: 'Education Fund', cause: 'Education', amount: 1.2, status: 'completed' },
-  { id: 3, date: '2026-03-11', recipient: 'Typhoon Relief', cause: 'Relief', amount: 0.5, status: 'completed' },
-  { id: 4, date: '2026-03-10', recipient: 'Medical Fund', cause: 'Healthcare', amount: 0.85, status: 'completed' },
-  { id: 5, date: '2026-03-09', recipient: 'Environment Fund', cause: 'Environment', amount: 0.35, status: 'completed' },
-  { id: 6, date: '2026-03-08', recipient: 'Education Fund', cause: 'Education', amount: 1.0, status: 'completed' },
-  { id: 7, date: '2026-03-07', recipient: 'Medical Fund', cause: 'Healthcare', amount: 0.6, status: 'completed' },
-  { id: 8, date: '2026-03-06', recipient: 'Relief Fund', cause: 'Relief', amount: 0.45, status: 'pending' },
-  { id: 9, date: '2026-03-05', recipient: 'Medical Fund', cause: 'Healthcare', amount: 0.9, status: 'completed' },
-  { id: 10, date: '2026-03-04', recipient: 'Education Fund', cause: 'Education', amount: 0.55, status: 'completed' },
-])
+
+const donationHistory = computed(() => {
+  const realDonations = donationStore.donationHistory || []
+  return realDonations.length > 0 ? realDonations : sampleDonations
+})
+
+
+const allDonations = computed(() => {
+  const realDonations = donationStore.donationHistory || []
+  return realDonations.length > 0 ? realDonations : sampleDonations
+})
+
+
+const updateWalletStats = () => {
+  if (donationHistory.value && donationHistory.value.length > 0) {
+    const total = donationHistory.value.reduce((sum, d) => sum + parseFloat(d.amount || 0), 0)
+    const count = donationHistory.value.length
+    
+  
+    selectedWallet.value.totalDonated = total
+    selectedWallet.value.donationCount = count
+    selectedWallet.value.debitRate = total.toFixed(4)
+    selectedWallet.value.overdraftLimit = total.toFixed(4)
+    
+
+    if (selectedWallet.value.impactCards && selectedWallet.value.impactCards.length > 0) {
+      selectedWallet.value.impactCards[0].largeValue = `${total.toFixed(4)} BCH`
+      selectedWallet.value.impactCards[2].largeValue = `${count}+`
+    }
+  }
+}
+
+
+watch(() => donationStore.donationHistory, () => {
+  updateWalletStats()
+}, { immediate: true, deep: true })
 
 
 const supportedProjects = ref([
@@ -642,39 +740,31 @@ const supportedProjects = ref([
 ])
 
 
-const completedCount = computed(() => 
-  allDonations.value.filter(d => d.status === 'completed').length
-)
-
-const pendingCount = computed(() => 
-  allDonations.value.filter(d => d.status === 'pending').length
-)
-
+const completedCount = computed(() => allDonations.value.length)
+const pendingCount = computed(() => 0)
 const totalDonatedAmount = computed(() => {
-  const total = allDonations.value
-    .filter(d => d.status === 'completed')
-    .reduce((sum, d) => sum + d.amount, 0)
-  return total.toFixed(2)
+  const total = allDonations.value.reduce((sum, d) => sum + parseFloat(d.amount || 0), 0)
+  return total.toFixed(4)
 })
 
 
 const recipientSummary = computed(() => {
   const recipientMap = {}
   donationHistory.value.forEach(donation => {
-    const recipientName = donation.recipient
+    const recipientName = donation.recipient || 'Unknown'
     if (!recipientMap[recipientName]) {
       recipientMap[recipientName] = {
         name: recipientName,
-        cause: donation.cause,
+        cause: donation.cause || 'General',
         totalAmount: 0,
         count: 0,
-        lastDate: donation.date,
+        lastDate: donation.timestamp || donation.date,
         hasCompleted: true,
         donations: []
       }
     }
     
-    recipientMap[recipientName].totalAmount += donation.amount
+    recipientMap[recipientName].totalAmount += parseFloat(donation.amount || 0)
     recipientMap[recipientName].count++
     recipientMap[recipientName].donations.push(donation)
     
@@ -683,9 +773,9 @@ const recipientSummary = computed(() => {
       recipientMap[recipientName].hasCompleted = false
     }
     
-
-    if (donation.date > recipientMap[recipientName].lastDate) {
-      recipientMap[recipientName].lastDate = donation.date
+    const donationDate = donation.timestamp || donation.date
+    if (donationDate > recipientMap[recipientName].lastDate) {
+      recipientMap[recipientName].lastDate = donationDate
     }
   })
   
@@ -706,20 +796,22 @@ const averagePerRecipient = computed(() => {
 const filteredActivity = computed(() => {
   let filtered = [...allDonations.value]
   
-  if (statusFilter.value !== 'All') {
-    filtered = filtered.filter(d => d.status === statusFilter.value.toLowerCase())
-  }
   
   if (categoryFilter.value !== 'All') {
-    filtered = filtered.filter(d => d.cause === categoryFilter.value)
+    filtered = filtered.filter(d => 
+      d.cause && d.cause.toLowerCase().includes(categoryFilter.value.toLowerCase())
+    )
   }
   
+ 
   if (activitySearch.value) {
     const search = activitySearch.value.toLowerCase()
     filtered = filtered.filter(d => 
-      d.recipient.toLowerCase().includes(search) ||
-      d.cause.toLowerCase().includes(search) ||
-      d.date.includes(search)
+      (d.cause && d.cause.toLowerCase().includes(search)) ||
+      (d.donor_name && d.donor_name.toLowerCase().includes(search)) ||
+      (d.donor_email && d.donor_email.toLowerCase().includes(search)) ||
+      (d.txid && d.txid.toLowerCase().includes(search)) ||
+      (d.interval && d.interval.toLowerCase().includes(search))
     )
   }
   
@@ -733,27 +825,405 @@ const selectWallet = (wallet) => {
 }
 
 const formatCurrency = (amount) => {
-  return amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 8 })
+  const num = parseFloat(amount) || 0
+  return num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 8 })
+}
+
+const formatDate = (timestamp) => {
+  if (!timestamp) return 'N/A'
+  const date = new Date(timestamp)
+  return date.toLocaleDateString('en-US', { 
+    year: 'numeric', 
+    month: 'short', 
+    day: 'numeric'
+  })
 }
 
 const viewDonationDetails = (donation) => {
+  const donationDate = formatDate(donation.timestamp || donation.date)
+  const formattedAmount = formatCurrency(donation.amount)
+  
   $q.dialog({
-    title: 'Donation Details',
+    title: '',
     message: `
-      <div style="text-align: left;">
-        <p><strong>Date:</strong> ${donation.date}</p>
-        <p><strong>Recipient:</strong> ${donation.recipient}</p>
-        <p><strong>Cause:</strong> ${donation.cause}</p>
-        <p><strong>Amount:</strong> ${donation.amount} BCH</p>
-        <p><strong>Status:</strong> ${donation.status.toUpperCase()}</p>
+      <div style="max-width: 550px; margin: 0 auto; font-family: 'Roboto', sans-serif;">
+        <!-- Header -->
+        <div style="padding: 20px 24px; background: white; border-bottom: 1px solid #e0e0e0; margin: -16px -16px 0 -16px;">
+          <div style="font-size: 20px; font-weight: 600; color: #212121; margin-bottom: 4px;">Donation Details</div>
+          <div style="font-size: 13px; color: #757575;">BiToHelp Blockchain Donation Platform</div>
+        </div>
+        
+        <!-- Content -->
+        <div style="padding: 24px; background: white;">
+          <!-- Details Table -->
+          <div style="border: 1px solid #e0e0e0; border-radius: 8px; overflow: hidden;">
+            <table style="width: 100%; border-collapse: collapse;">
+              <tr style="background: #fafafa; border-bottom: 1px solid #e0e0e0;">
+                <td style="padding: 14px 16px; font-size: 13px; color: #757575; font-weight: 500; width: 40%;">Date</td>
+                <td style="padding: 14px 16px; font-size: 14px; color: #212121; font-weight: 500; text-align: right;">${donationDate}</td>
+              </tr>
+              <tr style="border-bottom: 1px solid #e0e0e0;">
+                <td style="padding: 14px 16px; font-size: 13px; color: #757575; font-weight: 500;">Cause / Nonprofit</td>
+                <td style="padding: 14px 16px; font-size: 14px; color: #212121; font-weight: 500; text-align: right;">${donation.cause || 'N/A'}</td>
+              </tr>
+              <tr style="border-bottom: 1px solid #e0e0e0;">
+                <td style="padding: 14px 16px; font-size: 13px; color: #757575; font-weight: 500;">Donor Name</td>
+                <td style="padding: 14px 16px; font-size: 14px; color: #212121; font-weight: 500; text-align: right;">${donation.donor_name || 'Anonymous'}</td>
+              </tr>
+              <tr style="border-bottom: 1px solid #e0e0e0;">
+                <td style="padding: 14px 16px; font-size: 13px; color: #757575; font-weight: 500;">Donor Email</td>
+                <td style="padding: 14px 16px; font-size: 14px; color: #212121; font-weight: 500; text-align: right;">${donation.donor_email || 'N/A'}</td>
+              </tr>
+              <tr style="border-bottom: 1px solid #e0e0e0;">
+                <td style="padding: 14px 16px; font-size: 13px; color: #757575; font-weight: 500;">Interval</td>
+                <td style="padding: 14px 16px; font-size: 14px; color: #212121; font-weight: 500; text-align: right;">${donation.interval || 'One-time'}</td>
+              </tr>
+              <tr style="border-bottom: 1px solid #e0e0e0;">
+                <td style="padding: 14px 16px; font-size: 13px; color: #757575; font-weight: 500;">Message</td>
+                <td style="padding: 14px 16px; font-size: 14px; color: #212121; font-weight: 500; text-align: right;">${donation.message || 'No message'}</td>
+              </tr>
+              <tr style="border-bottom: 1px solid #e0e0e0;">
+                <td style="padding: 14px 16px; font-size: 13px; color: #757575; font-weight: 500;">Transaction ID</td>
+                <td style="padding: 14px 16px; font-size: 12px; color: #212121; font-weight: 400; text-align: right; word-break: break-all;">${donation.txid || 'N/A'}</td>
+              </tr>
+              <tr style="background: #f5f5f5;">
+                <td style="padding: 18px 16px; font-size: 14px; color: #424242; font-weight: 600;">Donation Amount</td>
+                <td style="padding: 18px 16px; font-size: 18px; color: #1976d2; font-weight: 700; text-align: right;">${formattedAmount} ${donation.coin || 'BCH'}</td>
+              </tr>
+            </table>
+          </div>
+          
+          <!-- Footer Note -->
+          <div style="margin-top: 20px; padding: 12px 16px; background: #f5f5f5; border-left: 3px solid #1976d2; border-radius: 4px;">
+            <div style="color: #424242; font-size: 12px; line-height: 1.6;">
+              <strong>Note:</strong> This transaction is recorded on the Bitcoin Cash blockchain. For receipt or tax purposes, use the 'View Receipt' option.
+            </div>
+          </div>
+        </div>
       </div>
     `,
     html: true,
     ok: {
       label: 'Close',
-      color: 'primary'
+      color: 'primary',
+      flat: false,
+      unelevated: true,
+      noCaps: true
+    },
+    cancel: {
+      label: 'View Receipt',
+      color: 'primary',
+      flat: true,
+      noCaps: true
     }
+  }).onCancel(() => {
+    viewReceipt(donation)
   })
+}
+
+const viewReceipt = (donation) => {
+  try {
+    const receiptDate = new Date(donation.date).toLocaleDateString('en-US', { 
+      year: 'numeric', 
+      month: 'long', 
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    })
+    
+    const currentDate = new Date().toLocaleDateString('en-US', { 
+      year: 'numeric', 
+      month: 'long', 
+      day: 'numeric' 
+    })
+    
+    const mockTxId = `BTHLP-${Date.now().toString().slice(-10)}`
+    const walletInfo = selectedWallet.value
+    const formattedAmount = formatCurrency(donation.amount)
+    const statusBadgeColor = donation.status === 'completed' ? '#4caf50' : '#ff9800'
+    
+    const receiptHTML = `
+      <div style="max-width: 700px; margin: 0 auto; font-family: 'Roboto', sans-serif; background: white;">
+        <!-- Letterhead -->
+        <div style="background: white; padding: 32px 32px 24px; text-align: center; border-bottom: 2px solid #e0e0e0; margin: -16px -16px 0 -16px;">
+          <div style="font-size: 32px; font-weight: 700; color: #212121; letter-spacing: 0.5px; margin-bottom: 6px;">BiToHelp</div>
+          <div style="font-size: 13px; color: #757575; font-weight: 400; margin-bottom: 4px;">Blockchain-Powered Charitable Giving</div>
+          <div style="font-size: 12px; color: #9e9e9e;">Building a Better Tomorrow, One Transaction at a Time</div>
+        </div>
+        
+        <!-- Receipt Title -->
+        <div style="background: #fafafa; padding: 20px 32px; border-bottom: 1px solid #e0e0e0;">
+          <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+            <div>
+              <h2 style="margin: 0; color: #212121; font-size: 22px; font-weight: 600;">Official Donation Receipt</h2>
+              <p style="margin: 6px 0 0 0; color: #757575; font-size: 13px;">Tax-Deductible Donation Record</p>
+            </div>
+            <div style="text-align: right;">
+              <div style="background: ${statusBadgeColor}; color: white; padding: 6px 14px; border-radius: 4px; font-size: 12px; font-weight: 600; text-transform: uppercase; display: inline-block;">
+                ${donation.status}
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Receipt Details -->
+        <div style="padding: 32px;">
+          <!-- Receipt Info Bar -->
+          <div style="background: #f5f5f5; padding: 18px 20px; border-radius: 8px; margin-bottom: 28px; border: 1px solid #e0e0e0;">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+              <div>
+                <div style="color: #757575; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.3px; margin-bottom: 6px;">Receipt Number</div>
+                <div style="color: #212121; font-size: 15px; font-weight: 600; font-family: monospace;">${mockTxId}</div>
+              </div>
+              <div style="text-align: right;">
+                <div style="color: #757575; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.3px; margin-bottom: 6px;">Issue Date</div>
+                <div style="color: #212121; font-size: 14px; font-weight: 600;">${currentDate}</div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Donor Information -->
+          <div style="margin-bottom: 28px;">
+            <h3 style="color: #424242; font-size: 15px; font-weight: 600; margin: 0 0 14px 0; text-transform: uppercase; letter-spacing: 0.3px; border-bottom: 2px solid #e0e0e0; padding-bottom: 10px;">Donor Information</h3>
+            <table style="width: 100%; border-collapse: collapse;">
+              <tr>
+                <td style="padding: 12px 0; color: #757575; font-size: 13px; font-weight: 500; width: 35%;">Full Name:</td>
+                <td style="padding: 12px 0; color: #212121; font-size: 14px; font-weight: 500;">${walletInfo.donorName}</td>
+              </tr>
+              <tr style="border-top: 1px solid #eeeeee;">
+                <td style="padding: 12px 0; color: #757575; font-size: 13px; font-weight: 500;">Email Address:</td>
+                <td style="padding: 12px 0; color: #212121; font-size: 14px; font-weight: 500;">${walletInfo.email}</td>
+              </tr>
+              <tr style="border-top: 1px solid #eeeeee;">
+                <td style="padding: 12px 0; color: #757575; font-size: 13px; font-weight: 500;">BCH Wallet:</td>
+                <td style="padding: 12px 0; color: #212121; font-size: 11px; font-weight: 500; font-family: monospace; word-break: break-all;">${walletInfo.address}</td>
+              </tr>
+            </table>
+          </div>
+          
+          <!-- Donation Information -->
+          <div style="margin-bottom: 28px;">
+            <h3 style="color: #424242; font-size: 15px; font-weight: 600; margin: 0 0 14px 0; text-transform: uppercase; letter-spacing: 0.3px; border-bottom: 2px solid #e0e0e0; padding-bottom: 10px;">Donation Details</h3>
+            <table style="width: 100%; border-collapse: collapse;">
+              <tr>
+                <td style="padding: 12px 0; color: #757575; font-size: 13px; font-weight: 500; width: 35%;">Transaction Date:</td>
+                <td style="padding: 12px 0; color: #212121; font-size: 14px; font-weight: 500;">${receiptDate}</td>
+              </tr>
+              <tr style="border-top: 1px solid #eeeeee;">
+                <td style="padding: 12px 0; color: #757575; font-size: 13px; font-weight: 500;">Recipient Organization:</td>
+                <td style="padding: 12px 0; color: #212121; font-size: 14px; font-weight: 500;">${donation.recipient}</td>
+              </tr>
+              <tr style="border-top: 1px solid #eeeeee;">
+                <td style="padding: 12px 0; color: #757575; font-size: 13px; font-weight: 500;">Cause Category:</td>
+                <td style="padding: 12px 0; color: #212121; font-size: 14px; font-weight: 500;">${donation.cause}</td>
+              </tr>
+              <tr style="border-top: 1px solid #eeeeee;">
+                <td style="padding: 12px 0; color: #757575; font-size: 13px; font-weight: 500;">Payment Method:</td>
+                <td style="padding: 12px 0; color: #212121; font-size: 14px; font-weight: 500;">Bitcoin Cash (BCH)</td>
+              </tr>
+            </table>
+          </div>
+          
+          <!-- Amount Section -->
+          <div style="background: #fafafa; padding: 24px; border-radius: 8px; margin: 28px 0; border: 2px solid #e0e0e0;">
+            <div style="text-align: center;">
+              <div style="color: #757575; font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.3px; margin-bottom: 10px;">Total Donation Amount</div>
+              <div style="color: #1976d2; font-size: 36px; font-weight: 700; line-height: 1;">${formattedAmount} BCH</div>
+            </div>
+          </div>
+          
+          <!-- Tax Information -->
+          <div style="background: #f5f5f5; border: 1px solid #e0e0e0; border-radius: 8px; padding: 18px 20px; margin-bottom: 24px; border-left: 3px solid #1976d2;">
+            <div>
+              <h4 style="margin: 0 0 8px 0; color: #424242; font-size: 14px; font-weight: 600;">Tax Deduction Notice</h4>
+              <p style="margin: 0; color: #616161; font-size: 13px; line-height: 1.6;">
+                This receipt serves as official documentation for tax purposes. Please consult with your tax advisor regarding the deductibility of this donation in your jurisdiction. BiToHelp is a registered charitable platform facilitating cryptocurrency donations.
+              </p>
+            </div>
+          </div>
+          
+          <!-- Footer -->
+          <div style="text-align: center; padding-top: 24px; border-top: 2px solid #e0e0e0;">
+            <div style="color: #424242; font-size: 18px; font-weight: 600; margin-bottom: 10px;">Thank You for Your Generosity!</div>
+            <p style="color: #757575; font-size: 13px; line-height: 1.7; margin: 10px 0;">
+              Your contribution makes a real difference in people's lives. Together, we're building<br/>
+              a more transparent and efficient charitable giving ecosystem powered by blockchain technology.
+            </p>
+            <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e0e0e0;">
+              <p style="color: #9e9e9e; font-size: 11px; margin: 5px 0; line-height: 1.6;">
+                BiToHelp - Cryptocurrency Donation Platform<br/>
+                This is a computer-generated receipt and is valid without signature.<br/>
+                For inquiries, please contact support@bitohelp.org
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    `
+    
+    $q.dialog({
+      title: '',
+      message: receiptHTML,
+      html: true,
+      ok: {
+        label: 'Close',
+        color: 'grey-7',
+        flat: true,
+        noCaps: true
+      },
+      cancel: {
+        label: 'Download Receipt',
+        color: 'primary',
+        unelevated: true,
+        noCaps: true
+      }
+    }).onCancel(() => {
+      downloadReceipt(donation)
+    })
+  } catch (error) {
+    console.error('Error in viewReceipt:', error)
+    $q.notify({
+      type: 'negative',
+      message: 'Error viewing receipt',
+      caption: error.message,
+      position: 'top'
+    })
+  }
+}
+
+const downloadReceipt = (donation) => {
+  try {
+    const receiptDate = new Date(donation.date).toLocaleDateString('en-US', { 
+      year: 'numeric', 
+      month: 'long', 
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    })
+    
+    const currentDate = new Date().toLocaleDateString('en-US', { 
+      year: 'numeric', 
+      month: 'long', 
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    })
+    
+    const mockTxId = `BTHLP-${Date.now().toString().slice(-10)}`
+    const walletInfo = selectedWallet.value
+    const formattedAmount = formatCurrency(donation.amount)
+    
+    
+    const receiptContent = `
+╔════════════════════════════════════════════════════════════════════════════╗
+║                                                                            ║
+║                              B i T o H e l p                               ║
+║                   Blockchain-Powered Charitable Giving                     ║
+║            Building a Better Tomorrow, One Transaction at a Time           ║
+║                                                                            ║
+╚════════════════════════════════════════════════════════════════════════════╝
+
+
+                          OFFICIAL DONATION RECEIPT
+                        Tax-Deductible Donation Record
+                                                                              
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+ RECEIPT INFORMATION
+
+ Receipt Number:      ${mockTxId}
+ Issue Date:          ${currentDate}
+ Transaction Status:  ${donation.status.toUpperCase()}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+ DONOR INFORMATION
+
+ Full Name:           ${walletInfo.donorName}
+ Email Address:       ${walletInfo.email}
+ BCH Wallet Address:  ${walletInfo.address}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+ DONATION DETAILS
+
+ Transaction Date:         ${receiptDate}
+ Recipient Organization:   ${donation.recipient}
+ Cause Category:           ${donation.cause}
+ Payment Method:           Bitcoin Cash (BCH)
+ 
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+                            DONATION AMOUNT
+
+                        ${formattedAmount} BCH
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+ TAX INFORMATION
+
+ This receipt serves as official documentation for tax purposes. Please
+ consult with your tax advisor regarding the deductibility of this donation
+ in your jurisdiction. BiToHelp is a registered charitable platform 
+ facilitating cryptocurrency donations to verified non-profit organizations.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+                       THANK YOU FOR YOUR GENEROSITY!
+
+ Your contribution makes a real difference in people's lives. Together, we're
+ building a more transparent and efficient charitable giving ecosystem powered
+ by blockchain technology.
+
+ This transaction has been recorded on the Bitcoin Cash blockchain, ensuring
+ permanent transparency and accountability.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+                              BiToHelp Platform
+                    Cryptocurrency Donation Platform
+          This is a computer-generated receipt and is valid without signature
+                 For inquiries: support@bitohelp.org
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    `
+    
+   
+    const blob = new Blob([receiptContent], { type: 'text/plain;charset=utf-8' })
+    const url = window.URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = `BiToHelp_Receipt_${mockTxId}.txt`
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    window.URL.revokeObjectURL(url)
+    
+    $q.notify({
+      type: 'positive',
+      message: 'Receipt downloaded successfully!',
+      caption: `Saved as BiToHelp_Receipt_${mockTxId}.txt`,
+      position: 'top',
+      timeout: 3000,
+      icon: 'download',
+      actions: [
+        {
+          label: 'OK',
+          color: 'white'
+        }
+      ]
+    })
+  } catch (error) {
+    console.error('Error in downloadReceipt:', error)
+    $q.notify({
+      type: 'negative',
+      message: 'Error downloading receipt',
+      caption: error.message,
+      position: 'top',
+      icon: 'error'
+    })
+  }
 }
 
 const refreshActivity = () => {
@@ -811,7 +1281,8 @@ onMounted(async () => {
 }
 
 .sidebar-container {
-  background-color: #eeeeee;
+  background-color: #8e8b8b2d;
+
 }
 
 .accounts-sidebar {
@@ -840,6 +1311,7 @@ onMounted(async () => {
 .details-panel {
   background-color: #aba7a73a;
   border-radius: 8px;
+  border: inset 1px rgba(255, 255, 255, 0.5);
   padding: 1rem;
 }
 
@@ -968,26 +1440,47 @@ onMounted(async () => {
   transition: all 0.3s ease;
   
   &:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+    transform: translateX(-5px);
+    box-shadow: 0 8px 16px rgba(14, 63, 221, 0.15);
+    border-color: #8799f3;
   }
 }
 
+
+
+@property --angle {
+  syntax: "<angle>";
+  initial-value: 0deg;
+  inherits: false;
+}
 
 .recipient-card {
-
-  border: 2px solid #e0e0e0;
-  border-radius: 12px;
+  --angle: 0deg;
+  background: #d1d2d485;
+  border-radius: 4px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.9);
+  backdrop-filter: blur(9px);
   transition: all 0.3s ease;
-  
-  
-  &:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 8px 16px rgba(211, 37, 37, 0.15);
-  }
 }
 
+.recipient-card:hover {
+  transform: scale(1.05); 
+  box-shadow: 0 8px 16px rgba(211, 37, 37, 0.1);
+  border: 8px solid transparent;
+  border-image: conic-gradient(
+    from var(--angle),
+    #150ae5, #ffea01,
+    #02f791, #f20404
+  ) 1;
+
+  animation: border-rotate 4s linear infinite;
+}
+
+@keyframes border-rotate {
+  to {
+    --angle: 360deg;
+  }
+}
 .stat-box {
   text-align: center;
   padding: 16px;
