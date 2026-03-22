@@ -1,6 +1,6 @@
 from django.db import models
+
 class Nonprofit(models.Model):
-  
     CATEGORY_CHOICES = [
         ('education', 'Education'),
         ('health', 'Health'),
@@ -13,7 +13,7 @@ class Nonprofit(models.Model):
         ('other', 'Other'),
     ]
 
-  
+    # Basic Information
     name = models.CharField(max_length=255)
     description = models.TextField()
     bch_address = models.CharField(max_length=255, unique=True, db_index=True)
@@ -23,13 +23,15 @@ class Nonprofit(models.Model):
     category = models.CharField(max_length=50, choices=CATEGORY_CHOICES)
     logo_url = models.URLField(blank=True)
 
-  
+    # Status
     verified = models.BooleanField(default=False)
     active = models.BooleanField(default=True)
 
+    # Timestamps
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+    # Statistics
     total_donations = models.DecimalField(max_digits=20, decimal_places=8, default=0)
     donation_count = models.PositiveIntegerField(default=0)
 
@@ -43,9 +45,14 @@ class Nonprofit(models.Model):
 
     def update_donation_stats(self):
         from donations.models import Donation
-        donations = Donation.objects.filter(nonprofit=self)
-        self.donation_count = donations.count()
-        self.total_donations = donations.aggregate(
-            total=models.Sum('amount')
-        )['total'] or 0
-        self.save() 
+        from django.db.models import Sum, Count
+        
+        stats = Donation.objects.filter(nonprofit=self).aggregate(
+            total=Sum('amount'),
+            count=Count('id')
+        )
+   
+        Nonprofit.objects.filter(pk=self.pk).update(
+            donation_count=stats['count'] or 0,
+            total_donations=stats['total'] or 0
+        ) 
