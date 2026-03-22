@@ -1,5 +1,6 @@
 from django.shortcuts import render
 from django.db.models import Sum, Count
+from django.db import transaction
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
 from rest_framework import viewsets, status
@@ -7,6 +8,7 @@ from rest_framework.decorators import api_view, action
 from rest_framework.response import Response
 from .models import Donation
 from .serializers import DonationSerializer, DonationStatsSerializer
+import time
 
 
 @method_decorator(csrf_exempt, name='dispatch')
@@ -14,8 +16,30 @@ class DonationViewSet(viewsets.ModelViewSet):
     queryset = Donation.objects.all()
     serializer_class = DonationSerializer
     
+    def create(self, request, *args, **kwargs):
+        max_retries = 5
+        for attempt in range(max_retries):
+            try:
+                serializer = self.get_serializer(data=request.data)
+                serializer.is_valid(raise_exception=True)
+                with transaction.atomic():
+                    self.perform_create(serializer)
+                
+                headers = self.get_success_headers(serializer.data)
+                return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+            except Exception as e:
+                error_msg = str(e).lower()
+                is_lock_error = 'database is locked' in error_msg or 'locked' in error_msg
+                if is_lock_error and attempt < max_retries - 1:
+                    time.sleep(0.2 * (attempt + 1))  # Exponential backoff
+                    continue
+                raise
+        
+        return Response({'error': 'Database temporarily unavailable'}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+    
     @action(detail=False, methods=['get'])
     def recent(self, request):
+
         limit = int(request.query_params.get('limit', 10))
         donations = self.queryset[:limit]
         serializer = self.get_serializer(donations, many=True)
@@ -23,6 +47,7 @@ class DonationViewSet(viewsets.ModelViewSet):
     
     @action(detail=False, methods=['get'])
     def by_cause(self, request):
+
         cause = request.query_params.get('cause')
         if cause:
             donations = self.queryset.filter(cause__icontains=cause)
@@ -33,6 +58,7 @@ class DonationViewSet(viewsets.ModelViewSet):
 
 @api_view(['GET'])
 def donation_stats(request):
+
     total_donations = Donation.objects.count()
     total_amount = Donation.objects.aggregate(
         total=Sum('amount')
@@ -49,7 +75,7 @@ def donation_stats(request):
             'amount': float(item['total']),
             'count': item['count']
         }
-    
+        
     by_coin = {}
     coins = Donation.objects.values('coin').annotate(
         total=Sum('amount'),
@@ -71,6 +97,7 @@ def donation_stats(request):
 
 @api_view(['GET'])
 def health_check(request):
+    
     return Response({
         'status': 'healthy',
         'message': 'BiToHelp API is running'
