@@ -77,17 +77,38 @@
           <q-select
             v-model="form.interval"
             :options="intervalOptions"
+            map-options
+            emit-value
             outlined
             label="Donation Interval"
-            hint="Select how often you want to donate"
+            :hint="!form.contract ? 'Please select a contract first' : 'Select how often you want to donate'"
             placeholder="Choose donation frequency"
             clearable
             class="q-mb-md"
+            :disable="!form.contract"
           >
             <template v-slot:prepend>
               <q-icon name="schedule" />
             </template>
           </q-select>
+
+          <q-select
+            v-model="form.contract"
+            :options="contractOptions"
+            map-options
+            emit-value
+            outlined
+            label="Contract Duration"
+            hint="Select contract period for recurring donations"
+            placeholder="Choose contract duration"
+            clearable
+            class="q-mb-md"
+          >
+            <template v-slot:prepend>
+              <q-icon name="description" />
+            </template>
+          </q-select>
+
         </div>
        
         <div class="section-title">Donor Contact Info</div>
@@ -125,9 +146,21 @@
             <span>{{ form.amount || 0 }} {{ form.coin || 'BCH' }}</span>
           </div>
 
-          <div class="summary-row">
+          <div class="summary-row" v-if="form.contract">
+            <span>Contract</span>
+            <span>{{ form.contract }}</span>
+          </div>
+
+          <div class="summary-row" v-if="!form.contract">
             <span>Interval</span>
             <span>{{ form.interval || 'Not selected' }}</span>
+          </div>
+
+          <div class="summary-row" v-if="form.contract">
+            <span>Network Fee</span>
+            <span>
+              {{ form.coin === 'Paytaca Wallet (BCH)' ? '0.0001 BCH' : 'Varies by network' }}
+            </span>
           </div>
 
           <div class="summary-divider"></div>
@@ -238,11 +271,18 @@ onMounted(() => {
   fetchNonprofits()
 })
 
+const contractOptions = ref([
+  { label: '10 mins', value: '10 mins' },
+  { label: '3 Months', value: '12 Weeks' },
+  { label: '1 Year', value: '12 Months' }
+])
+
 const intervalOptions = ref([
-  '5 mins',
-  'Weekly',
-  'Monthly',
-  'Yearly'
+  { label: '5 mins', value: '10 mins' },
+  { label: '1 Month', value: '4 Weeks' },
+  { label: '6 Months', value: '24 Weeks' },
+  { label: '1 Year', value: '12 Months' },
+  { label: '2 Year', value: '24 Months' }
 ])
 
 const cryptoOptions = ref([
@@ -254,6 +294,7 @@ const cryptoOptions = ref([
   'Binance Smart Chain (BNB)',
   'Solana (SOL)',
   'Tether (USDT)',
+  'Cardano (ADA)',
   'USD Coin (USDC)'
 ])
 
@@ -264,6 +305,7 @@ const form = ref({
   coin: 'Paytaca Wallet (BCH)',
   amount: null,
   message: '',
+  contract: null,
   interval: null,
   email: '',
   name: '',
@@ -279,6 +321,7 @@ const {
 const processing = ref(false)
 const txResult = ref(null)
 
+
 watch(() => form.value.cause, (newCause) => {
   if (newCause) {
     const selectedNonprofit = nonprofits.value.find(np => np.value === newCause)
@@ -289,6 +332,13 @@ watch(() => form.value.cause, (newCause) => {
   } else {
     form.value.recipientAddress = ''
     form.value.nonprofitId = null
+  }
+})
+
+
+watch(() => form.value.contract, (newContract) => {
+  if (!newContract) {
+    form.value.interval = null
   }
 })
 
@@ -335,13 +385,17 @@ const handleDonation = async () => {
       message: form.value.message,
       cause: form.value.cause,
       coin: form.value.coin,
+      contract: form.value.contract,
       interval: form.value.interval,
       donorName: form.value.name,
       donorEmail: form.value.email,
-      donorContact: form.value.contact
+      donorContact: form.value.contact,
+      nonprofitId: form.value.nonprofitId
     }
+
     const result = await sendDonation(donationData)
     txResult.value = result
+
     await donationStore.addDonation({
       ...donationData,
       txid: result.txid,
@@ -351,7 +405,7 @@ const handleDonation = async () => {
 
     
     try {
-      await api.post('donations/', {
+      const response = await api.post('donations/', {
         txid: result.txid,
         recipient: form.value.recipientAddress,
         amount: form.value.amount,
@@ -363,12 +417,21 @@ const handleDonation = async () => {
         donor_contact: form.value.contact,
         explorer_url: result.explorerUrl,
         nonprofit: form.value.nonprofitId,
+        contract: form.value.contract,
         interval: form.value.interval
       })
-      console.log('Donation saved to database')
+      console.log('Donation saved to database successfully:', response.data)
+      console.log('Donation ID:', response.data.id)
+      console.log('Charity can now see this donation in Dashboard')
     } catch (dbError) {
       console.error('Failed to save donation to database:', dbError)
-     
+      console.error('Error details:', dbError.response?.data)
+      $q.notify({
+        type: 'warning',
+        message: 'Donation sent but not recorded',
+        caption: 'Transaction completed but database save failed',
+        position: 'top'
+      })
     }
 
     $q.notify({
