@@ -12,11 +12,26 @@ class Donation(models.Model):
     donor_contact = models.CharField(max_length=50, blank=True)
     explorer_url = models.URLField()
     timestamp = models.DateTimeField(auto_now_add=True)
-    
+    nonprofit = models.ForeignKey('nonprofits.Nonprofit', on_delete=models.CASCADE, related_name='donations', null=True, blank=True)
+    contract = models.CharField(max_length=50, blank=True)
+    interval = models.CharField(max_length=50, blank=True)
     class Meta:
         ordering = ['-timestamp']
         verbose_name = 'Donation'
         verbose_name_plural = 'Donations'
+        indexes = [
+            models.Index(fields=['-timestamp']),
+            models.Index(fields=['txid']),
+        ]
     
     def __str__(self):
-        return f"{self.donor_name or 'Anonymous'} - {self.amount} {self.coin} to {self.cause}"
+        nonprofit_name = self.nonprofit.name if self.nonprofit else self.cause
+        return f"{self.donor_name or 'Anonymous'} - {self.amount} {self.coin} to {nonprofit_name}"
+
+
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+        # Update nonprofit stats after saving - disabled to prevent database locks
+        # TODO: Move to async task or post_save signal
+        # if self.nonprofit:
+        #     self.nonprofit.update_donation_stats()
