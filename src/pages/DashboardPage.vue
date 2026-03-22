@@ -111,16 +111,16 @@
             indicator-color="blue-7"
             align="left"
           >
-            <q-tab name="transactions" label="Transactions" />
+            <q-tab name="transactions" label="All Donations" />
             <q-tab name="details" label="Details" />
-            <q-tab name="pending" label="Pending" />
+            <q-tab name="pending" label="Pending Withdrawals" />
           </q-tabs>
 
           <q-separator class="q-mb-lg" />
 
           <q-tab-panels v-model="detailTab" animated>
             <q-tab-panel name="transactions">
-              <div class="text-h6 q-mb-md">Recent Transactions</div>
+              <div class="text-h6 q-mb-md">All Donations Received</div>
               
               <q-table
                 :rows="transactions"
@@ -133,8 +133,8 @@
                 <template v-slot:body-cell-status="props">
                   <q-td :props="props">
                     <q-badge
-                      :color="props.row.status === 'completed' ? 'positive' : props.row.status === 'pending' ? 'warning' : 'negative'"
-                      :label="props.row.status"
+                      :color="props.row.withdrawn ? 'positive' : 'warning'"
+                      :label="props.row.withdrawn ? 'Withdrawn' : 'Pending Withdrawal'"
                     />
                   </q-td>
                 </template>
@@ -249,7 +249,7 @@
 
        
             <q-tab-panel name="pending">
-              <div class="text-h6 q-mb-md">Pending Transactions</div>
+              <div class="text-h6 q-mb-md">Pending Withdrawals</div>
               
               <q-table
                 :rows="pendingTransactions"
@@ -261,7 +261,7 @@
               >
                 <template v-slot:body-cell-status="props">
                   <q-td :props="props">
-                    <q-badge color="warning" label="pending" />
+                    <q-badge color="warning" label="Pending Withdrawal" />
                   </q-td>
                 </template>
                 <template v-slot:body-cell-amount="props">
@@ -510,15 +510,21 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useQuasar } from 'quasar'
 import { useBCHContract } from '../composables/useBCHContract'
+import { api } from 'boot/axios'
 import bchImg from 'src/assets/bch.png'
 import projectImg from 'src/assets/project.png'
 import transactionImg from 'src/assets/transaction.png'
 
 const $q = useQuasar()
 const { isConnected } = useBCHContract()
+
+
+const loadingDonations = ref(false)
+const apiDonations = ref([]) 
+const withdrawnDonations = ref(new Set())
 
 const activeTab = ref('balances')
 const detailTab = ref('details')
@@ -616,13 +622,214 @@ const accounts = ref([
 const selectedAccount = ref(accounts.value[0])
 
 
+const fetchDonations = async () => {
+  loadingDonations.value = true
+  try {
+    const response = await api.get('donations/')
+    
+    
+    if (Array.isArray(response.data)) {
+      apiDonations.value = response.data
+      console.log('Loaded donations from API:', apiDonations.value.length)
+    } else if (response.data && Array.isArray(response.data.results)) {
+      
+      apiDonations.value = response.data.results
+      console.log('Loaded donations from API (paginated):', apiDonations.value.length)
+    } else {
+      console.warn(' Unexpected API response format:', response.data)
+      apiDonations.value = []
+    }
+    
+  
+    updateTransactionsFromAPI()
+    
+    
+    updateAccountStats()
+    
+    if (apiDonations.value.length > 0) {
+      $q.notify({
+        type: 'positive',
+        message: `Loaded ${apiDonations.value.length} donations`,
+        position: 'top',
+        timeout: 2000
+      })
+    }
+  } catch (error) {
+    console.error(' Failed to fetch donations:', error)
+    
+  
+    apiDonations.value = []
+    
+    $q.notify({
+      type: 'negative',
+      message: 'Failed to load donation data',
+      caption: 'Using default view. Check if server is running.',
+      position: 'top'
+    })
+  } finally {
+    loadingDonations.value = false
+  }
+}
+
+
+const updateTransactionsFromAPI = () => {
+  if (!Array.isArray(apiDonations.value) || apiDonations.value.length === 0) {
+    console.log('No donations data to display')
+    return
+  }
+  
+  
+  const mappedTransactions = apiDonations.value.map((donation, index) => ({
+    id: donation.id || index + 1,
+    date: new Date(donation.timestamp).toISOString().split('T')[0],
+    description: `Donation from ${donation.donor_name || 'Anonymous'}${donation.message ? ' - ' + donation.message : ''}`,
+    donorName: donation.donor_name || 'Anonymous',
+    donorEmail: donation.donor_email || 'N/A',
+    donorContact: donation.donor_contact || 'N/A',
+    type: donation.coin || 'BCH',
+    amount: parseFloat(donation.amount),
+    status: withdrawnDonations.value.has(donation.id) ? 'completed' : 'pending',
+    cause: donation.cause,
+    txid: donation.txid,
+    explorerUrl: donation.explorer_url,
+    contract: donation.contract || 'N/A',
+    interval: donation.interval || 'N/A',
+    nonprofit: donation.nonprofit,
+    withdrawn: withdrawnDonations.value.has(donation.id)
+  }))
+  
+  transactions.value = mappedTransactions.slice(0, 5)
+  allTransactions.value = mappedTransactions
+  
+
+  pendingTransactions.value = mappedTransactions.filter(t => !t.withdrawn)
+  
+
+  createWithdrawalAccounts()
+}
+
+
+const updateAccountStats = () => {
+  if (!Array.isArray(apiDonations.value) || apiDonations.value.length === 0) {
+    console.log('No donations to update stats')
+    return
+  }
+  
+  const totalAmount = apiDonations.value.reduce((sum, d) => sum + parseFloat(d.amount), 0)
+  const uniqueNonprofits = new Set(apiDonations.value.map(d => d.nonprofit || d.cause))
+  
+  if (selectedAccount.value) {
+    selectedAccount.value.totalReceived = totalAmount
+    selectedAccount.value.current = totalAmount
+    selectedAccount.value.available = totalAmount
+    selectedAccount.value.transactionCount = apiDonations.value.length
+    
+  
+    selectedAccount.value.cards = [
+      {
+        id: 1,
+        title1: 'TOTAL DONATION',
+        title2: 'RECEIVED',
+        colorClass: 'wallet-stat-card-blue',
+        icon: bchImg,
+        largeValue: totalAmount.toFixed(2),
+        rightIcon: bchImg
+      },
+      {
+        id: 2,
+        title1: 'TOTAL',
+        title2: 'CAUSES',
+        colorClass: 'wallet-stat-card-purple',
+        icon: projectImg,
+        largeValue: `${uniqueNonprofits.size}+`,
+        rightIcon: projectImg
+      },
+      {
+        id: 3,
+        title1: 'VERIFIED',
+        title2: 'TRANSACTION',
+        colorClass: 'wallet-stat-card-yellow',
+        icon: transactionImg,
+        largeValue: `${apiDonations.value.length}+`,
+        rightIcon: transactionImg
+      }
+    ]
+  }
+}
+
+
+const createWithdrawalAccounts = () => {
+  if (!Array.isArray(apiDonations.value) || apiDonations.value.length === 0) return
+  
+  
+  const groupedDonations = {}
+  
+  apiDonations.value.forEach(donation => {
+    const key = donation.cause || 'Unknown Charity'
+    if (!groupedDonations[key]) {
+      groupedDonations[key] = {
+        donations: [],
+        total: 0,
+        pending: 0
+      }
+    }
+    
+    const amount = parseFloat(donation.amount)
+    groupedDonations[key].donations.push(donation)
+    groupedDonations[key].total += amount
+    
+    if (!withdrawnDonations.value.has(donation.id)) {
+      groupedDonations[key].pending += amount
+    }
+  })
+  
+
+  const newAccounts = Object.entries(groupedDonations).map(([charity, data], index) => ({
+    id: index + 1,
+    name: charity,
+    number: `${data.donations.length} donations`,
+    address: data.donations[0]?.recipient || '',
+    current: data.total,
+    available: data.pending,
+    type: 'Paytaca',
+    totalFees: 0,
+    charityName: charity,
+    email: '',
+    totalReceived: data.total,
+    firstDonation: data.donations[data.donations.length - 1]?.timestamp ? new Date(data.donations[data.donations.length - 1].timestamp).toLocaleDateString() : 'N/A',
+    lastDonation: data.donations[0]?.timestamp ? new Date(data.donations[0].timestamp).toLocaleDateString() : 'N/A',
+    transactionCount: data.donations.length,
+    donations: data.donations,
+    cards: []
+  }))
+  
+  accounts.value = newAccounts
+  if (newAccounts.length > 0 && !selectedAccount.value) {
+    selectedAccount.value = newAccounts[0]
+  }
+}
+
+
+onMounted(() => {
+  fetchDonations()
+  
+  
+  const saved = localStorage.getItem('withdrawnDonations')
+  if (saved) {
+    withdrawnDonations.value = new Set(JSON.parse(saved))
+  }
+})
+
+
+
 const transactionSearch = ref('')
 const statusFilter = ref('All')
 const typeFilter = ref('All')
 
 const transactionColumns = [
   { name: 'date', label: 'Date', field: 'date', align: 'left', sortable: true },
-  { name: 'description', label: 'Description', field: 'description', align: 'left' },
+  { name: 'donorName', label: 'Donor Name', field: 'donorName', align: 'left' },
+  { name: 'description', label: 'Message', field: 'description', align: 'left' },
   { name: 'type', label: 'Type', field: 'type', align: 'center' },
   { name: 'amount', label: 'Amount', field: 'amount', align: 'right', sortable: true },
   { name: 'status', label: 'Status', field: 'status', align: 'center' },
@@ -753,7 +960,7 @@ const handleWithdraw = async () => {
 
   try {
     const amount = parseFloat(withdrawForm.value.amount)
-    const donor = withdrawForm.value.donorAddress
+    const donorAddress = withdrawForm.value.donorAddress
 
     
     $q.dialog({
@@ -772,7 +979,7 @@ const handleWithdraw = async () => {
             </div>
             <div style="padding-top: 12px; border-top: 1px solid #e0e0e0;">
               <div style="font-size: 12px; color: #757575; font-weight: 500; margin-bottom: 4px;">RECIPIENT ADDRESS</div>
-              <div style="font-size: 12px; font-weight: 600; color: #424242; font-family: monospace; word-break: break-all;">${donor}</div>
+              <div style="font-size: 12px; font-weight: 600; color: #424242; font-family: monospace; word-break: break-all;">${donorAddress}</div>
             </div>
           </div>
           
@@ -799,16 +1006,41 @@ const handleWithdraw = async () => {
       persistent: true
     }).onOk(async () => {
       try {
+        
         await new Promise(resolve => setTimeout(resolve, 2000))
+        
+    
+        const withdrawnAmount = amount
+        let remainingAmount = withdrawnAmount
+        
+        if (selectedAccount.value?.donations) {
+          for (const donation of selectedAccount.value.donations) {
+            if (remainingAmount <= 0) break
+            if (!withdrawnDonations.value.has(donation.id)) {
+              withdrawnDonations.value.add(donation.id)
+              remainingAmount -= parseFloat(donation.amount)
+            }
+          }
+          
+          
+          localStorage.setItem('withdrawnDonations', JSON.stringify([...withdrawnDonations.value]))
+        }
+        
+  
         selectedAccount.value.available -= amount
-        selectedAccount.value.current -= amount
+        if (selectedAccount.value.available < 0) selectedAccount.value.available = 0
+        
+        
+        await fetchDonations()
+        
         $q.notify({
           type: 'positive',
           message: 'Withdrawal successful!',
-          caption: `${amount} BCH sent to ${donor.substring(0, 30)}...`,
+          caption: `${amount} BCH sent to ${donorAddress.substring(0, 30)}...`,
           position: 'top',
           timeout: 3000
         })
+        
         withdrawForm.value = {
           amount: '',
           donorAddress: '',
@@ -838,21 +1070,22 @@ const handleWithdraw = async () => {
   }
 }
 
-const refreshTransactions = () => {
+const refreshTransactions = async () => {
   $q.notify({
     type: 'info',
     message: 'Refreshing transactions...',
     position: 'top',
     timeout: 1000
   })
-  setTimeout(() => {
-    $q.notify({
-      type: 'positive',
-      message: 'Transactions updated',
-      position: 'top',
-      timeout: 1500
-    })
-  }, 1000)
+  
+  await fetchDonations()
+  
+  $q.notify({
+    type: 'positive',
+    message: 'Transactions updated',
+    position: 'top',
+    timeout: 1500
+  })
 }
 
 const viewTransactionDetails = (transaction) => {
@@ -866,7 +1099,7 @@ const viewTransactionDetails = (transaction) => {
   
   const formattedAmount = formatCurrency(parseFloat(transaction.amount))
   const statusColor = transaction.status === 'completed' ? 'positive' : transaction.status === 'pending' ? 'warning' : 'negative'
-  const typeColor = transaction.type === 'credit' ? '#4caf50' : '#f44336'
+  const typeColor = '#4caf50'
   
   $q.dialog({
     title: '',
@@ -874,7 +1107,7 @@ const viewTransactionDetails = (transaction) => {
       <div style="max-width: 550px; margin: 0 auto; font-family: 'Roboto', sans-serif;">
         <!-- Header -->
         <div style="padding: 20px 24px; background: white; border-bottom: 1px solid #e0e0e0; margin: -16px -16px 0 -16px;">
-          <div style="font-size: 20px; font-weight: 600; color: #212121; margin-bottom: 4px;">Transaction Details</div>
+          <div style="font-size: 20px; font-weight: 600; color: #212121; margin-bottom: 4px;">Donation Details</div>
           <div style="font-size: 13px; color: #757575;">BiToHelp Charity Dashboard</div>
         </div>
         
@@ -891,30 +1124,68 @@ const viewTransactionDetails = (transaction) => {
           <div style="border: 1px solid #e0e0e0; border-radius: 8px; overflow: hidden;">
             <table style="width: 100%; border-collapse: collapse;">
               <tr style="background: #fafafa; border-bottom: 1px solid #e0e0e0;">
-                <td style="padding: 14px 16px; font-size: 13px; color: #757575; font-weight: 500; width: 40%;">Transaction Date</td>
+                <td style="padding: 14px 16px; font-size: 13px; color: #757575; font-weight: 500; width: 40%;">Donation Date</td>
                 <td style="padding: 14px 16px; font-size: 14px; color: #212121; font-weight: 500; text-align: right;">${transactionDate}</td>
               </tr>
               <tr style="border-bottom: 1px solid #e0e0e0;">
-                <td style="padding: 14px 16px; font-size: 13px; color: #757575; font-weight: 500;">Description</td>
-                <td style="padding: 14px 16px; font-size: 14px; color: #212121; font-weight: 500; text-align: right;">${transaction.description}</td>
+                <td style="padding: 14px 16px; font-size: 13px; color: #757575; font-weight: 500;">Donor Name</td>
+                <td style="padding: 14px 16px; font-size: 14px; color: #212121; font-weight: 600; text-align: right;">${transaction.donorName || 'Anonymous'}</td>
               </tr>
               <tr style="border-bottom: 1px solid #e0e0e0;">
-                <td style="padding: 14px 16px; font-size: 13px; color: #757575; font-weight: 500;">Transaction Type</td>
+                <td style="padding: 14px 16px; font-size: 13px; color: #757575; font-weight: 500;">Donor Email</td>
+                <td style="padding: 14px 16px; font-size: 14px; color: #212121; font-weight: 500; text-align: right;">${transaction.donorEmail || 'N/A'}</td>
+              </tr>
+              <tr style="border-bottom: 1px solid #e0e0e0;">
+                <td style="padding: 14px 16px; font-size: 13px; color: #757575; font-weight: 500;">Donor Contact</td>
+                <td style="padding: 14px 16px; font-size: 14px; color: #212121; font-weight: 500; text-align: right;">${transaction.donorContact || 'N/A'}</td>
+              </tr>
+              ${transaction.contract && transaction.contract !== 'N/A' ? `
+              <tr style="border-bottom: 1px solid #e0e0e0;">
+                <td style="padding: 14px 16px; font-size: 13px; color: #757575; font-weight: 500;">Contract</td>
+                <td style="padding: 14px 16px; font-size: 14px; color: #1976d2; font-weight: 600; text-align: right;">${transaction.contract}</td>
+              </tr>
+              ` : ''}
+              ${transaction.interval && transaction.interval !== 'N/A' ? `
+              <tr style="border-bottom: 1px solid #e0e0e0;">
+                <td style="padding: 14px 16px; font-size: 13px; color: #757575; font-weight: 500;">Interval</td>
+                <td style="padding: 14px 16px; font-size: 14px; color: #1976d2; font-weight: 600; text-align: right;">${transaction.interval}</td>
+              </tr>
+              ` : ''}
+              <tr style="border-bottom: 1px solid #e0e0e0;">
+                <td style="padding: 14px 16px; font-size: 13px; color: #757575; font-weight: 500;">Message</td>
+                <td style="padding: 14px 16px; font-size: 14px; color: #212121; font-weight: 500; text-align: right;">${transaction.description || 'No message'}</td>
+              </tr>
+              <tr style="border-bottom: 1px solid #e0e0e0;">
+                <td style="padding: 14px 16px; font-size: 13px; color: #757575; font-weight: 500;">Wallet Type</td>
                 <td style="padding: 14px 16px; font-size: 14px; color: ${typeColor}; font-weight: 600; text-align: right; text-transform: uppercase;">${transaction.type}</td>
               </tr>
               <tr style="background: #f5f5f5;">
                 <td style="padding: 18px 16px; font-size: 14px; color: #424242; font-weight: 600;">Amount</td>
                 <td style="padding: 18px 16px; font-size: 18px; color: ${typeColor}; font-weight: 700; text-align: right;">
-                  ${transaction.type === 'credit' ? '+' : '-'}${formattedAmount} BCH
+                  ${formattedAmount} ${transaction.type}
                 </td>
               </tr>
+              ${transaction.txid ? `
+              <tr style="border-top: 1px solid #e0e0e0;">
+                <td style="padding: 14px 16px; font-size: 13px; color: #757575; font-weight: 500;">Transaction ID</td>
+                <td style="padding: 14px 16px; font-size: 11px; color: #424242; font-family: monospace; text-align: right; word-break: break-all;">${transaction.txid}</td>
+              </tr>
+              ` : ''}
             </table>
           </div>
+          
+          ${transaction.explorerUrl ? `
+          <div style="margin-top: 16px; text-align: center;">
+            <a href="${transaction.explorerUrl}" target="_blank" style="display: inline-block; padding: 10px 24px; background: #1976d2; color: white; text-decoration: none; border-radius: 4px; font-weight: 600; font-size: 13px;">
+              View on Blockchain Explorer
+            </a>
+          </div>
+          ` : ''}
           
           <!-- Footer Note -->
           <div style="margin-top: 20px; padding: 12px 16px; background: #f5f5f5; border-left: 3px solid #1976d2; border-radius: 4px;">
             <div style="color: #424242; font-size: 12px; line-height: 1.6;">
-              <strong>Note:</strong> This transaction is recorded on the Bitcoin Cash blockchain and can be verified through the transaction hash.
+              <strong>Note:</strong> This donation is recorded on the Bitcoin Cash blockchain and can be verified through the transaction hash.
             </div>
           </div>
         </div>
@@ -938,7 +1209,7 @@ const viewTransactionDetails = (transaction) => {
 }
 
 .sidebar-container {
-  background-color: #eeeeee; 
+   background-color: #8e8b8b2d;
 }
 
 .accounts-sidebar {
@@ -967,7 +1238,7 @@ const viewTransactionDetails = (transaction) => {
 }
 
 .details-panel {
-  background-color: #aba7a73a;
+  background-color: #8e8b8b2d;
   border-radius: 8px;
   box-shadow: inset;
   padding: 1rem;
