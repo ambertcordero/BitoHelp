@@ -1,0 +1,18 @@
+pragma cashscript ^0.12.0;
+
+contract RecurringDonation(bytes20 pubkeyhash, int withdrawalAmount) {
+    function withdraw(pubkey pk, sig s) {
+
+        bytes25 recipientLock = new LockingBytecodeP2PKH(pubkeyhash);
+
+        // Verify signature
+        require(checkSig(s, pk));
+
+        // Ensure the public key matches the stored pubkeyhash
+        require(new LockingBytecodeP2PKH(hash160(pk)) == recipientLock);
+
+        // Ensure correct withdrawal amount
+        require(tx.outputs[0].value == withdrawalAmount);
+        require(tx.outputs[0].lockingBytecode == recipientLock);
+    }
+}
