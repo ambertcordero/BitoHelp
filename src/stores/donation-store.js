@@ -47,6 +47,8 @@ export const useDonationStore = defineStore('donation', {
           donor_email: donationData.donorEmail || '',
           donor_contact: donationData.donorContact || '',
           explorer_url: donationData.explorerUrl,
+          interval: donationData.interval || '',
+          nonprofit: donationData.nonprofitId || null,
         }
         
         console.log('API Payload:', payload)

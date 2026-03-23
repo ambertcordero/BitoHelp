@@ -22,4 +22,5 @@ urlpatterns = [
     path('', api_root, name='api-root'),
     path('admin/', admin.site.urls),
     path('api/', include('donations.urls')),
+    path('api/', include('nonprofits.urls')),
 ]

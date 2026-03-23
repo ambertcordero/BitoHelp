@@ -1,16 +1,16 @@
 import { defineBoot } from '#q-app/wrappers'
 import axios from 'axios'
 
-// API instance configured for Django backend
+
 const api = axios.create({ 
-  baseURL: 'http://localhost:8000/api/',
+  baseURL: 'http://localhost:8001/api/',
   headers: {
     'Content-Type': 'application/json',
   },
-  timeout: 10000, // 10 second timeout
+  timeout: 10000, 
 })
 
-// Add request interceptor for debugging
+
 api.interceptors.request.use(
   (config) => {
     console.log('API Request:', config.method?.toUpperCase(), config.url, config.data)
@@ -22,7 +22,7 @@ api.interceptors.request.use(
   }
 )
 
-// Add response interceptor for debugging and error handling
+
 api.interceptors.response.use(
   (response) => {
     console.log('API Response:', response.status, response.config.url)

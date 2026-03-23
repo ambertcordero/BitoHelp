@@ -124,7 +124,6 @@
                 <q-btn
                   flat
                   class="details-btn"
-                  label="View details"
                   @click="viewProject(4)"
                 />
               </div>
@@ -340,19 +339,19 @@
             <span style="font-weight: 500;">{{ selectedProject.category }}</span>
           </div>
 
-          <!-- Description -->
+    
           <div class="details-section">
             <h4 class="section-label">About This Project</h4>
             <p class="details-text">{{ selectedProject.fullDescription }}</p>
           </div>
 
-          <!-- Mission -->
+          
           <div class="details-section">
             <h4 class="section-label">Mission Statement</h4>
             <p class="details-text" style="font-style: italic; color: #555;">{{ selectedProject.mission }}</p>
           </div>
 
-          <!-- Impact Statistics -->
+     
           <div class="details-section">
             <h4 class="section-label">Impact Statistics</h4>
             <div class="impact-grid">
@@ -363,7 +362,7 @@
             </div>
           </div>
 
-          <!-- Fundraising Progress -->
+         
           <div class="details-section">
             <h4 class="section-label">Fundraising Progress</h4>
             <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
@@ -381,7 +380,7 @@
             </div>
           </div>
 
-          <!-- Contact Information -->
+          
           <div class="details-section">
             <h4 class="section-label">Contact Information</h4>
             <div class="contact-info">
@@ -409,7 +408,7 @@
             </div>
           </div>
 
-          <!-- Wallet Address -->
+        
           <div class="details-section">
             <h4 class="section-label">Bitcoin Wallet Address</h4>
             <div class="wallet-container">
@@ -426,7 +425,7 @@
             </div>
           </div>
 
-          <!-- Registration Date -->
+         
           <div style="text-align: center; margin-top: 20px; padding-top: 20px; border-top: 1px solid #e0e0e0;">
             <span style="color: #999; font-size: 13px;">
               Registered since {{ selectedProject.registrationDate }}
@@ -434,7 +433,7 @@
           </div>
         </q-card-section>
 
-        <!-- Action Buttons -->
+        
         <q-card-actions align="center" style="padding: 0 24px 24px;">
           <q-btn 
             unelevated
@@ -475,7 +474,7 @@ const charityForm = ref({
   documents: null
 })
 
-// Sample project data with complete charity details
+
 const projectsData = {
   1: {
     id: 1,
@@ -969,7 +968,7 @@ const copyWalletAddress = (address) => {
   color: #666;
 }
 
-/* Glass Dialog Effect */
+
 .glass-dialog-card {
   background: rgba(255, 255, 255, 0.95) !important;
   backdrop-filter: blur(10px) saturate(180%);
@@ -1070,7 +1069,7 @@ const copyWalletAddress = (address) => {
   background: transparent;
 }
 
-/* Semi-transparent backdrop */
+
 .q-dialog__backdrop {
   background: rgba(0, 0, 0, 0.3) !important;
   backdrop-filter: blur(4px);
@@ -1093,7 +1092,7 @@ const copyWalletAddress = (address) => {
   border-radius: 8px;
 }
 
-/* Project Details Dialog */
+
 .details-header-image {
   position: relative;
   width: 100%;

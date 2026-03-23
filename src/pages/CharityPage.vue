@@ -144,7 +144,7 @@
                     size="sm"
                     color="primary"
                     @click="refreshDonations"
-                    :loading="donationStore.isLoading"
+                    :loading="isLoadingDonations || donationStore.isLoading"
                   >
                     <q-tooltip>Refresh donations</q-tooltip>
                   </q-btn>
@@ -314,12 +314,18 @@
 import { ref, computed, onMounted, watch } from 'vue'
 import { useDonationStore } from '../stores/donation-store'
 import { useQuasar } from 'quasar'
+import { api } from 'boot/axios'
 
 const $q = useQuasar()
 const donationStore = useDonationStore()
 
-
+// Charity/Nonprofit configuration
 const CHARITY_WALLET = 'bitcoincash:qp3wjpa3tjlj042z2wv7hahsldgwhwy0rq9sywjpyy'
+const NONPROFIT_ID = 1 // Change this to the actual nonprofit ID
+
+// State for API-fetched donations
+const apiDonations = ref([])
+const isLoadingDonations = ref(false)
 const totalProjects = ref('100')
 const totalTransactions = ref('100')
 
@@ -340,18 +346,46 @@ const funds = ref([
 
 
 const recentDonations = computed(() => {
+  // Use API donations if available, otherwise fall back to store
+  if (apiDonations.value.length > 0) {
+    return apiDonations.value
+  }
+  
+  // Fallback to local store filtering
   const filtered = donationStore.donationHistory
     .filter(d => d.recipient === CHARITY_WALLET)
   
   console.log('=== CHARITY PAGE DEBUG ===')
-  console.log('Total donations in history:', donationStore.donationHistory.length)
-  console.log('All donations:', donationStore.donationHistory)
-  console.log('CHARITY_WALLET:', CHARITY_WALLET)
+  console.log('Using fallback: Total donations in history:', donationStore.donationHistory.length)
   console.log('Filtered donations for this charity:', filtered.length)
-  console.log('Filtered donations:', filtered)
   
   return filtered
 })
+
+// Fetch donations from backend API for this nonprofit
+async function fetchNonprofitDonations() {
+  if (!NONPROFIT_ID) {
+    console.warn('No nonprofit ID configured')
+    return
+  }
+
+  isLoadingDonations.value = true
+  try {
+    const response = await api.get(`nonprofits/${NONPROFIT_ID}/donations/`)
+    apiDonations.value = response.data
+    console.log(`Fetched ${response.data.length} donations from API for nonprofit ${NONPROFIT_ID}`)
+    console.log('Donations with donor info:', response.data)
+  } catch (error) {
+    console.error('Failed to fetch nonprofit donations:', error)
+    $q.notify({
+      type: 'warning',
+      message: 'Failed to load donations from server',
+      caption: 'Showing local donations instead'
+    })
+  } finally {
+    isLoadingDonations.value = false
+  }
+}
 
 
 
@@ -449,7 +483,10 @@ function openExplorer(url) {
 
 async function refreshDonations() {
   console.log('Manually refreshing donations...')
-  await donationStore.fetchDonations(50)
+  await Promise.all([
+    fetchNonprofitDonations(),
+    donationStore.fetchDonations(50)
+  ])
   $q.notify({
     type: 'positive',
     message: 'Donations refreshed',
@@ -459,14 +496,20 @@ async function refreshDonations() {
 }
 
 onMounted(async () => {
-  await donationStore.fetchDonations(50)
-  console.log('CharityPage mounted - donations fetched')
+  console.log('CharityPage mounted - fetching donations from API and store')
+  await Promise.all([
+    fetchNonprofitDonations(),
+    donationStore.fetchDonations(50)
+  ])
 })
 
 watch(() => donationStore.latestDonation, (newDonation) => {
   if (newDonation) {
-    console.log('New donation detected:', newDonation)
-    donationStore.fetchDonations(50)
+    console.log('New donation detected, refreshing from API and store:', newDonation)
+    Promise.all([
+      fetchNonprofitDonations(),
+      donationStore.fetchDonations(50)
+    ])
   }
 })
 </script>
@@ -1331,4 +1374,3 @@ watch(() => donationStore.latestDonation, (newDonation) => {
 }
 
 </style>
-

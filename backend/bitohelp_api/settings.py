@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     # Third party apps
     'rest_framework',
     'corsheaders',
+    'django_filters',
     
     # Local apps
     'donations',
@@ -86,6 +87,11 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
         'NAME': BASE_DIR / 'db.sqlite3',
+        'OPTIONS': {
+            'timeout': 60,
+            'check_same_thread': False,
+        },
+        'CONN_MAX_AGE': 0,
     }
 }
 
@@ -135,6 +141,7 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:9000",
     "http://localhost:9001",
+    "http://localhost:9002",
     "http://localhost:8080",
 ]
 

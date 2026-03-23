@@ -125,39 +125,208 @@ body{
 
 .donation-page {
   min-height: 100vh;
-  background: linear-gradient(180deg, #B8C5F2 0%, #D5DDFF 100%);
+  background: linear-gradient(180deg, #b8c5f2 0%, #d5ddff 100%);
   display: flex;
-  align-items: center;
   justify-content: center;
+  padding: 30px 20px 42px;
+  font-family: 'Century Gothic', 'CenturyGothic', 'AppleGothic', 'Segoe UI', sans-serif;
 }
 
 .donation-wrapper {
-  width: 1200px;
-  display: grid;
-  grid-template-columns: 1.3fr 1fr;
-  gap: 80px;
+  width: min(1260px, 100%);
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
 }
 
-.donation-form h1 {
-  margin-top: 50px;
-  margin-bottom: 12px;
-  font-size: 2.9rem;
-  font-weight: 800;
-  line-height: 1.15;
-  max-width: 520px;
-  color: #0f172a;
+.donation-hero {
+  display: grid;
+  grid-template-columns: 1.2fr auto;
+  align-items: center;
+  gap: 24px;
+}
+
+.donation-hero-copy h1 {
+  margin: 0 0 12px;
+  font-size: clamp(2.5rem, 5vw, 5rem);
+  font-weight: 700;
+  line-height: 1.1;
+  color: #0d1738;
+  max-width: 620px;
+}
+
+.donation-hero-logo {
+  display: flex;
+  justify-content: center;
+}
+
+.donation-hero-logo img {
+  width: min(300px, 32vw);
+  height: auto;
+}
+
+.donation-main {
+  display: grid;
+  grid-template-columns: 1.25fr 1fr;
+  gap: 28px;
+  align-items: start;
+}
+
+.donation-form-panel {
+  background: #f4f5f7;
+  border: 2px solid #0f3750;
+  border-radius: 16px;
+  padding: 16px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.06);
+}
+
+.donation-select .q-field__control {
+  border-radius: 10px;
+  background: transparent;
+}
+
+.donation-select .q-field__label {
+  color: #101010;
+  font-weight: 600;
+}
+
+.org-option-icon,
+.org-selected-icon {
+  width: 26px;
+  height: 26px;
+  object-fit: contain;
+}
+
+.organization-select .q-field__append .q-icon {
+  display: none;
+}
+
+.org-append-icon {
+  width: 26px;
+  height: 26px;
+  object-fit: contain;
+}
+
+.mini-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.floating-field {
+  position: relative;
+  border: 2px solid #0f3750;
+  border-radius: 10px;
+  min-height: 64px;
+  background: transparent;
+  transition: border-color 0.2s ease;
+}
+
+.floating-field input,
+.floating-field textarea {
+  width: 100%;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: #101010;
+  padding: 24px 16px 12px;
+  font-size: 1.05rem;
+  font-family: inherit;
+}
+
+.floating-field textarea {
+  resize: none;
+}
+
+.floating-field label {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  transform-origin: left top;
+  background: #f4f5f7;
+  padding: 0 8px;
+  font-weight: 600;
+  color: #101010;
+  pointer-events: none;
+  transition:
+    transform 0.2s ease,
+    top 0.2s ease,
+    color 0.2s ease;
+}
+
+.floating-field:focus-within,
+.floating-field.is-filled {
+  border-color: #1a5d82;
+}
+
+.floating-field:focus-within label,
+.floating-field.is-filled label {
+  top: 0;
+  transform: translateY(-50%) scale(0.85);
+  color: #1a5d82;
+}
+
+.mini-field input {
+  text-align: center;
+  padding-bottom: 18px;
+}
+
+.mini-field .php-conversion {
+  position: absolute;
+  right: 12px;
+  bottom: 6px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #1a5d82;
+  pointer-events: none;
+}
+
+.donor-title {
+  margin: 22px 0 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  font-size: 2rem;
+  font-weight: 700;
+  color: #111;
+}
+
+.donor-title::before,
+.donor-title::after {
+  content: '';
+  flex: 1;
+  height: 6px;
+  border-radius: 4px;
+  background: #000;
+}
+
+.contact-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.textarea-field {
+  min-height: 160px;
+}
+
+.textarea-field label {
+  top: 22px;
+  transform: translateY(-50%);
+}
+
+.textarea-field:focus-within label,
+.textarea-field.is-filled label {
+  top: 0;
 }
 
 .subtitle {
-  color: #475569;
-  margin-bottom: 32px;
-}
-
-.section-title {
-  margin-top: 32px;
-  margin-bottom: 16px;
-  font-weight: 700;
-  color: #0c0c0c;
+  color: #30496f;
+  font-size: clamp(1.05rem, 1.3vw, 2rem);
+  margin: 0;
+  max-width: 680px;
 }
 
 .summary-card {
@@ -230,7 +399,7 @@ body{
 }
 
 .terms {
-  font-size: 1 rem;
+  font-size: 1rem;
   color: #64748b;
   margin-top: 16px;
   text-align: center;
@@ -239,45 +408,6 @@ body{
 .terms span {
   color: #2563eb;
   cursor: pointer;
-}
-
-.donation-footer {
-  grid-column: 1 / -1;
-  margin-top: 40px;
-  padding-top: 24px;
-  border-top: 1px solid rgba(15, 23, 42, 0.15);
-  display: grid;
-  grid-template-columns: 1.2fr repeat(4, 1fr);
-  gap: 24px;
-  font-size: 12px;
-  color: #334155;
-}
-
-.footer-brand {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 6px;
-}
-
-.footer-brand img {
-  width: 44px;
-  height: auto;
-}
-
-.footer-brand-text {
-  font-weight: 700;
-  color: #2563eb;
-}
-
-.footer-title {
-  font-weight: 700;
-  margin-bottom: 6px;
-  color: #0f172a;
-}
-
-.footer-col div {
-  margin-bottom: 4px;
 }
 
 @media (max-width: 768px) {
@@ -303,21 +433,21 @@ body{
     width: 140px !important;
     height: 140px !important;
   }
-  .donation-page {
-    align-items: flex-start;
-  }
 
-  .donation-wrapper {
-    width: 100%;
+  .donation-hero {
     grid-template-columns: 1fr;
-    gap: 32px;
-    padding: 16px 20px 32px;
   }
 
-  .donation-form h1 {
-    margin-top: 16px;
+  .donation-hero-copy h1 {
     font-size: 2.1rem;
-    max-width: 100%;
+  }
+
+  .donation-hero-logo {
+    display: none;
+  }
+
+  .donation-main {
+    grid-template-columns: 1fr;
   }
 
   .summary-card {
@@ -340,22 +470,17 @@ body{
     width: 80%;
   }
 
-  .donation-footer {
-    grid-template-columns: 1fr 1fr;
-    gap: 16px;
+  .mini-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .contact-grid {
+    grid-template-columns: 1fr;
   }
 }
 
 @media (max-width: 480px) {
-  .donation-wrapper {
-    padding: 12px 16px 28px;
-  }
-
-  .donation-form h1 {
+  .donation-hero-copy h1 {
     font-size: 1.9rem;
-  }
-
-  .donation-footer {
-    grid-template-columns: 1fr;
   }
 }

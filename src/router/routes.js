@@ -3,35 +3,13 @@ const routes = [
     path: '/',
     component: () => import('layouts/MainLayout.vue'),
     children: [
-      { path: '', component: () => import('pages/IndexPage.vue') }
-    ],
-  },
-  {
-    path: '/donate',
-    component: () => import('layouts/MainLayout.vue'), 
-    children: [
-      { path: '', component: () => import('pages/DonatePage.vue') }
-    ],
-  },
-  {
-    path: '/continue',
-    component: () => import('layouts/MainLayout.vue'), 
-    children: [
-      { path: '', component: () => import('pages/UserPage.vue') }
-    ],
-  },
-  {
-    path: '/charity',
-    component: () => import('layouts/MainLayout.vue'), 
-    children: [
-      { path: '', component: () => import('pages/CharityPage.vue') }
-    ],
-  },
-  {
-    path: '/charities',
-    component: () => import('layouts/MainLayout.vue'), 
-    children: [
-      { path: '', component: () => import('pages/ProjectPage.vue') }
+      { path: '', component: () => import('pages/IndexPage.vue') },
+      { path: 'donate', component: () => import('pages/DonatePage.vue') },
+      { path: 'donor', component: () => import('pages/DonorPage.vue') },
+      { path: 'charity', component: () => import('pages/CharityPage.vue') },
+      { path: 'dashboard', component: () => import('pages/DashboardPage.vue') },
+      { path: 'charities', component: () => import('pages/ProjectPage.vue') },
+      { path: 'user', component: () => import('pages/UserPage.vue') },
     ],
   },
 
