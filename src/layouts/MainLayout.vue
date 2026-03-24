@@ -17,7 +17,7 @@
         <q-space />
         
      
-        <div class="nav-menu">
+        <div class="nav-menu gt-md">
           <q-btn flat no-caps label="Home" class="nav-item" to="/" />
           <q-btn flat no-caps label="Mission" class="nav-item" to="/donate" />
           <q-btn flat no-caps label="Charities" class="nav-item" to="/charities" />
@@ -173,7 +173,6 @@
       </q-toolbar>
     </q-header>
 
-  
     <q-page-container>
       <router-view />
     </q-page-container>
@@ -322,7 +321,7 @@ function addCharityNotification(data) {
         label: 'View',
         color: 'white',
         handler: () => {
-          router.push('/charity')
+          router.push('/dashboard')
         }
       }
     ]
@@ -338,7 +337,7 @@ function markAsRead(id) {
   if (notification) {
     notification.read = true
     if (notification.isCharity) {
-      router.push('/charity')
+      router.push('/dashboard')
     }
   }
 }
@@ -451,9 +450,11 @@ const handleConnectWallet = async () => {
 }
 
 .app-header {
-  background: white;
+  background: rgba(255, 255, 255, 0.265);
+  backdrop-filter: blur(10px);
   color: #333;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  margin-right: 15px;
 }
 
 .wallet-btn {
@@ -467,8 +468,14 @@ const handleConnectWallet = async () => {
   .nav-menu {
     display: none;
   }
+  
+  .wallet-btn {
+    font-size: 12px;
+    padding: 4px 8px;
+  }
+  
+  .wallet-btn .q-btn__content {
+    font-size: 11px;
+  }
 }
-
-/* Charity Dialog Styles */
-
 </style>
