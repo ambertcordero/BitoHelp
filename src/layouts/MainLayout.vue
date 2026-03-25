@@ -714,7 +714,6 @@ const purgeAllWalletConnectStorage = () => {
 }
 
 const disposeWalletConnectClient = async () => {
-  const previousPrefix = walletConnectStoragePrefix
   if (signClient) {
     try {
       await disconnectAllWalletConnectSessions()
