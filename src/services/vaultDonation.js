@@ -152,9 +152,7 @@ const checkVaultUtxo = async (contract, intervalBlocks) => {
     const currentHeight = await provider.getBlockHeight()
 
     // Match Watchtower UTXO to the CashScript UTXO by txid + vout
-    const wtMatch = wtUtxos.find(
-      (u) => u.tx_hash === vaultUtxo.txid && u.tx_pos === vaultUtxo.vout,
-    )
+    const wtMatch = wtUtxos.find((u) => u.tx_hash === vaultUtxo.txid && u.tx_pos === vaultUtxo.vout)
 
     if (wtMatch && wtMatch.height > 0 && intervalBlocks > 0) {
       const confirmations = currentHeight - wtMatch.height
@@ -226,7 +224,13 @@ export const executeWithdraw = async (record) => {
       console.info('[BitoHelp][vault-withdraw:drain]', { txid, amount: drainAmount.toString() })
     }
 
-    return { success: true, txid, drained: true, amount: drainAmount, vaultBalanceBefore: currentValue }
+    return {
+      success: true,
+      txid,
+      drained: true,
+      amount: drainAmount,
+      vaultBalanceBefore: currentValue,
+    }
   }
 
   // Normal cycle: withdrawal to recipient, change back to vault
@@ -246,7 +250,13 @@ export const executeWithdraw = async (record) => {
     })
   }
 
-  return { success: true, txid, drained: false, amount: withdrawalAmount, vaultBalanceBefore: currentValue }
+  return {
+    success: true,
+    txid,
+    drained: false,
+    amount: withdrawalAmount,
+    vaultBalanceBefore: currentValue,
+  }
 }
 
 // ---- Auto-withdraw scheduler ----
@@ -313,7 +323,9 @@ export const startAutoWithdraw = (record, onCycle) => {
       const contract = contractFromRecord(record)
       const utxos = await contract.getUtxos()
       currentBalanceSats = utxos.reduce((sum, u) => sum + u.satoshis, 0n)
-    } catch { /* ignore */ }
+    } catch {
+      /* ignore */
+    }
 
     if (import.meta.env.DEV) {
       console.info('[BitoHelp][vault-autowithdraw:attempt]', {
@@ -322,9 +334,10 @@ export const startAutoWithdraw = (record, onCycle) => {
         donationId: id,
         vaultAddress: record.vaultAddress,
         vaultBalance: currentBalanceSats !== null ? satsToBch(currentBalanceSats) : 'unknown',
-        fundPercentage: currentBalanceSats !== null
-          ? calcFundedPct(currentBalanceSats, record.depositSatoshis)
-          : '—',
+        fundPercentage:
+          currentBalanceSats !== null
+            ? calcFundedPct(currentBalanceSats, record.depositSatoshis)
+            : '—',
       })
     }
     try {
