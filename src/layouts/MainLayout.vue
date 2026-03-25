@@ -225,8 +225,12 @@ const donationStore = useDonationStore()
 
 // ── WalletConnect constants ──
 const projectId = '1e52dff3b9c75d86cfc7b1190c02d3a0'
-const makeWalletConnectStoragePrefix = () =>
-  `bitohelp-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`
+const makeWalletConnectStoragePrefix = () => {
+  const uid = typeof crypto !== 'undefined' && crypto.randomUUID
+    ? crypto.randomUUID()
+    : `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`
+  return `bitohelp-${uid}`
+}
 let walletConnectStoragePrefix = makeWalletConnectStoragePrefix()
 const walletConnectRelayUrl = 'wss://relay.walletconnect.com'
 const bchChains = ['bch:bchtest']
@@ -693,14 +697,15 @@ const restartWalletConnectTransport = async () => {
   }
 }
 
-const clearWalletConnectStorageByPrefix = (prefix) => {
-  const candidatePrefix = String(prefix || '').trim()
-  if (!candidatePrefix || typeof window === 'undefined') return
+const purgeAllWalletConnectStorage = () => {
+  if (typeof window === 'undefined') return
   try {
     const keysToDelete = []
     for (let i = 0; i < localStorage.length; i++) {
       const key = localStorage.key(i)
-      if (key && key.includes(candidatePrefix)) keysToDelete.push(key)
+      if (key && (key.includes('wc@2') || key.startsWith('bitohelp-'))) {
+        keysToDelete.push(key)
+      }
     }
     keysToDelete.forEach((key) => localStorage.removeItem(key))
   } catch {
@@ -709,21 +714,22 @@ const clearWalletConnectStorageByPrefix = (prefix) => {
 }
 
 const disposeWalletConnectClient = async () => {
-  if (!signClient) return
   const previousPrefix = walletConnectStoragePrefix
-  try {
-    await disconnectAllWalletConnectSessions()
-  } catch {
-    /* best effort */
-  }
-  try {
-    await signClient?.core?.relayer?.transportClose?.()
-  } catch {
-    /* optional */
+  if (signClient) {
+    try {
+      await disconnectAllWalletConnectSessions()
+    } catch {
+      /* best effort */
+    }
+    try {
+      await signClient?.core?.relayer?.transportClose?.()
+    } catch {
+      /* optional */
+    }
   }
   signClient = undefined
   walletConnectInitPromise = undefined
-  clearWalletConnectStorageByPrefix(previousPrefix)
+  purgeAllWalletConnectStorage()
   walletConnectStoragePrefix = makeWalletConnectStoragePrefix()
 }
 
@@ -741,11 +747,31 @@ const disconnectAllWalletConnectSessions = async () => {
   }
 }
 
+const waitForRelayConnected = async (timeoutMs = 5000) => {
+  if (!signClient?.core?.relayer) return
+  const relayer = signClient.core.relayer
+  if (relayer.connected) return
+  await new Promise((resolve) => {
+    const timer = setTimeout(resolve, timeoutMs)
+    const check = () => {
+      if (relayer.connected) { clearTimeout(timer); resolve() }
+    }
+    relayer.on?.('relayer_connect', () => { clearTimeout(timer); resolve() })
+    // Poll as fallback in case the event doesn't fire
+    const poll = setInterval(() => {
+      if (relayer.connected) { clearInterval(poll); clearTimeout(timer); resolve() }
+    }, 200)
+    setTimeout(() => clearInterval(poll), timeoutMs)
+    check()
+  })
+}
+
 const prepareFreshWalletConnectConnection = async () => {
   if (!signClient) return
   await disconnectAllWalletConnectSessions()
   await cleanupInactivePairings({ deletePairings: true })
   await restartWalletConnectTransport()
+  await waitForRelayConnected()
 }
 
 const parseAccount = (account) => {
