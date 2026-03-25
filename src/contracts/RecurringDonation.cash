@@ -1,0 +1,64 @@
+pragma cashscript ^0.12.0;
+
+// VaultDonation — time-locked recurring donation contract.
+//
+// A donor deposits BCH into this contract.  The recipient can withdraw
+// a fixed `withdrawalAmount` every `interval` blocks.  When the remaining
+// balance is too small for another full cycle the contract drains completely
+// to the recipient.  The original funder can reclaim any unspent funds at
+// any time by signing with their key.
+//
+// Parameters:
+//   recipient        — hash160 of the charity / recipient P2PKH address
+//   funder           — hash160 of the donor P2PKH address (for reclaim)
+//   withdrawalAmount — satoshis released per interval
+//   interval         — minimum blocks between withdrawals (1 ≈ 10 min)
+
+contract VaultDonation(
+    bytes20 recipient,
+    bytes20 funder,
+    int withdrawalAmount,
+    int interval
+) {
+    // Called by the recipient (or anyone) after `interval` blocks have passed.
+    function withdraw() {
+        // Enforce the time-lock: the UTXO must be at least `interval` blocks old.
+        require(this.age >= interval);
+
+        bytes25 recipientLock = new LockingBytecodeP2PKH(recipient);
+
+        int minerFee = 1000;
+        int currentValue = tx.inputs[this.activeInputIndex].value;
+        int remaining   = currentValue - withdrawalAmount - minerFee;
+
+        // Output 0 always goes to the recipient.
+        require(tx.outputs[0].lockingBytecode == recipientLock);
+
+        // If the remainder can't fund another full cycle, drain everything
+        // to the recipient (minus miner fee) and close the vault.
+        if (remaining <= withdrawalAmount + minerFee) {
+            require(tx.outputs[0].value == currentValue - minerFee);
+        } else {
+            // Send exactly the scheduled amount to the recipient.
+            require(tx.outputs[0].value == withdrawalAmount);
+
+            // Return the rest into the same vault contract.
+            bytes vaultLock = tx.inputs[this.activeInputIndex].lockingBytecode;
+            require(tx.outputs[1].lockingBytecode == vaultLock);
+            require(tx.outputs[1].value == remaining);
+        }
+    }
+
+    // Let the original funder reclaim any remaining funds at any time.
+    function reclaim(pubkey pk, sig s) {
+        require(hash160(pk) == funder);
+        require(checkSig(s, pk));
+
+        bytes25 funderLock = new LockingBytecodeP2PKH(funder);
+        int minerFee = 1000;
+        int value = tx.inputs[this.activeInputIndex].value - minerFee;
+
+        require(tx.outputs[0].lockingBytecode == funderLock);
+        require(tx.outputs[0].value == value);
+    }
+}

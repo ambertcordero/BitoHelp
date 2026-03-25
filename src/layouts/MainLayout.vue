@@ -1,10 +1,8 @@
 <template>
   <q-layout view="lHh Lpr lFf">
-
     <!-- HEADER ini !!!-->
     <q-header reveal class="app-header">
       <q-toolbar class="q-px-lg">
-
         <!-- Logo ini !!!-->
         <div class="row items-center">
           <q-avatar size="40px">
@@ -13,15 +11,14 @@
 
           <div class="app-title q-ml-sm">BitoHelp</div>
         </div>
-        
+
         <q-space />
-        
-     
+
         <div class="nav-menu gt-md">
           <q-btn flat no-caps label="Home" class="nav-item" to="/" />
           <q-btn flat no-caps label="Mission" class="nav-item" to="/donate" />
           <q-btn flat no-caps label="Charities" class="nav-item" to="/charities" />
-          
+
           <q-btn flat no-caps class="nav-item">
             <div class="row items-center no-wrap">
               <span>Get Involved</span>
@@ -41,7 +38,7 @@
               </q-list>
             </q-menu>
           </q-btn>
-          
+
           <q-btn flat no-caps class="nav-item">
             <div class="row items-center no-wrap">
               <span>About</span>
@@ -61,40 +58,47 @@
               </q-list>
             </q-menu>
           </q-btn>
-          
+
           <q-btn flat no-caps label="Contact" class="nav-item" to="/donate" />
         </div>
 
         <q-space />
 
         <!-- Notification Bell ini !!!-->
-        <q-btn round icon="notifications" flat color="blue" class="q-mr-sm" @click="toggleNotifications">
+        <q-btn
+          round
+          icon="notifications"
+          flat
+          color="blue"
+          class="q-mr-sm"
+          @click="toggleNotifications"
+        >
           <q-badge v-if="unreadCount > 0" floating color="red" rounded>{{ unreadCount }}</q-badge>
           <q-tooltip>Notifications</q-tooltip>
-          
+
           <q-menu>
             <q-list style="min-width: 350px">
               <q-item-label header class="text-weight-bold">
                 Notifications
-                <q-btn 
-                  v-if="notifications.length > 0" 
-                  flat 
-                  dense 
-                  size="sm" 
-                  label="Clear all" 
+                <q-btn
+                  v-if="notifications.length > 0"
+                  flat
+                  dense
+                  size="sm"
+                  label="Clear all"
                   class="float-right"
                   @click="clearAllNotifications"
                 />
               </q-item-label>
-              
+
               <q-separator />
-              
+
               <div v-if="notifications.length === 0" class="q-pa-md text-center text-grey-6">
                 No notifications yet
               </div>
-              
-              <q-item 
-                v-for="notification in notifications" 
+
+              <q-item
+                v-for="notification in notifications"
                 :key="notification.id"
                 clickable
                 v-ripple
@@ -102,25 +106,25 @@
                 :class="{ 'bg-blue-1': !notification.read }"
               >
                 <q-item-section avatar>
-                  <q-avatar 
-                    :icon="notification.isCharity ? 'volunteer_activism' : 'check_circle'" 
-                    :color="notification.isCharity ? 'green' : 'positive'" 
-                    text-color="white" 
+                  <q-avatar
+                    :icon="notification.isCharity ? 'volunteer_activism' : 'check_circle'"
+                    :color="notification.isCharity ? 'green' : 'positive'"
+                    text-color="white"
                   />
                 </q-item-section>
-                
+
                 <q-item-section>
                   <q-item-label class="text-weight-medium">{{ notification.title }}</q-item-label>
                   <q-item-label caption lines="2">{{ notification.message }}</q-item-label>
                   <q-item-label caption class="text-grey-6">{{ notification.time }}</q-item-label>
                 </q-item-section>
-                
+
                 <q-item-section side>
-                  <q-btn 
-                    flat 
-                    dense 
-                    round 
-                    icon="close" 
+                  <q-btn
+                    flat
+                    dense
+                    round
+                    icon="close"
                     size="sm"
                     @click.stop="removeNotification(notification.id)"
                   />
@@ -184,14 +188,12 @@
 
           <p v-if="walletError" class="wallet-error">{{ walletError }}</p>
         </div>
-
       </q-toolbar>
     </q-header>
 
     <q-page-container>
       <router-view />
     </q-page-container>
-
   </q-layout>
 </template>
 
@@ -206,6 +208,7 @@ import lottie from 'lottie-web'
 import { useDonationStore } from '../stores/donation-store'
 import { useQuasar } from 'quasar'
 import { fetchAddressBalance, normalizeChipnetAddress } from '../services/bchChipnet'
+import { resumeAllAutoWithdraws } from '../services/vaultDonation'
 
 import logoUrl from '../assets/BitoHelp.png'
 import bitcoinIcon from '../../wallets/Bitcoin.ico'
@@ -229,9 +232,18 @@ const walletConnectRelayUrl = 'wss://relay.walletconnect.com'
 const bchChains = ['bch:bchtest']
 const evmChains = ['eip155:1', 'eip155:5', 'eip155:11155111']
 const evmNativeSymbols = {
-  1: 'ETH', 10: 'ETH', 56: 'BNB', 137: 'MATIC', 250: 'FTM',
-  324: 'ETH', 42161: 'ETH', 43114: 'AVAX', 59144: 'ETH', 8453: 'ETH',
-  5: 'ETH', 11155111: 'ETH',
+  1: 'ETH',
+  10: 'ETH',
+  56: 'BNB',
+  137: 'MATIC',
+  250: 'FTM',
+  324: 'ETH',
+  42161: 'ETH',
+  43114: 'AVAX',
+  59144: 'ETH',
+  8453: 'ETH',
+  5: 'ETH',
+  11155111: 'ETH',
 }
 const evmRpcByChain = {
   'eip155:1': 'https://ethereum-rpc.publicnode.com',
@@ -308,8 +320,12 @@ const syncWalletSnapshot = () => {
 
 const syncWalletClientBridge = () => {
   if (
-    !isConnected.value || !signClient || !sessionTopic ||
-    !walletChain.value || !walletNamespace.value || !walletAddress.value
+    !isConnected.value ||
+    !signClient ||
+    !sessionTopic ||
+    !walletChain.value ||
+    !walletNamespace.value ||
+    !walletAddress.value
   ) {
     delete window[WALLET_CLIENT_GLOBAL_KEY]
     return
@@ -320,14 +336,30 @@ const syncWalletClientBridge = () => {
 
   const waitForRequestSent = (method, timeoutMs = 5000) =>
     new Promise((resolve) => {
-      if (!signClient) { resolve(null); return }
+      if (!signClient) {
+        resolve(null)
+        return
+      }
       let settled = false
       let timeoutId
-      const cleanup = () => { if (timeoutId) window.clearTimeout(timeoutId); signClient.off('session_request_sent', handleSent) }
-      const resolveOnce = (value) => { if (settled) return; settled = true; cleanup(); resolve(value) }
+      const cleanup = () => {
+        if (timeoutId) window.clearTimeout(timeoutId)
+        signClient.off('session_request_sent', handleSent)
+      }
+      const resolveOnce = (value) => {
+        if (settled) return
+        settled = true
+        cleanup()
+        resolve(value)
+      }
       const handleSent = (event) => {
         if (event?.topic !== activeTopic || event?.request?.method !== method) return
-        resolveOnce({ id: event.id, topic: event.topic, chainId: event.chainId, request: event.request })
+        resolveOnce({
+          id: event.id,
+          topic: event.topic,
+          chainId: event.chainId,
+          request: event.request,
+        })
       }
       timeoutId = window.setTimeout(() => resolveOnce(null), timeoutMs)
       signClient.on('session_request_sent', handleSent)
@@ -335,14 +367,20 @@ const syncWalletClientBridge = () => {
 
   const getHistoryRecord = async (id) => {
     if (!signClient || id === undefined || id === null) return null
-    try { return await signClient.core.history.get(activeTopic, id) } catch { return null }
+    try {
+      return await signClient.core.history.get(activeTopic, id)
+    } catch {
+      return null
+    }
   }
 
   const getPendingHistory = () => {
     try {
       const pending = signClient?.core?.history?.pending || []
       return pending.filter((entry) => entry?.topic === activeTopic)
-    } catch { return [] }
+    } catch {
+      return []
+    }
   }
 
   window[WALLET_CLIENT_GLOBAL_KEY] = {
@@ -370,7 +408,12 @@ const handleWalletBalanceAdjust = (event) => {
   const targetChain = event?.detail?.chain
   const targetAddress = event?.detail?.address
   if (targetChain && targetChain !== walletChain.value) return
-  if (targetAddress && normalizeAddressForComparison(targetAddress, targetChain || walletChain.value) !== normalizeAddressForComparison(walletAddress.value, walletChain.value)) return
+  if (
+    targetAddress &&
+    normalizeAddressForComparison(targetAddress, targetChain || walletChain.value) !==
+      normalizeAddressForComparison(walletAddress.value, walletChain.value)
+  )
+    return
   walletBalance.value = Math.max(0, walletBalance.value + delta)
 }
 
@@ -379,31 +422,53 @@ const handleWalletBalanceRefresh = (event) => {
   const targetChain = event?.detail?.chain
   const targetAddress = event?.detail?.address
   if (targetChain && targetChain !== walletChain.value) return
-  if (targetAddress && normalizeAddressForComparison(targetAddress, targetChain || walletChain.value) !== normalizeAddressForComparison(walletAddress.value, walletChain.value)) return
+  if (
+    targetAddress &&
+    normalizeAddressForComparison(targetAddress, targetChain || walletChain.value) !==
+      normalizeAddressForComparison(walletAddress.value, walletChain.value)
+  )
+    return
   fetchBalance(walletAddress.value, walletChain.value)
 }
 
 // ── Lottie animations ──
 const destroyWalletLottie = () => {
-  if (walletLottieTimeout) { window.clearTimeout(walletLottieTimeout); walletLottieTimeout = undefined }
-  if (walletLottieAnimation) { walletLottieAnimation.destroy(); walletLottieAnimation = undefined }
+  if (walletLottieTimeout) {
+    window.clearTimeout(walletLottieTimeout)
+    walletLottieTimeout = undefined
+  }
+  if (walletLottieAnimation) {
+    walletLottieAnimation.destroy()
+    walletLottieAnimation = undefined
+  }
 }
 const destroyBitcoinLoader = () => {
-  if (bitcoinLoaderAnimation) { bitcoinLoaderAnimation.destroy(); bitcoinLoaderAnimation = undefined }
+  if (bitcoinLoaderAnimation) {
+    bitcoinLoaderAnimation.destroy()
+    bitcoinLoaderAnimation = undefined
+  }
 }
 const initWalletLottie = () => {
   if (!walletLottieContainer.value || walletLottieAnimation) return
   walletLottieAnimation = lottie.loadAnimation({
-    container: walletLottieContainer.value, renderer: 'svg', loop: false, autoplay: false,
-    animationData: walletLottieJson, rendererSettings: { preserveAspectRatio: 'xMidYMid slice' },
+    container: walletLottieContainer.value,
+    renderer: 'svg',
+    loop: false,
+    autoplay: false,
+    animationData: walletLottieJson,
+    rendererSettings: { preserveAspectRatio: 'xMidYMid slice' },
   })
   walletLottieAnimation.goToAndStop(0, true)
 }
 const initBitcoinLoader = () => {
   if (!bitcoinLoaderContainer.value || bitcoinLoaderAnimation) return
   bitcoinLoaderAnimation = lottie.loadAnimation({
-    container: bitcoinLoaderContainer.value, renderer: 'svg', loop: true, autoplay: true,
-    animationData: bitcoinLoaderJson, rendererSettings: { preserveAspectRatio: 'xMidYMid meet' },
+    container: bitcoinLoaderContainer.value,
+    renderer: 'svg',
+    loop: true,
+    autoplay: true,
+    animationData: bitcoinLoaderJson,
+    rendererSettings: { preserveAspectRatio: 'xMidYMid meet' },
   })
 }
 const handleIdleIconHover = () => {
@@ -413,12 +478,18 @@ const handleIdleIconHover = () => {
   if (walletLottieTimeout) window.clearTimeout(walletLottieTimeout)
   walletLottieAnimation.goToAndStop(0, true)
   walletLottieAnimation.play()
-  walletLottieTimeout = window.setTimeout(() => { walletLottieAnimation?.goToAndStop(0, true); walletLottieTimeout = undefined }, 1000)
+  walletLottieTimeout = window.setTimeout(() => {
+    walletLottieAnimation?.goToAndStop(0, true)
+    walletLottieTimeout = undefined
+  }, 1000)
 }
 
 // ── Balance retry ──
 const clearBalanceRetry = () => {
-  if (balanceRetryTimer) { window.clearTimeout(balanceRetryTimer); balanceRetryTimer = undefined }
+  if (balanceRetryTimer) {
+    window.clearTimeout(balanceRetryTimer)
+    balanceRetryTimer = undefined
+  }
   balanceRetryDelay = 0
 }
 const scheduleBalanceRetry = () => {
@@ -428,7 +499,8 @@ const scheduleBalanceRetry = () => {
   if (balanceRetryDelay === 0) balanceRetryDelay = 15000
   balanceRetryTimer = window.setTimeout(() => {
     balanceRetryTimer = undefined
-    if (isConnected.value && walletAddress.value) fetchBalance(walletAddress.value, walletChain.value)
+    if (isConnected.value && walletAddress.value)
+      fetchBalance(walletAddress.value, walletChain.value)
   }, balanceRetryDelay)
 }
 
@@ -461,9 +533,10 @@ const handleQrClosed = () => {
 // ── Computed properties ──
 const shortAddress = computed(() => {
   if (!walletAddress.value) return ''
-  const display = walletNamespace.value === 'bch' && walletAddress.value.includes(':')
-    ? walletAddress.value.slice(walletAddress.value.indexOf(':') + 1)
-    : walletAddress.value
+  const display =
+    walletNamespace.value === 'bch' && walletAddress.value.includes(':')
+      ? walletAddress.value.slice(walletAddress.value.indexOf(':') + 1)
+      : walletAddress.value
   return `${display.slice(0, 6)}...${display.slice(-4)}`
 })
 
@@ -478,13 +551,17 @@ const walletSymbol = computed(() => {
 
 const formatBchDisplay = (value) => {
   const floored = Math.floor(value * 1000) / 1000
-  return floored.toFixed(3).replace(/(\.\d*[1-9])0+$/, '$1').replace(/\.0+$/, '.0')
+  return floored
+    .toFixed(3)
+    .replace(/(\.\d*[1-9])0+$/, '$1')
+    .replace(/\.0+$/, '.0')
 }
 
 const formattedBalance = computed(() => {
   if (!isConnected.value) return '0.000'
   if (isBalanceLoading.value) return `Loading ${walletSymbol.value}...`
-  if (walletNamespace.value === 'bch') return `${formatBchDisplay(walletBalance.value)} ${walletSymbol.value}`
+  if (walletNamespace.value === 'bch')
+    return `${formatBchDisplay(walletBalance.value)} ${walletSymbol.value}`
   return `${walletBalance.value.toFixed(4)} ${walletSymbol.value}`
 })
 
@@ -496,8 +573,10 @@ const walletIconClass = computed(() =>
 const parseBchAccount = (account) => {
   if (!account || !account.startsWith('bch:')) return ''
   const parts = account.split(':')
-  if (parts.length >= 4 && parts[2] === 'bchtest') return `${parts[2]}:${parts.slice(3).join(':')}`.toLowerCase()
-  if (parts.length >= 3 && parts[1] === 'bchtest') return `${parts[1]}:${parts.slice(2).join(':')}`.toLowerCase()
+  if (parts.length >= 4 && parts[2] === 'bchtest')
+    return `${parts[2]}:${parts.slice(3).join(':')}`.toLowerCase()
+  if (parts.length >= 3 && parts[1] === 'bchtest')
+    return `${parts[1]}:${parts.slice(2).join(':')}`.toLowerCase()
   if (parts.length >= 3 && parts[1] === 'chipnet') {
     const addressPart = parts.slice(2).join(':')
     if (addressPart.startsWith('bchtest:')) return addressPart.toLowerCase()
@@ -526,17 +605,31 @@ const sanitizeWalletConnectSession = (session) => {
   const peerMetadata = session.peer?.metadata || {}
   const redirect = peerMetadata.redirect || {}
   const sessionConfig = session.sessionConfig || {}
-  if (session.transportType !== 'relay') { session.transportType = 'relay' }
-  if (sessionConfig.disableDeepLink !== true) { session.sessionConfig = { ...sessionConfig, disableDeepLink: true } }
+  if (session.transportType !== 'relay') {
+    session.transportType = 'relay'
+  }
+  if (sessionConfig.disableDeepLink !== true) {
+    session.sessionConfig = { ...sessionConfig, disableDeepLink: true }
+  }
   if (redirect.linkMode || redirect.universal || redirect.native) {
-    session.peer = { ...session.peer, metadata: { ...peerMetadata, redirect: { ...redirect, linkMode: false, universal: '', native: '' } } }
+    session.peer = {
+      ...session.peer,
+      metadata: {
+        ...peerMetadata,
+        redirect: { ...redirect, linkMode: false, universal: '', native: '' },
+      },
+    }
   }
   return session
 }
 
 const getWalletConnectSession = (topic = sessionTopic) => {
   if (!signClient || !topic) return null
-  try { return sanitizeWalletConnectSession(signClient.session.get(topic)) } catch { return null }
+  try {
+    return sanitizeWalletConnectSession(signClient.session.get(topic))
+  } catch {
+    return null
+  }
 }
 
 const pickStoredSession = (sessions) => {
@@ -550,18 +643,31 @@ const pickStoredSession = (sessions) => {
   return sanitizeWalletConnectSession(rankedSessions[0] || null)
 }
 
-const pingWalletConnectSession = async (topic, timeoutMs = WALLETCONNECT_SESSION_PING_TIMEOUT_MS) => {
+const pingWalletConnectSession = async (
+  topic,
+  timeoutMs = WALLETCONNECT_SESSION_PING_TIMEOUT_MS,
+) => {
   if (!signClient || !topic) return false
   try {
     await Promise.race([
       signClient.ping({ topic }),
-      new Promise((_, reject) => window.setTimeout(() => reject(new Error('ping timed out')), timeoutMs)),
+      new Promise((_, reject) =>
+        window.setTimeout(() => reject(new Error('ping timed out')), timeoutMs),
+      ),
     ])
     return true
-  } catch { return false }
+  } catch {
+    return false
+  }
 }
 
-const getStoredPairings = () => { try { return signClient?.pairing?.getAll?.() || [] } catch { return [] } }
+const getStoredPairings = () => {
+  try {
+    return signClient?.pairing?.getAll?.() || []
+  } catch {
+    return []
+  }
+}
 
 const cleanupInactivePairings = async ({ deletePairings = false } = {}) => {
   if (!signClient) return
@@ -573,12 +679,18 @@ const cleanupInactivePairings = async ({ deletePairings = false } = {}) => {
     try {
       if (deletePairings) await signClient.core.pairing.disconnect({ topic })
       else await signClient.core.relayer.subscriber.unsubscribe(topic)
-    } catch { /* best effort */ }
+    } catch {
+      /* best effort */
+    }
   }
 }
 
 const restartWalletConnectTransport = async () => {
-  try { await signClient?.core?.relayer?.restartTransport?.() } catch { /* best effort */ }
+  try {
+    await signClient?.core?.relayer?.restartTransport?.()
+  } catch {
+    /* best effort */
+  }
 }
 
 const clearWalletConnectStorageByPrefix = (prefix) => {
@@ -591,14 +703,24 @@ const clearWalletConnectStorageByPrefix = (prefix) => {
       if (key && key.includes(candidatePrefix)) keysToDelete.push(key)
     }
     keysToDelete.forEach((key) => localStorage.removeItem(key))
-  } catch { /* best effort */ }
+  } catch {
+    /* best effort */
+  }
 }
 
 const disposeWalletConnectClient = async () => {
   if (!signClient) return
   const previousPrefix = walletConnectStoragePrefix
-  try { await disconnectAllWalletConnectSessions() } catch { /* best effort */ }
-  try { await signClient?.core?.relayer?.transportClose?.() } catch { /* optional */ }
+  try {
+    await disconnectAllWalletConnectSessions()
+  } catch {
+    /* best effort */
+  }
+  try {
+    await signClient?.core?.relayer?.transportClose?.()
+  } catch {
+    /* optional */
+  }
   signClient = undefined
   walletConnectInitPromise = undefined
   clearWalletConnectStorageByPrefix(previousPrefix)
@@ -611,7 +733,11 @@ const disconnectAllWalletConnectSessions = async () => {
   for (const session of sessions) {
     const topic = session?.topic
     if (!topic) continue
-    try { await signClient.disconnect({ topic, reason: { code: 6000, message: 'User disconnected' } }) } catch { /* best effort */ }
+    try {
+      await signClient.disconnect({ topic, reason: { code: 6000, message: 'User disconnected' } })
+    } catch {
+      /* best effort */
+    }
   }
 }
 
@@ -629,7 +755,7 @@ const parseAccount = (account) => {
   return parts[parts.length - 1] || ''
 }
 
-function normalizeAddressForComparison (address, chainId) {
+function normalizeAddressForComparison(address, chainId) {
   const raw = String(address || '').trim()
   if (!raw) return ''
   if ((chainId || '').startsWith('bch:')) return normalizeChipnetAddress(raw) || raw.toLowerCase()
@@ -674,7 +800,12 @@ const fetchEvmBalanceFromRpc = async (chainId, address) => {
   const response = await fetch(rpcUrl, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ id: Date.now(), jsonrpc: '2.0', method: 'eth_getBalance', params: [address, 'latest'] }),
+    body: JSON.stringify({
+      id: Date.now(),
+      jsonrpc: '2.0',
+      method: 'eth_getBalance',
+      params: [address, 'latest'],
+    }),
   })
   if (!response.ok) throw new Error('RPC balance request failed')
   const data = await response.json()
@@ -735,15 +866,20 @@ const updateFromSession = (session) => {
     namespaceKey = 'bch'
     account = selectPreferredAccount(bchNs.accounts, bchChains)
     chain = parseChainFromAccount(account)
-    const allNormalized = bchNs.accounts.map((a) => normalizeChipnetAddress(parseBchAccount(a))).filter(Boolean)
+    const allNormalized = bchNs.accounts
+      .map((a) => normalizeChipnetAddress(parseBchAccount(a)))
+      .filter(Boolean)
     bchSessionAddresses.value = [...new Set(allNormalized)]
     if (import.meta.env.DEV) {
       console.info('[BitoHelp][bch-session]', {
-        topic: sanitized.topic, transportType: sanitized.transportType || null,
+        topic: sanitized.topic,
+        transportType: sanitized.transportType || null,
         sessionConfig: sanitized.sessionConfig || null,
         peerRedirect: sanitized.peer?.metadata?.redirect || null,
-        rawAccount: account, parsedChain: chain,
-        allBchAccounts: bchNs.accounts, resolvedAddresses: bchSessionAddresses.value,
+        rawAccount: account,
+        parsedChain: chain,
+        allBchAccounts: bchNs.accounts,
+        resolvedAddresses: bchSessionAddresses.value,
       })
     }
   } else if (evmNs?.accounts?.length) {
@@ -752,12 +888,17 @@ const updateFromSession = (session) => {
     chain = parseChainFromAccount(account)
     if (import.meta.env.DEV) {
       console.info('[BitoHelp][evm-session]', {
-        rawAccount: account, parsedChain: chain, allEvmAccounts: evmNs.accounts,
+        rawAccount: account,
+        parsedChain: chain,
+        allEvmAccounts: evmNs.accounts,
       })
     }
   }
 
-  if (!account) { walletError.value = 'No supported accounts found in the session.'; return }
+  if (!account) {
+    walletError.value = 'No supported accounts found in the session.'
+    return
+  }
 
   walletNamespace.value = namespaceKey
   walletChain.value = chain
@@ -766,11 +907,16 @@ const updateFromSession = (session) => {
   if (namespaceKey === 'bch') {
     const normalized = normalizeChipnetAddress(parsedAddress)
     if (!normalized) {
-      if (import.meta.env.DEV) console.error('[BitoHelp][bch-session] Invalid address', { rawAccount: account, parsedAddress })
+      if (import.meta.env.DEV)
+        console.error('[BitoHelp][bch-session] Invalid address', {
+          rawAccount: account,
+          parsedAddress,
+        })
       walletError.value = `Invalid BCH address format: ${parsedAddress}`
       return
     }
-    if (import.meta.env.DEV) console.info('[BitoHelp][bch-session] Address normalized', { raw: parsedAddress, normalized })
+    if (import.meta.env.DEV)
+      console.info('[BitoHelp][bch-session] Address normalized', { raw: parsedAddress, normalized })
     walletAddress.value = normalized
   } else {
     walletAddress.value = parsedAddress
@@ -791,74 +937,151 @@ const logWalletBalanceDebug = (stage, details) => {
 
 const fetchBalance = async (address, chainId = walletChain.value) => {
   const requestNonce = ++balanceRequestNonce
-  const finishLoading = () => { if (requestNonce === balanceRequestNonce) isBalanceLoading.value = false }
-  const setBalanceSafely = (next) => { if (requestNonce === balanceRequestNonce) walletBalance.value = next }
-  if (!address) { setBalanceSafely(0); finishLoading(); return }
+  const finishLoading = () => {
+    if (requestNonce === balanceRequestNonce) isBalanceLoading.value = false
+  }
+  const setBalanceSafely = (next) => {
+    if (requestNonce === balanceRequestNonce) walletBalance.value = next
+  }
+  if (!address) {
+    setBalanceSafely(0)
+    finishLoading()
+    return
+  }
   isBalanceLoading.value = true
-  logWalletBalanceDebug('request:start', { account: address, chainId, rpc: evmRpcByChain[chainId] || null, walletName: walletName.value })
+  logWalletBalanceDebug('request:start', {
+    account: address,
+    chainId,
+    rpc: evmRpcByChain[chainId] || null,
+    walletName: walletName.value,
+  })
   try {
     if (walletNamespace.value === 'eip155') {
       const isReactWalletV2 = (walletName.value || '').toLowerCase().includes('react wallet v2')
       try {
         if (!signClient || !sessionTopic) throw new Error('No active session')
-        const balanceResult = await signClient.request({ topic: sessionTopic, chainId, request: { method: 'eth_getBalance', params: [address, 'latest'] } })
-        logWalletBalanceDebug('walletconnect:response', { account: address, chainId, rawWei: balanceResult })
-        const walletBalanceWei = parseBalanceWei(balanceResult, { assumeNativeForPlainDecimal: isReactWalletV2 })
+        const balanceResult = await signClient.request({
+          topic: sessionTopic,
+          chainId,
+          request: { method: 'eth_getBalance', params: [address, 'latest'] },
+        })
+        logWalletBalanceDebug('walletconnect:response', {
+          account: address,
+          chainId,
+          rawWei: balanceResult,
+        })
+        const walletBalanceWei = parseBalanceWei(balanceResult, {
+          assumeNativeForPlainDecimal: isReactWalletV2,
+        })
         try {
           const rpcBalance = await fetchEvmBalanceFromRpc(chainId, address)
-          logWalletBalanceDebug('rpc:response', { account: address, chainId, rpc: rpcBalance.rpcUrl, rawWei: rpcBalance.rawWei })
-          setBalanceSafely(weiToNative(rpcBalance.wei > walletBalanceWei ? rpcBalance.wei : walletBalanceWei))
-        } catch { setBalanceSafely(weiToNative(walletBalanceWei)) }
+          logWalletBalanceDebug('rpc:response', {
+            account: address,
+            chainId,
+            rpc: rpcBalance.rpcUrl,
+            rawWei: rpcBalance.rawWei,
+          })
+          setBalanceSafely(
+            weiToNative(rpcBalance.wei > walletBalanceWei ? rpcBalance.wei : walletBalanceWei),
+          )
+        } catch {
+          setBalanceSafely(weiToNative(walletBalanceWei))
+        }
       } catch {
         const rpcBalance = await fetchEvmBalanceFromRpc(chainId, address)
-        logWalletBalanceDebug('rpc:response:fallback', { account: address, chainId, rpc: rpcBalance.rpcUrl, rawWei: rpcBalance.rawWei })
+        logWalletBalanceDebug('rpc:response:fallback', {
+          account: address,
+          chainId,
+          rpc: rpcBalance.rpcUrl,
+          rawWei: rpcBalance.rawWei,
+        })
         setBalanceSafely(weiToNative(rpcBalance.wei))
       }
     } else {
       const primaryNorm = normalizeChipnetAddress(address)
-      const addressList = bchSessionAddresses.value.length > 0 ? bchSessionAddresses.value : primaryNorm ? [primaryNorm] : []
-      if (addressList.length === 0) { walletError.value = `Cannot fetch BCH balance — unrecognised address: "${address}"`; setBalanceSafely(0); finishLoading(); return }
+      const addressList =
+        bchSessionAddresses.value.length > 0
+          ? bchSessionAddresses.value
+          : primaryNorm
+            ? [primaryNorm]
+            : []
+      if (addressList.length === 0) {
+        walletError.value = `Cannot fetch BCH balance — unrecognised address: "${address}"`
+        setBalanceSafely(0)
+        finishLoading()
+        return
+      }
       console.info('[BitoHelp][bch-balance] fetching all addresses', { addressList })
       let totalBalance = 0
       let firstBalanceError = ''
       for (const addr of addressList) {
         try {
           const chipnetBal = await fetchAddressBalance({ address: addr })
-          console.info('[BitoHelp][bch-balance] chipnet result', { address: addr, balance: chipnetBal })
+          console.info('[BitoHelp][bch-balance] chipnet result', {
+            address: addr,
+            balance: chipnetBal,
+          })
           totalBalance += chipnetBal
+        } catch (e) {
+          if (!firstBalanceError) firstBalanceError = String(e?.message || e || '')
         }
-        catch (e) { if (!firstBalanceError) firstBalanceError = String(e?.message || e || '') }
       }
       console.info('[BitoHelp][bch-balance] total', { totalBalance, addresses: addressList })
       if (totalBalance === 0 && firstBalanceError) {
-        walletError.value = /provider unavailable/i.test(firstBalanceError) ? 'BCH balance service temporarily unavailable — retrying...' : firstBalanceError
+        walletError.value = /provider unavailable/i.test(firstBalanceError)
+          ? 'BCH balance service temporarily unavailable — retrying...'
+          : firstBalanceError
         scheduleBalanceRetry()
-      } else { walletError.value = ''; clearBalanceRetry() }
+      } else {
+        walletError.value = ''
+        clearBalanceRetry()
+      }
       setBalanceSafely(totalBalance)
     }
   } catch (err) {
-    logWalletBalanceDebug('error', { account: address, chainId, error: String(err?.message || err) })
+    logWalletBalanceDebug('error', {
+      account: address,
+      chainId,
+      error: String(err?.message || err),
+    })
     if (walletNamespace.value !== 'eip155') {
-      walletError.value = /provider unavailable/i.test(String(err?.message || '')) ? 'BCH balance service temporarily unavailable — retrying...' : `Balance fetch failed: ${err?.message || err}`
+      walletError.value = /provider unavailable/i.test(String(err?.message || ''))
+        ? 'BCH balance service temporarily unavailable — retrying...'
+        : `Balance fetch failed: ${err?.message || err}`
       scheduleBalanceRetry()
     }
-  } finally { finishLoading() }
+  } finally {
+    finishLoading()
+  }
 }
 
 // ── Init WalletConnect ──
 const initWalletConnect = async () => {
   if (signClient) return
-  if (walletConnectInitPromise) { await walletConnectInitPromise; return }
+  if (walletConnectInitPromise) {
+    await walletConnectInitPromise
+    return
+  }
 
   walletConnectInitPromise = (async () => {
     const core = new WalletConnectCore({
-      projectId, customStoragePrefix: walletConnectStoragePrefix,
-      relayUrl: walletConnectRelayUrl, telemetryEnabled: false,
+      projectId,
+      customStoragePrefix: walletConnectStoragePrefix,
+      relayUrl: walletConnectRelayUrl,
+      telemetryEnabled: false,
     })
 
     signClient = await SignClient.init({
-      core, projectId, relayUrl: walletConnectRelayUrl, telemetryEnabled: false,
-      metadata: { name: 'BiToHelp', description: 'Periodic donations on Bitcoin Cash.', url: window.location.origin, icons: [logoUrl] },
+      core,
+      projectId,
+      relayUrl: walletConnectRelayUrl,
+      telemetryEnabled: false,
+      metadata: {
+        name: 'BiToHelp',
+        description: 'Periodic donations on Bitcoin Cash.',
+        url: window.location.origin,
+        icons: [logoUrl],
+      },
     })
 
     await cleanupInactivePairings()
@@ -866,10 +1089,14 @@ const initWalletConnect = async () => {
     wcModal = new WalletConnectModal({ projectId, themeMode: 'light' })
 
     if (typeof wcModal.subscribeModal === 'function') {
-      unsubscribeModalState = wcModal.subscribeModal((modalState) => { if (!modalState?.open) handleQrClosed() })
+      unsubscribeModalState = wcModal.subscribeModal((modalState) => {
+        if (!modalState?.open) handleQrClosed()
+      })
     }
 
-    signClient.on('session_delete', ({ topic }) => { if (!sessionTopic || topic === sessionTopic) resetWalletState() })
+    signClient.on('session_delete', ({ topic }) => {
+      if (!sessionTopic || topic === sessionTopic) resetWalletState()
+    })
 
     signClient.on('session_event', ({ topic, params }) => {
       if (!sessionTopic || topic !== sessionTopic) return
@@ -882,16 +1109,26 @@ const initWalletConnect = async () => {
           const parsedAddress = parseAccount(account)
           if (walletNamespace.value === 'bch') {
             const normalized = normalizeChipnetAddress(parsedAddress)
-            if (!normalized) { walletError.value = `Invalid BCH address: ${parsedAddress}`; resetWalletState(); return }
+            if (!normalized) {
+              walletError.value = `Invalid BCH address: ${parsedAddress}`
+              resetWalletState()
+              return
+            }
             walletAddress.value = normalized
-          } else { walletAddress.value = parsedAddress }
+          } else {
+            walletAddress.value = parsedAddress
+          }
           fetchBalance(walletAddress.value, walletChain.value)
-        } else { resetWalletState() }
+        } else {
+          resetWalletState()
+        }
         return
       }
       if (params?.event?.name === 'chainChanged') {
         const data = params?.event?.data
-        const nextChain = normalizeEvmChainId(Array.isArray(data) ? data[0] : (data?.chainId ?? data))
+        const nextChain = normalizeEvmChainId(
+          Array.isArray(data) ? data[0] : (data?.chainId ?? data),
+        )
         if (nextChain) walletChain.value = nextChain
         if (walletAddress.value) fetchBalance(walletAddress.value, walletChain.value)
       }
@@ -901,9 +1138,17 @@ const initWalletConnect = async () => {
       if (!sessionTopic || topic !== sessionTopic) return
       const activeSession = getWalletConnectSession(topic)
       updateFromSession({
-        topic, namespaces: params.namespaces, transportType: activeSession?.transportType,
+        topic,
+        namespaces: params.namespaces,
+        transportType: activeSession?.transportType,
         sessionConfig: activeSession?.sessionConfig,
-        peer: { metadata: { name: walletName.value, icons: walletIconUrl.value ? [walletIconUrl.value] : [], redirect: activeSession?.peer?.metadata?.redirect } },
+        peer: {
+          metadata: {
+            name: walletName.value,
+            icons: walletIconUrl.value ? [walletIconUrl.value] : [],
+            redirect: activeSession?.peer?.metadata?.redirect,
+          },
+        },
       })
     })
 
@@ -911,12 +1156,23 @@ const initWalletConnect = async () => {
     const session = pickStoredSession(existingSessions)
     if (session) {
       const isReachable = await pingWalletConnectSession(session.topic)
-      if (isReachable) { sessionTopic = session.topic; isConnected.value = true; updateFromSession(session) }
-      else { resetWalletState(); await cleanupInactivePairings({ deletePairings: true }); await restartWalletConnectTransport() }
+      if (isReachable) {
+        sessionTopic = session.topic
+        isConnected.value = true
+        updateFromSession(session)
+      } else {
+        resetWalletState()
+        await cleanupInactivePairings({ deletePairings: true })
+        await restartWalletConnectTransport()
+      }
     }
   })()
 
-  try { await walletConnectInitPromise } finally { walletConnectInitPromise = undefined }
+  try {
+    await walletConnectInitPromise
+  } finally {
+    walletConnectInitPromise = undefined
+  }
 }
 
 // ── Connect / disconnect toggle ──
@@ -926,8 +1182,14 @@ const handleConnect = async () => {
 
   if (isConnected.value && sessionTopic) {
     await initWalletConnect()
-    if (!signClient) { walletError.value = 'WalletConnect client failed to initialize.'; return }
-    await signClient.disconnect({ topic: sessionTopic, reason: { code: 6000, message: 'User disconnected' } })
+    if (!signClient) {
+      walletError.value = 'WalletConnect client failed to initialize.'
+      return
+    }
+    await signClient.disconnect({
+      topic: sessionTopic,
+      reason: { code: 6000, message: 'User disconnected' },
+    })
     resetWalletState()
     return
   }
@@ -941,19 +1203,39 @@ const handleConnect = async () => {
     let connection
     try {
       connection = await signClient.connect({
-        requiredNamespaces: { bch: { methods: ['bch_signMessage', 'bch_signTransaction', 'bch_sendTransaction'], chains: bchChains, events: [] } },
+        requiredNamespaces: {
+          bch: {
+            methods: ['bch_signMessage', 'bch_signTransaction', 'bch_sendTransaction'],
+            chains: bchChains,
+            events: [],
+          },
+        },
       })
     } catch {
       try {
         connection = await signClient.connect({
           requiredNamespaces: {
-            bch: { methods: ['bch_signMessage', 'bch_signTransaction', 'bch_sendTransaction'], chains: bchChains, events: [] },
-            eip155: { methods: ['eth_getBalance', 'eth_sign', 'personal_sign', 'eth_sendTransaction'], chains: evmChains, events: ['accountsChanged', 'chainChanged'] },
+            bch: {
+              methods: ['bch_signMessage', 'bch_signTransaction', 'bch_sendTransaction'],
+              chains: bchChains,
+              events: [],
+            },
+            eip155: {
+              methods: ['eth_getBalance', 'eth_sign', 'personal_sign', 'eth_sendTransaction'],
+              chains: evmChains,
+              events: ['accountsChanged', 'chainChanged'],
+            },
           },
         })
       } catch {
         connection = await signClient.connect({
-          requiredNamespaces: { eip155: { methods: ['eth_getBalance', 'eth_sign', 'personal_sign', 'eth_sendTransaction'], chains: evmChains, events: ['accountsChanged', 'chainChanged'] } },
+          requiredNamespaces: {
+            eip155: {
+              methods: ['eth_getBalance', 'eth_sign', 'personal_sign', 'eth_sendTransaction'],
+              chains: evmChains,
+              events: ['accountsChanged', 'chainChanged'],
+            },
+          },
         })
       }
     }
@@ -979,18 +1261,33 @@ const handleConnect = async () => {
 // ── Notification system ──
 const CHARITY_WALLET = 'bitcoincash:qp3wjpa3tjlj042z2wv7hahsldgwhwy0rq9sywjpyy'
 const notifications = ref([])
-const unreadCount = computed(() => notifications.value.filter(n => !n.read).length)
+const unreadCount = computed(() => notifications.value.filter((n) => !n.read).length)
 const lastCheckedId = ref(null)
 
-watch(() => donationStore.latestDonation, (newDonation, oldDonation) => {
-  if (newDonation && newDonation !== oldDonation) {
-    if (newDonation.recipient === CHARITY_WALLET) {
-      addCharityNotification({ title: 'New Donation Received!', message: `Received ${newDonation.amount} BCH for ${newDonation.cause}`, txid: newDonation.txid, amount: newDonation.amount, cause: newDonation.cause, isCharity: true })
-    } else {
-      addNotification({ title: 'Donation Successful!', message: `Your donation of ${newDonation.amount} BCH to ${newDonation.cause} was sent successfully.`, txid: newDonation.txid, isCharity: false })
+watch(
+  () => donationStore.latestDonation,
+  (newDonation, oldDonation) => {
+    if (newDonation && newDonation !== oldDonation) {
+      if (newDonation.recipient === CHARITY_WALLET) {
+        addCharityNotification({
+          title: 'New Donation Received!',
+          message: `Received ${newDonation.amount} BCH for ${newDonation.cause}`,
+          txid: newDonation.txid,
+          amount: newDonation.amount,
+          cause: newDonation.cause,
+          isCharity: true,
+        })
+      } else {
+        addNotification({
+          title: 'Donation Successful!',
+          message: `Your donation of ${newDonation.amount} BCH to ${newDonation.cause} was sent successfully.`,
+          txid: newDonation.txid,
+          isCharity: false,
+        })
+      }
     }
-  }
-})
+  },
+)
 
 let pollInterval = null
 
@@ -998,35 +1295,89 @@ async function checkForNewDonations() {
   try {
     await donationStore.fetchDonations(10)
     const donations = donationStore.donationHistory
-    const charityDonations = donations.filter(d => d.recipient === CHARITY_WALLET)
+    const charityDonations = donations.filter((d) => d.recipient === CHARITY_WALLET)
     if (charityDonations.length > 0) {
       const latestDonation = charityDonations[0]
       if (lastCheckedId.value !== latestDonation.id) {
         lastCheckedId.value = latestDonation.id
-        addCharityNotification({ title: 'New Donation Received!', message: `Received ${latestDonation.amount} BCH for ${latestDonation.cause}`, txid: latestDonation.txid, amount: latestDonation.amount, cause: latestDonation.cause, donorName: latestDonation.donor_name || 'Anonymous', isCharity: true })
+        addCharityNotification({
+          title: 'New Donation Received!',
+          message: `Received ${latestDonation.amount} BCH for ${latestDonation.cause}`,
+          txid: latestDonation.txid,
+          amount: latestDonation.amount,
+          cause: latestDonation.cause,
+          donorName: latestDonation.donor_name || 'Anonymous',
+          isCharity: true,
+        })
       }
     }
-  } catch (error) { console.error('Error checking for new donations:', error) }
+  } catch (error) {
+    console.error('Error checking for new donations:', error)
+  }
 }
 
 function addNotification(data) {
-  notifications.value.unshift({ id: Date.now(), title: data.title, message: data.message, time: new Date().toLocaleTimeString(), read: false, txid: data.txid, isCharity: data.isCharity || false })
+  notifications.value.unshift({
+    id: Date.now(),
+    title: data.title,
+    message: data.message,
+    time: new Date().toLocaleTimeString(),
+    read: false,
+    txid: data.txid,
+    isCharity: data.isCharity || false,
+  })
   if (notifications.value.length > 20) notifications.value = notifications.value.slice(0, 20)
 }
 
 function addCharityNotification(data) {
-  notifications.value.unshift({ id: Date.now(), title: data.title, message: data.message, time: new Date().toLocaleTimeString(), read: false, txid: data.txid, amount: data.amount, cause: data.cause, donorName: data.donorName, isCharity: true })
+  notifications.value.unshift({
+    id: Date.now(),
+    title: data.title,
+    message: data.message,
+    time: new Date().toLocaleTimeString(),
+    read: false,
+    txid: data.txid,
+    amount: data.amount,
+    cause: data.cause,
+    donorName: data.donorName,
+    isCharity: true,
+  })
   if (notifications.value.length > 20) notifications.value = notifications.value.slice(0, 20)
-  $q.notify({ type: 'positive', message: 'New Donation Received!', caption: `${data.amount} BCH for ${data.cause}`, position: 'top-right', timeout: 5000, actions: [{ label: 'View', color: 'white', handler: () => { router.push('/dashboard') } }] })
+  $q.notify({
+    type: 'positive',
+    message: 'New Donation Received!',
+    caption: `${data.amount} BCH for ${data.cause}`,
+    position: 'top-right',
+    timeout: 5000,
+    actions: [
+      {
+        label: 'View',
+        color: 'white',
+        handler: () => {
+          router.push('/dashboard')
+        },
+      },
+    ],
+  })
 }
 
-function toggleNotifications() { notifications.value.forEach(n => n.read = true) }
-function markAsRead(id) {
-  const n = notifications.value.find(n => n.id === id)
-  if (n) { n.read = true; if (n.isCharity) router.push('/dashboard') }
+function toggleNotifications() {
+  notifications.value.forEach((n) => (n.read = true))
 }
-function removeNotification(id) { const i = notifications.value.findIndex(n => n.id === id); if (i > -1) notifications.value.splice(i, 1) }
-function clearAllNotifications() { notifications.value = [] }
+function markAsRead(id) {
+  const n = notifications.value.find((n) => n.id === id)
+  if (n) {
+    n.read = true
+    if (n.isCharity) router.push('/dashboard')
+  }
+}
+function removeNotification(id) {
+  const i = notifications.value.findIndex((n) => n.id === id)
+  if (i > -1) notifications.value.splice(i, 1)
+}
+function clearAllNotifications() {
+  notifications.value = []
+}
 
 // ── Lifecycle ──
 onMounted(() => {
@@ -1036,29 +1387,56 @@ onMounted(() => {
   window.addEventListener(WALLET_BALANCE_REFRESH_EVENT, handleWalletBalanceRefresh)
   pollInterval = setInterval(checkForNewDonations, 30000)
   checkForNewDonations()
+  // Resume auto-withdraw timers for all active vaults from previous sessions
+  resumeAllAutoWithdraws((cycle) => {
+    if (import.meta.env.DEV) {
+      console.info('[BitoHelp][vault-autowithdraw:cycle]', cycle)
+    }
+  })
 })
 
 watch(
   () => [isConnected.value, walletNamespace.value],
   async ([connected]) => {
     syncWalletConnectionState(connected, walletNamespace.value)
-    if (connected) { destroyWalletLottie(); return }
+    if (connected) {
+      destroyWalletLottie()
+      return
+    }
     await nextTick()
     initWalletLottie()
   },
 )
 
 watch(
-  () => [isConnected.value, walletNamespace.value, walletChain.value, walletAddress.value, walletBalance.value, walletSymbol.value],
-  () => { syncWalletSnapshot(); syncWalletClientBridge() },
+  () => [
+    isConnected.value,
+    walletNamespace.value,
+    walletChain.value,
+    walletAddress.value,
+    walletBalance.value,
+    walletSymbol.value,
+  ],
+  () => {
+    syncWalletSnapshot()
+    syncWalletClientBridge()
+  },
 )
 
 watch(
   () => isConnecting.value,
   async (connecting) => {
-    if (connecting) { destroyWalletLottie(); await nextTick(); initBitcoinLoader(); return }
+    if (connecting) {
+      destroyWalletLottie()
+      await nextTick()
+      initBitcoinLoader()
+      return
+    }
     destroyBitcoinLoader()
-    if (!isConnected.value && !walletIconUrl.value) { await nextTick(); initWalletLottie() }
+    if (!isConnected.value && !walletIconUrl.value) {
+      await nextTick()
+      initWalletLottie()
+    }
   },
 )
 

@@ -1,16 +1,13 @@
 <template>
   <q-page>
-
     <!-- HERO ini !!!-->
     <section class="hero-section">
       <div class="row items-center justify-between q-pa-xl full-width">
-
         <div class="col-12 col-md-6 hero-content">
           <h1 class="hero-title">
             Donate Bitcoin<br />
             <span class="highlight">Change Lives</span>
           </h1>
-          
 
           <p class="hero-subtitle">
             Helping the world with fast, transparent blockchain-powered donations.
@@ -35,7 +32,6 @@
             />
           </div>
         </div>
-
       </div>
     </section>
 
@@ -43,32 +39,30 @@
       <div class="container">
         <div class="q-mb-xl">
           <h2 class="section-title text-h3 text-weight-bold q-mb-sm">Featured Projects</h2>
-          <p class="text-subtitle1 text-grey-6">Support impactful causes and make a difference in communities worldwide.</p>
+          <p class="text-subtitle1 text-grey-6">
+            Support impactful causes and make a difference in communities worldwide.
+          </p>
         </div>
         <div class="row q-col-gutter-lg">
           <div class="col-12 col-sm-6 col-md-3">
             <q-card class="project-card" flat bordered>
               <div class="project-image">
-                <img src="~assets/scholar.jpg" alt="Project">
+                <img src="~assets/scholar.jpg" alt="Project" />
                 <q-badge color="primary" class="project-badge">Open</q-badge>
               </div>
               <q-card-section>
                 <div class="text-h6 text-weight-bold q-mb-sm">Education Scholarship Program</div>
                 <p class="text-body2 text-grey-7 q-mb-md project-description">
-                  Help provide quality education and school supplies to underprivileged children, empowering them with knowledge and opportunity.
+                  Help provide quality education and school supplies to underprivileged children,
+                  empowering them with knowledge and opportunity.
                 </p>
-                
+
                 <div class="project-progress q-mb-sm">
                   <div class="row items-center justify-between q-mb-xs">
                     <span class="text-caption text-grey-7">Progress</span>
                     <span class="text-caption text-weight-bold">75% Funded</span>
                   </div>
-                  <q-linear-progress 
-                    :value="0.75" 
-                    color="primary" 
-                    rounded
-                    size="8px"
-                  />
+                  <q-linear-progress :value="0.75" color="primary" rounded size="8px" />
                 </div>
                 <div class="row items-center q-mt-md">
                   <q-avatar size="24px" color="green-2" text-color="green" icon="verified">
@@ -78,32 +72,27 @@
             </q-card>
           </div>
 
-          
           <div class="col-12 col-sm-6 col-md-3">
             <q-card class="project-card" flat bordered>
               <div class="project-image">
-                <img src="~assets/medical.jpg" alt="Project">
+                <img src="~assets/medical.jpg" alt="Project" />
                 <q-badge color="positive" class="project-badge">Open</q-badge>
               </div>
               <q-card-section>
                 <div class="text-h6 text-weight-bold q-mb-sm">Medical Care Support</div>
                 <p class="text-body2 text-grey-7 q-mb-md project-description">
-                  Provide essential medical supplies, treatments, and healthcare services to communities in need of immediate assistance.
+                  Provide essential medical supplies, treatments, and healthcare services to
+                  communities in need of immediate assistance.
                 </p>
-                
+
                 <div class="project-progress q-mb-sm">
                   <div class="row items-center justify-between q-mb-xs">
                     <span class="text-caption text-grey-7">Progress</span>
                     <span class="text-caption text-weight-bold">82% Funded</span>
                   </div>
-                  <q-linear-progress 
-                    :value="0.82" 
-                    color="positive" 
-                    rounded
-                    size="8px"
-                  />
+                  <q-linear-progress :value="0.82" color="positive" rounded size="8px" />
                 </div>
-                
+
                 <div class="row items-center q-mt-md">
                   <q-avatar size="24px" color="orange-2" text-color="orange" icon="emoji_events">
                   </q-avatar>
@@ -112,32 +101,27 @@
             </q-card>
           </div>
 
-        
           <div class="col-12 col-sm-6 col-md-3">
             <q-card class="project-card" flat bordered>
               <div class="project-image">
-                <img src="~assets/typhoon.jpeg" alt="Project">
+                <img src="~assets/typhoon.jpeg" alt="Project" />
                 <q-badge color="info" class="project-badge">Open</q-badge>
               </div>
               <q-card-section>
                 <div class="text-h6 text-weight-bold q-mb-sm">Disaster Relief Fund</div>
                 <p class="text-body2 text-grey-7 q-mb-md project-description">
-                  Rapid response support for families affected by typhoons, floods, and natural disasters with food, shelter, and supplies.
+                  Rapid response support for families affected by typhoons, floods, and natural
+                  disasters with food, shelter, and supplies.
                 </p>
-                
+
                 <div class="project-progress q-mb-sm">
                   <div class="row items-center justify-between q-mb-xs">
                     <span class="text-caption text-grey-7">Progress</span>
                     <span class="text-caption text-weight-bold">68% Funded</span>
                   </div>
-                  <q-linear-progress 
-                    :value="0.68" 
-                    color="info" 
-                    rounded
-                    size="8px"
-                  />
+                  <q-linear-progress :value="0.68" color="info" rounded size="8px" />
                 </div>
-                
+
                 <div class="row items-center q-mt-md">
                   <q-avatar size="24px" color="blue-2" text-color="blue" icon="favorite">
                   </q-avatar>
@@ -146,34 +130,34 @@
             </q-card>
           </div>
 
-      
           <div class="col-12 col-sm-6 col-md-3">
             <q-card class="project-card" flat bordered>
               <div class="project-image">
-                <img src="~assets/community.jpg" alt="Project">
+                <img src="~assets/community.jpg" alt="Project" />
                 <q-badge color="positive" class="project-badge">Open</q-badge>
               </div>
               <q-card-section>
                 <div class="text-h6 text-weight-bold q-mb-sm">Community Development</div>
                 <p class="text-body2 text-grey-7 q-mb-md project-description">
-                  Support sustainable farming, livelihood programs, and skill development projects to lift communities out of poverty.
+                  Support sustainable farming, livelihood programs, and skill development projects
+                  to lift communities out of poverty.
                 </p>
-                
+
                 <div class="project-progress q-mb-sm">
                   <div class="row items-center justify-between q-mb-xs">
                     <span class="text-caption text-grey-7">Progress</span>
                     <span class="text-caption text-weight-bold">91% Funded</span>
                   </div>
-                  <q-linear-progress 
-                    :value="0.91" 
-                    color="positive" 
-                    rounded
-                    size="8px"
-                  />
+                  <q-linear-progress :value="0.91" color="positive" rounded size="8px" />
                 </div>
-                
+
                 <div class="row items-center q-mt-md">
-                  <q-avatar size="24px" color="orange-2" text-color="orange" icon="local_fire_department">
+                  <q-avatar
+                    size="24px"
+                    color="orange-2"
+                    text-color="orange"
+                    icon="local_fire_department"
+                  >
                   </q-avatar>
                 </div>
               </q-card-section>
@@ -183,20 +167,20 @@
       </div>
     </section>
 
-  
     <section class="mission-section q-py-xl q-px-md">
       <div class="container">
         <div class="row">
           <div class="col-12 col-md-5 q-pr-xl">
             <h2 class="mission-heading text-weight-bold q-mb-lg">Our Mission</h2>
-            
+
             <p class="mission-description text-body1 text-grey-8">
-              We empower donors and nonprofits by providing a transparent, blockchain-based donation platform where every transaction is verifiable and impactful.<br>
-              We empower donors and nonprofits by providing a transparent, blockchain-based donation platform where every transaction is verifiable and impactful.<br>
+              We empower donors and nonprofits by providing a transparent, blockchain-based donation
+              platform where every transaction is verifiable and impactful.<br />
+              We empower donors and nonprofits by providing a transparent, blockchain-based donation
+              platform where every transaction is verifiable and impactful.<br />
               We empower donors and nonprofits.
             </p>
 
-      
             <div class="mission-visual-grid q-mt-xl">
               <div class="row q-col-gutter-sm">
                 <div class="col-6">
@@ -213,7 +197,6 @@
             </div>
           </div>
 
-         
           <div class="col-12 col-md-7">
             <div class="mission-grid">
               <div class="mission-grid-item mission-large-photo">
@@ -240,7 +223,6 @@
           </div>
         </div>
 
-    
         <div class="row q-col-gutter-md q-mt-xl q-pt-xl">
           <div class="col-12 col-sm-4 text-center">
             <div class="stat-card q-pa-md">
@@ -264,20 +246,19 @@
       </div>
     </section>
 
-
-   
     <section class="why-donate-section q-py-xl q-px-md">
       <div class="container">
         <div class="row q-mb-xl">
           <div class="col-12 col-md-8">
             <h2 class="text-h3 text-weight-bold q-mb-md">Why Donate with Cryptocurrency?</h2>
-            <p class="text-body1 text-grey-8" style="line-height: 1.8;">
-              Blockchain technology offers a modern approach to charitable giving. Here's what makes cryptocurrency donations different and why organizations are increasingly adopting this method.
+            <p class="text-body1 text-grey-8" style="line-height: 1.8">
+              Blockchain technology offers a modern approach to charitable giving. Here's what makes
+              cryptocurrency donations different and why organizations are increasingly adopting
+              this method.
             </p>
           </div>
         </div>
 
-  
         <div class="row q-col-gutter-lg q-mb-xl">
           <div class="col-12 col-md-6">
             <div class="crypto-benefit-card">
@@ -285,8 +266,10 @@
                 <div class="benefit-number">01</div>
                 <h3 class="text-h5 text-weight-bold">Complete Transaction Transparency</h3>
               </div>
-              <p class="text-body1 text-grey-8 q-mb-md" style="line-height: 1.7;">
-                Every donation is permanently recorded on the blockchain. You can track exactly where your funds go, from your wallet to the nonprofit's address, and verify that they were used as intended.
+              <p class="text-body1 text-grey-8 q-mb-md" style="line-height: 1.7">
+                Every donation is permanently recorded on the blockchain. You can track exactly
+                where your funds go, from your wallet to the nonprofit's address, and verify that
+                they were used as intended.
               </p>
               <div class="benefit-detail">
                 <q-chip dense color="blue-1" text-color="primary" icon="verified">
@@ -305,8 +288,10 @@
                 <div class="benefit-number">02</div>
                 <h3 class="text-h5 text-weight-bold">Lower Processing Fees</h3>
               </div>
-              <p class="text-body1 text-grey-8 q-mb-md" style="line-height: 1.7;">
-                Traditional payment processors charge 2-3% plus fixed fees. Bitcoin Cash transactions typically cost less than $0.01, meaning more of your donation directly supports the cause.
+              <p class="text-body1 text-grey-8 q-mb-md" style="line-height: 1.7">
+                Traditional payment processors charge 2-3% plus fixed fees. Bitcoin Cash
+                transactions typically cost less than $0.01, meaning more of your donation directly
+                supports the cause.
               </p>
               <div class="benefit-detail">
                 <div class="fee-comparison">
@@ -323,15 +308,16 @@
             </div>
           </div>
 
-      
           <div class="col-12 col-md-6">
             <div class="crypto-benefit-card">
               <div class="benefit-header q-mb-md">
                 <div class="benefit-number">03</div>
                 <h3 class="text-h5 text-weight-bold">Instant Global Transfers</h3>
               </div>
-              <p class="text-body1 text-grey-8 q-mb-md" style="line-height: 1.7;">
-                Send funds anywhere in the world without intermediaries, currency conversion fees, or multi-day processing times. Perfect for emergency disaster relief when time is critical.
+              <p class="text-body1 text-grey-8 q-mb-md" style="line-height: 1.7">
+                Send funds anywhere in the world without intermediaries, currency conversion fees,
+                or multi-day processing times. Perfect for emergency disaster relief when time is
+                critical.
               </p>
               <div class="benefit-detail">
                 <q-chip dense color="green-1" text-color="positive" icon="schedule">
@@ -341,15 +327,15 @@
             </div>
           </div>
 
-    
           <div class="col-12 col-md-6">
             <div class="crypto-benefit-card">
               <div class="benefit-header q-mb-md">
                 <div class="benefit-number">04</div>
                 <h3 class="text-h5 text-weight-bold">No Geographic Restrictions</h3>
               </div>
-              <p class="text-body1 text-grey-8 q-mb-md" style="line-height: 1.7;">
-                Support nonprofits in any country without dealing with international wire transfer fees, exchange rates, or banking restrictions that can block traditional donations.
+              <p class="text-body1 text-grey-8 q-mb-md" style="line-height: 1.7">
+                Support nonprofits in any country without dealing with international wire transfer
+                fees, exchange rates, or banking restrictions that can block traditional donations.
               </p>
               <div class="benefit-detail">
                 <q-chip dense color="purple-1" text-color="purple" icon="public">
@@ -360,7 +346,6 @@
           </div>
         </div>
 
-    
         <div class="q-mb-xl">
           <h3 class="text-h5 text-weight-bold q-mb-lg">Where Your Donations Make an Impact</h3>
           <div class="row q-col-gutter-md">
@@ -406,7 +391,6 @@
           </div>
         </div>
 
-      
         <div class="crypto-cta-section q-mt-xl q-pt-lg">
           <div class="row items-center">
             <div class="col-12 col-md-7">
@@ -436,9 +420,10 @@
           <div class="row items-center justify-between">
             <div class="col-12 col-md-7">
               <h2 class="text-h3 text-weight-bold q-mb-md">Why Your Donation Matters</h2>
-              <p class="text-body1 text-grey-8" style="line-height: 1.8;">
-                Your contribution through blockchain technology ensures transparency, speed, and direct impact. 
-                Every donation is tracked on-chain, providing you with complete visibility into how your funds make a difference.
+              <p class="text-body1 text-grey-8" style="line-height: 1.8">
+                Your contribution through blockchain technology ensures transparency, speed, and
+                direct impact. Every donation is tracked on-chain, providing you with complete
+                visibility into how your funds make a difference.
               </p>
             </div>
             <div class="col-12 col-md-4 text-right">
@@ -450,20 +435,21 @@
           </div>
         </div>
 
-
         <div class="row q-col-gutter-lg q-mb-xl">
           <div class="col-12 col-md-4">
             <div class="metric-card">
               <div class="metric-number text-primary">$2.5M+</div>
               <div class="metric-label">Total Raised</div>
-              <div class="metric-description">In cryptocurrency donations processed through our platform</div>
+              <div class="metric-description">
+                In cryptocurrency donations processed through our platform
+              </div>
               <div class="metric-trend">
                 <q-icon name="trending_up" color="positive" size="20px" />
                 <span class="text-positive text-caption">+127% from last year</span>
               </div>
             </div>
           </div>
-          
+
           <div class="col-12 col-md-4">
             <div class="metric-card">
               <div class="metric-number text-positive">5,273</div>
@@ -475,7 +461,7 @@
               </div>
             </div>
           </div>
-          
+
           <div class="col-12 col-md-4">
             <div class="metric-card">
               <div class="metric-number text-secondary">158</div>
@@ -489,12 +475,11 @@
           </div>
         </div>
 
-      
         <div class="row q-col-gutter-lg q-mb-xl">
           <div class="col-12">
             <h3 class="text-h5 text-weight-bold q-mb-md">Real Impact, Real Stories</h3>
           </div>
-          
+
           <div class="col-12 col-md-6">
             <div class="impact-story-card">
               <div class="row q-col-gutter-md">
@@ -505,15 +490,18 @@
                 </div>
                 <div class="col-8">
                   <div class="story-stat text-h4 text-weight-bold text-primary">518</div>
-                  <div class="story-title text-subtitle1 text-weight-bold q-mb-sm">Students Received Scholarships</div>
+                  <div class="story-title text-subtitle1 text-weight-bold q-mb-sm">
+                    Students Received Scholarships
+                  </div>
                   <p class="story-text text-body2 text-grey-7">
-                    Funded full-year scholarships, school supplies, and educational technology for students in underserved communities.
+                    Funded full-year scholarships, school supplies, and educational technology for
+                    students in underserved communities.
                   </p>
                 </div>
               </div>
             </div>
           </div>
-          
+
           <div class="col-12 col-md-6">
             <div class="impact-story-card">
               <div class="row q-col-gutter-md">
@@ -524,15 +512,18 @@
                 </div>
                 <div class="col-8">
                   <div class="story-stat text-h4 text-weight-bold text-positive">1,247</div>
-                  <div class="story-title text-subtitle1 text-weight-bold q-mb-sm">Medical Treatments Provided</div>
+                  <div class="story-title text-subtitle1 text-weight-bold q-mb-sm">
+                    Medical Treatments Provided
+                  </div>
                   <p class="story-text text-body2 text-grey-7">
-                    Emergency medical care, essential medications, and health services delivered to families in crisis situations.
+                    Emergency medical care, essential medications, and health services delivered to
+                    families in crisis situations.
                   </p>
                 </div>
               </div>
             </div>
           </div>
-          
+
           <div class="col-12 col-md-6">
             <div class="impact-story-card">
               <div class="row q-col-gutter-md">
@@ -543,15 +534,18 @@
                 </div>
                 <div class="col-8">
                   <div class="story-stat text-h4 text-weight-bold text-orange">892</div>
-                  <div class="story-title text-subtitle1 text-weight-bold q-mb-sm">Families Assisted in Disasters</div>
+                  <div class="story-title text-subtitle1 text-weight-bold q-mb-sm">
+                    Families Assisted in Disasters
+                  </div>
                   <p class="story-text text-body2 text-grey-7">
-                    Rapid response support including food, shelter, and essential supplies for families affected by natural disasters.
+                    Rapid response support including food, shelter, and essential supplies for
+                    families affected by natural disasters.
                   </p>
                 </div>
               </div>
             </div>
           </div>
-          
+
           <div class="col-12 col-md-6">
             <div class="impact-story-card">
               <div class="row q-col-gutter-md">
@@ -562,9 +556,12 @@
                 </div>
                 <div class="col-8">
                   <div class="story-stat text-h4 text-weight-bold text-secondary">43</div>
-                  <div class="story-title text-subtitle1 text-weight-bold q-mb-sm">Community Projects Launched</div>
+                  <div class="story-title text-subtitle1 text-weight-bold q-mb-sm">
+                    Community Projects Launched
+                  </div>
                   <p class="story-text text-body2 text-grey-7">
-                    Sustainable farming, clean water, and livelihood programs helping communities build long-term self-sufficiency.
+                    Sustainable farming, clean water, and livelihood programs helping communities
+                    build long-term self-sufficiency.
                   </p>
                 </div>
               </div>
@@ -572,13 +569,13 @@
           </div>
         </div>
 
-    
         <div class="impact-cta-section q-mt-xl q-pt-xl">
           <div class="row items-center q-col-gutter-lg">
             <div class="col-12 col-md-7">
               <h3 class="text-h4 text-weight-bold q-mb-sm">Join Us in Making a Difference</h3>
               <p class="text-body1 text-grey-7">
-                Start your donation journey today and become part of a global community committed to transparent, impactful giving.
+                Start your donation journey today and become part of a global community committed to
+                transparent, impactful giving.
               </p>
             </div>
             <div class="col-12 col-md-5 text-right">
@@ -597,36 +594,33 @@
       </div>
     </section>
 
-
-   
     <section class="testimonials-section q-py-xl q-px-md">
       <div class="container">
         <div class="text-center q-mb-xl animate-slide-up">
           <h2 class="section-title text-h3 text-weight-bold q-mb-md">What People Are Saying</h2>
-          <p class="text-h6 text-grey-7 q-mb-lg" style="max-width: 700px; margin: 0 auto;">
+          <p class="text-h6 text-grey-7 q-mb-lg" style="max-width: 700px; margin: 0 auto">
             Hear from donors and beneficiaries about their experience with blockchain-powered giving
           </p>
         </div>
 
-     
         <div class="row q-col-gutter-lg">
-          <div class="col-12 col-md-4 animate-fade-slide-up" v-for="(t, index) in testimonials" :key="t.name" :style="{ animationDelay: (0.2 + index * 0.2) + 's' }">
+          <div
+            class="col-12 col-md-4 animate-fade-slide-up"
+            v-for="(t, index) in testimonials"
+            :key="t.name"
+            :style="{ animationDelay: 0.2 + index * 0.2 + 's' }"
+          >
             <q-card class="testimonial-card full-height" flat bordered>
-          
               <div class="quote-icon-wrapper">
                 <q-icon name="format_quote" size="48px" color="primary" />
               </div>
 
               <q-card-section class="q-pa-lg">
-                
-                <p class="testimonial-text text-body1 q-mb-lg">
-                  "{{ t.text }}"
-                </p>
+                <p class="testimonial-text text-body1 q-mb-lg">"{{ t.text }}"</p>
 
-             
                 <div class="row items-center">
                   <q-avatar size="56px" class="q-mr-md">
-                    <img :src="t.image" alt="t.name">
+                    <img :src="t.image" alt="t.name" />
                   </q-avatar>
                   <div>
                     <div class="text-subtitle1 text-weight-bold">{{ t.name }}</div>
@@ -635,7 +629,6 @@
                 </div>
               </q-card-section>
 
-              
               <q-card-section class="q-pt-none q-px-lg q-pb-lg">
                 <div class="row items-center">
                   <q-icon name="star" size="20px" color="amber" v-for="n in 5" :key="n" />
@@ -645,23 +638,24 @@
           </div>
         </div>
 
-      
         <div class="trust-section q-mt-xl q-pt-xl">
-          <div class="text-center q-mb-lg animate-slide-up" style="animation-delay: 0.8s;">
-            <div class="text-h5 text-weight-bold text-grey-8 q-mb-sm">Trusted by Organizations Worldwide</div>
+          <div class="text-center q-mb-lg animate-slide-up" style="animation-delay: 0.8s">
+            <div class="text-h5 text-weight-bold text-grey-8 q-mb-sm">
+              Trusted by Organizations Worldwide
+            </div>
             <p class="text-body1 text-grey-7">Join thousands of donors making a verified impact</p>
           </div>
-          
+
           <div class="row q-col-gutter-md justify-center items-center">
-            <div class="col-auto trust-badge animate-scale-in" style="animation-delay: 1s;">
+            <div class="col-auto trust-badge animate-scale-in" style="animation-delay: 1s">
               <q-icon name="verified" size="32px" color="primary" class="q-mr-sm" />
               <span class="text-weight-medium">Blockchain Verified</span>
             </div>
-            <div class="col-auto trust-badge animate-scale-in" style="animation-delay: 1.1s;">
+            <div class="col-auto trust-badge animate-scale-in" style="animation-delay: 1.1s">
               <q-icon name="security" size="32px" color="positive" class="q-mr-sm" />
               <span class="text-weight-medium">Secure Transactions</span>
             </div>
-            <div class="col-auto trust-badge animate-scale-in" style="animation-delay: 1.2s;">
+            <div class="col-auto trust-badge animate-scale-in" style="animation-delay: 1.2s">
               <q-icon name="public" size="32px" color="secondary" class="q-mr-sm" />
               <span class="text-weight-medium">Global Network</span>
             </div>
@@ -670,7 +664,6 @@
       </div>
     </section>
 
-    
     <section class="about-impact-section q-py-xl q-px-md">
       <div class="container">
         <div class="row justify-center">
@@ -680,27 +673,40 @@
                 <div class="col-12 col-md-6">
                   <div class="about-badge q-mb-md">About BitoHelp</div>
                   <h2 class="text-h3 text-weight-bold q-mb-md">Blockchain-Powered Social Impact</h2>
-                  <p class="text-body1 text-grey-8 q-mb-lg" style="line-height: 1.8;">
-                    Founded in 2026, BitoHelp is a cryptocurrency donation platform built on transparency, innovation, and social responsibility. We leverage blockchain technology to create a trusted bridge between donors and verified nonprofits worldwide.
+                  <p class="text-body1 text-grey-8 q-mb-lg" style="line-height: 1.8">
+                    Founded in 2026, BitoHelp is a cryptocurrency donation platform built on
+                    transparency, innovation, and social responsibility. We leverage blockchain
+                    technology to create a trusted bridge between donors and verified nonprofits
+                    worldwide.
                   </p>
-                  <p class="text-body1 text-grey-8 q-mb-xl" style="line-height: 1.8;">
-                    Every donation is tracked on-chain, ensuring complete visibility and accountability. Our mission is to make charitable giving more accessible, efficient, and impactful through the power of Bitcoin Cash.
+                  <p class="text-body1 text-grey-8 q-mb-xl" style="line-height: 1.8">
+                    Every donation is tracked on-chain, ensuring complete visibility and
+                    accountability. Our mission is to make charitable giving more accessible,
+                    efficient, and impactful through the power of Bitcoin Cash.
                   </p>
 
-                
                   <div class="key-features">
                     <div class="row q-col-gutter-md q-mb-lg">
                       <div class="col-12 col-sm-6">
                         <div class="feature-box">
-                          <q-icon name="verified_user" size="32px" color="primary" class="q-mb-sm" />
-                          <div class="text-subtitle1 text-weight-bold q-mb-xs">100% Transparent</div>
+                          <q-icon
+                            name="verified_user"
+                            size="32px"
+                            color="primary"
+                            class="q-mb-sm"
+                          />
+                          <div class="text-subtitle1 text-weight-bold q-mb-xs">
+                            100% Transparent
+                          </div>
                           <p class="text-caption text-grey-7">All transactions on blockchain</p>
                         </div>
                       </div>
                       <div class="col-12 col-sm-6">
                         <div class="feature-box">
                           <q-icon name="speed" size="32px" color="positive" class="q-mb-sm" />
-                          <div class="text-subtitle1 text-weight-bold q-mb-xs">Instant Transfers</div>
+                          <div class="text-subtitle1 text-weight-bold q-mb-xs">
+                            Instant Transfers
+                          </div>
                           <p class="text-caption text-grey-7">Real-time donation processing</p>
                         </div>
                       </div>
@@ -722,9 +728,9 @@
                   </div>
 
                   <div class="q-mt-lg">
-                    <q-btn 
-                      label="Learn More About Our Mission" 
-                      color="primary" 
+                    <q-btn
+                      label="Learn More About Our Mission"
+                      color="primary"
                       size="lg"
                       unelevated
                       padding="12px 32px"
@@ -733,7 +739,6 @@
                   </div>
                 </div>
 
-                
                 <div class="col-12 col-md-6">
                   <div class="about-visual-section">
                     <div class="about-main-image q-mb-md">
@@ -760,7 +765,6 @@
       </div>
     </section>
 
-   
     <footer class="main-footer">
       <div class="footer-top">
         <div class="container">
@@ -772,7 +776,8 @@
                   <span class="footer-brand-name">BiToHelp</span>
                 </div>
                 <p class="footer-description text-body2 q-mb-lg">
-                  Empowering social impact through transparent blockchain-powered cryptocurrency donations. Join us in making the world a better place.
+                  Empowering social impact through transparent blockchain-powered cryptocurrency
+                  donations. Join us in making the world a better place.
                 </p>
                 <div class="social-links">
                   <a href="#" class="social-link" aria-label="Facebook">
@@ -791,7 +796,6 @@
               </div>
             </div>
 
-      
             <div class="col-6 col-md-2">
               <div class="footer-column">
                 <h4 class="footer-title">About</h4>
@@ -805,7 +809,6 @@
               </div>
             </div>
 
-      
             <div class="col-6 col-md-2">
               <div class="footer-column">
                 <h4 class="footer-title">For Donors</h4>
@@ -819,7 +822,6 @@
               </div>
             </div>
 
-            
             <div class="col-6 col-md-2">
               <div class="footer-column">
                 <h4 class="footer-title">Nonprofits</h4>
@@ -833,7 +835,6 @@
               </div>
             </div>
 
-           
             <div class="col-6 col-md-2">
               <div class="footer-column">
                 <h4 class="footer-title">Resources</h4>
@@ -846,15 +847,15 @@
                 </ul>
               </div>
             </div>
-
           </div>
 
-          
           <div class="footer-newsletter q-mt-xl q-pt-xl">
             <div class="row items-center q-col-gutter-md">
               <div class="col-12 col-md-6">
                 <h3 class="newsletter-title text-h5 text-weight-bold q-mb-sm">Stay Updated</h3>
-                <p class="newsletter-subtitle text-body2">Subscribe to our newsletter for updates on crypto donations and social impact.</p>
+                <p class="newsletter-subtitle text-body2">
+                  Subscribe to our newsletter for updates on crypto donations and social impact.
+                </p>
               </div>
               <div class="col-12 col-md-6">
                 <div class="newsletter-form">
@@ -882,14 +883,11 @@
         </div>
       </div>
 
-      
       <div class="footer-bottom">
         <div class="container">
           <div class="row items-center justify-between">
             <div class="col-12 col-md-6 text-center text-md-left">
-              <p class="footer-copyright text-body2">
-                © 2026 BiToHelp. All rights reserved.
-              </p>
+              <p class="footer-copyright text-body2">© 2026 BiToHelp. All rights reserved.</p>
             </div>
             <div class="col-12 col-md-6 text-center text-md-right">
               <div class="footer-legal-links">
@@ -904,18 +902,14 @@
         </div>
       </div>
     </footer>
-    
-
   </q-page>
-  
-  
 </template>
 
 <script setup>
 import { ref, onMounted, onUnmounted } from 'vue'
 
 const isConnected = ref(localStorage.getItem('bitohelp.wallet.connected') === '1')
-function onWalletChange () {
+function onWalletChange() {
   isConnected.value = localStorage.getItem('bitohelp.wallet.connected') === '1'
 }
 onMounted(() => window.addEventListener('bitohelp:wallet-connection-changed', onWalletChange))
@@ -923,32 +917,29 @@ onUnmounted(() => window.removeEventListener('bitohelp:wallet-connection-changed
 
 const testimonials = [
   {
-    name: "Maria",
-    role: "Typhoon Relief",
-    text: "Crypto donations reached us instantly when we needed it.",
-    image: "https://cdn.quasar.dev/img/parallax2.jpg",
-    avatar: "../assets/image.png"
+    name: 'Maria',
+    role: 'Typhoon Relief',
+    text: 'Crypto donations reached us instantly when we needed it.',
+    image: 'https://cdn.quasar.dev/img/parallax2.jpg',
+    avatar: '../assets/image.png',
   },
   {
-    name: "Jose",
-    role: "Scholarship Student",
-    text: "My education was funded through blockchain donations.",
-    image: "https://cdn.quasar.dev/img/mountains.jpg",
-    avatar: "/avatars/jose.jpg"
+    name: 'Jose',
+    role: 'Scholarship Student',
+    text: 'My education was funded through blockchain donations.',
+    image: 'https://cdn.quasar.dev/img/mountains.jpg',
+    avatar: '/avatars/jose.jpg',
   },
   {
-    name: "James",
-    role: "Donor",
-    text: "I trust crypto because every donation is transparent.",
-    image: "https://cdn.quasar.dev/img/mountains.jpg",
-    avatar: "/avatars/james.jpg"
+    name: 'James',
+    role: 'Donor',
+    text: 'I trust crypto because every donation is transparent.',
+    image: 'https://cdn.quasar.dev/img/mountains.jpg',
+    avatar: '/avatars/james.jpg',
   },
-
 ]
 </script>
 <style scoped>
-
-
 .hero-section {
   min-height: 100vh;
   position: relative;
@@ -982,7 +973,6 @@ const testimonials = [
   }
 }
 
-
 .hero-section .row {
   position: relative;
   width: 100%;
@@ -1003,7 +993,7 @@ const testimonials = [
 }
 
 .hero-title .highlight {
-  color: #FFD700;
+  color: #ffd700;
   display: inline-block;
 }
 
@@ -1050,7 +1040,6 @@ const testimonials = [
   border-color: white;
   transform: scale(1.05);
 }
-
 
 .featured-projects-section {
   background: linear-gradient(180deg, #f8f9fa 0%, #ffffff 100%);
@@ -1577,7 +1566,6 @@ const testimonials = [
   opacity: 0;
 }
 
-
 .testimonials-section {
   background: linear-gradient(180deg, #f8f9fa 0%, #ffffff 100%);
 }
@@ -1637,7 +1625,6 @@ const testimonials = [
   transform: translateY(-4px);
   box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
 }
-
 
 .about-impact-section {
   background: #ffffff;

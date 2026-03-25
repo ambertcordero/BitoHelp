@@ -10,7 +10,7 @@ class Donation(models.Model):
     donor_name = models.CharField(max_length=255, blank=True)
     donor_email = models.EmailField(blank=True)
     donor_contact = models.CharField(max_length=50, blank=True)
-    explorer_url = models.URLField()
+    explorer_url = models.URLField(blank=True, default='')
     timestamp = models.DateTimeField(auto_now_add=True)
     nonprofit = models.ForeignKey('nonprofits.Nonprofit', on_delete=models.CASCADE, related_name='donations', null=True, blank=True)
     contract = models.CharField(max_length=50, blank=True)

@@ -4,8 +4,9 @@ import { getAddressUtxos, broadcastTransaction, getTransaction } from './electru
 const SATOSHIS_PER_BCH = 100000000n
 const BCH_DUST_SATOSHIS = 546n
 const DEFAULT_FEE_RATE = 1.2
-const DEFAULT_CONFIRMATION_TIMEOUT_MS = 180000
-const DEFAULT_CONFIRMATION_POLL_MS = 5000
+const DEFAULT_CONFIRMATION_TIMEOUT_MS = 600000
+const DEFAULT_CONFIRMATION_POLL_MS = 30000
+const DEFAULT_CONFIRMATION_INITIAL_DELAY_MS = 60000
 
 const getEnvValue = (key, fallback = '') => {
   const fromProcess = typeof process !== 'undefined' ? process?.env?.[key] : undefined
@@ -490,15 +491,24 @@ export const waitForConfirmations = async ({
   minConfirmations = 1,
   timeoutMs = DEFAULT_CONFIRMATION_TIMEOUT_MS,
   pollMs = DEFAULT_CONFIRMATION_POLL_MS,
+  initialDelayMs = DEFAULT_CONFIRMATION_INITIAL_DELAY_MS,
 }) => {
   const start = Date.now()
 
+  // Give the indexer time to see the tx before hitting it in a loop
+  if (initialDelayMs > 0) {
+    await sleep(initialDelayMs)
+  }
+
+  let currentPollMs = pollMs
   while (Date.now() - start <= timeoutMs) {
     const { confirmations } = await fetchTransactionConfirmations({ txid })
     if (confirmations >= minConfirmations) {
       return { confirmed: true, confirmations }
     }
-    await sleep(pollMs)
+    await sleep(currentPollMs)
+    // Exponential backoff: double interval each cycle, cap at 2 minutes
+    currentPollMs = Math.min(currentPollMs * 2, 120000)
   }
 
   return {

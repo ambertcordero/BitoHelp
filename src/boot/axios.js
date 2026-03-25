@@ -1,15 +1,13 @@
 import { defineBoot } from '#q-app/wrappers'
 import axios from 'axios'
 
-
-const api = axios.create({ 
+const api = axios.create({
   baseURL: 'http://localhost:8001/api/',
   headers: {
     'Content-Type': 'application/json',
   },
-  timeout: 10000, 
+  timeout: 10000,
 })
-
 
 api.interceptors.request.use(
   (config) => {
@@ -19,9 +17,8 @@ api.interceptors.request.use(
   (error) => {
     console.error('Request Error:', error)
     return Promise.reject(error)
-  }
+  },
 )
-
 
 api.interceptors.response.use(
   (response) => {
@@ -34,10 +31,10 @@ api.interceptors.response.use(
       code: error.code,
       response: error.response?.data,
       status: error.response?.status,
-      url: error.config?.url
+      url: error.config?.url,
     })
     return Promise.reject(error)
-  }
+  },
 )
 
 export default defineBoot(({ app }) => {

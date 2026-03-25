@@ -1,175 +1,58 @@
 /**
- * Lightweight Electrum (Fulcrum) JSON-RPC client over WebSocket.
- * Used for BCH chipnet UTXO lookups, transaction broadcast, and confirmation checks.
+ * Watchtower REST API client for BCH chipnet.
+ * Used for UTXO lookups, transaction broadcast, and confirmation checks.
  *
- * Protocol reference: https://electrum-cash-protocol.readthedocs.io/en/latest/
+ * API base: https://chipnet.watchtower.cash/api/
  */
 
-const CHIPNET_FULCRUM_SERVERS = [
-  'wss://chipnet.imaginary.cash:50004',
-  'wss://chipnet.bch.ninja:50004',
-]
-
+const CHIPNET_BASE = 'https://chipnet.watchtower.cash/api'
+const MAINNET_BASE = 'https://watchtower.cash/api'
 const REQUEST_TIMEOUT_MS = 15000
-const CONNECT_TIMEOUT_MS = 10000
-const CLIENT_NAME = 'BitoHelp'
-const PROTOCOL_VERSION = '1.4'
 
-let activeSocket = null
-let activeServerUrl = null
-let requestIdCounter = 0
-let pendingRequests = new Map()
-let connectPromise = null
-let negotiated = false
-
-const cleanup = () => {
-  if (activeSocket) {
-    try {
-      activeSocket.close()
-    } catch {
-      /* ignore */
-    }
+const getBaseUrl = (address) => {
+  if (typeof address === 'string' && address.startsWith('bitcoincash:')) {
+    return MAINNET_BASE
   }
-  activeSocket = null
-  activeServerUrl = null
-  connectPromise = null
-  negotiated = false
-
-  for (const [, entry] of pendingRequests) {
-    entry.reject(new Error('Electrum connection closed'))
-  }
-  pendingRequests = new Map()
+  return CHIPNET_BASE
 }
 
-const connectToServer = (url) =>
-  new Promise((resolve, reject) => {
-    const ws = new WebSocket(url)
-    const timer = setTimeout(() => {
-      ws.close()
-      reject(new Error(`Electrum connect timeout: ${url}`))
-    }, CONNECT_TIMEOUT_MS)
-
-    ws.addEventListener('open', () => {
-      clearTimeout(timer)
-      resolve(ws)
-    })
-
-    ws.addEventListener('error', () => {
-      clearTimeout(timer)
-      reject(new Error(`Electrum connect failed: ${url}`))
-    })
-  })
-
-const handleMessage = (event) => {
-  let parsed
+const fetchWithTimeout = async (url, options = {}) => {
+  const controller = new AbortController()
+  const timer = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS)
   try {
-    parsed = JSON.parse(event.data)
-  } catch {
-    return
-  }
-
-  const entry = pendingRequests.get(parsed.id)
-  if (!entry) return
-
-  pendingRequests.delete(parsed.id)
-  clearTimeout(entry.timer)
-
-  if (parsed.error) {
-    entry.reject(new Error(parsed.error.message || JSON.stringify(parsed.error)))
-  } else {
-    entry.resolve(parsed.result)
-  }
-}
-
-const handleClose = () => {
-  cleanup()
-}
-
-const ensureConnected = async () => {
-  if (activeSocket && activeSocket.readyState === WebSocket.OPEN && negotiated) {
-    return
-  }
-
-  // Prevent concurrent connection attempts
-  if (connectPromise) {
-    await connectPromise
-    return
-  }
-
-  cleanup()
-
-  connectPromise = (async () => {
-    let lastError = null
-    for (const url of CHIPNET_FULCRUM_SERVERS) {
-      try {
-        const ws = await connectToServer(url)
-        ws.addEventListener('message', handleMessage)
-        ws.addEventListener('close', handleClose)
-        activeSocket = ws
-        activeServerUrl = url
-
-        // Protocol version negotiation (required by Electrum protocol)
-        await sendRequest('server.version', [CLIENT_NAME, PROTOCOL_VERSION])
-        negotiated = true
-        return
-      } catch (e) {
-        lastError = e
-      }
-    }
-    throw lastError || new Error('All Fulcrum servers unreachable')
-  })()
-
-  try {
-    await connectPromise
+    const response = await fetch(url, { ...options, signal: controller.signal })
+    return response
   } finally {
-    connectPromise = null
-  }
-}
-
-const sendRequest = (method, params = []) =>
-  new Promise((resolve, reject) => {
-    if (!activeSocket || activeSocket.readyState !== WebSocket.OPEN) {
-      reject(new Error('Electrum socket not connected'))
-      return
-    }
-
-    const id = ++requestIdCounter
-    const timer = setTimeout(() => {
-      pendingRequests.delete(id)
-      reject(new Error(`Electrum request timeout: ${method}`))
-    }, REQUEST_TIMEOUT_MS)
-
-    pendingRequests.set(id, { resolve, reject, timer })
-
-    activeSocket.send(JSON.stringify({ jsonrpc: '2.0', method, params, id }))
-  })
-
-/**
- * Call an Electrum method, connecting if necessary.
- * Retries once on connection failure.
- */
-export const electrumRequest = async (method, params = []) => {
-  try {
-    await ensureConnected()
-    return await sendRequest(method, params)
-  } catch (firstErr) {
-    // Retry once with a fresh connection
-    cleanup()
-    try {
-      await ensureConnected()
-      return await sendRequest(method, params)
-    } catch {
-      throw firstErr
-    }
+    clearTimeout(timer)
   }
 }
 
 /**
  * Get unspent outputs for a BCH address.
- * Returns array of { tx_hash, tx_pos, height, value } where value is in satoshis.
+ * Returns array of { tx_hash, tx_pos, height, value } (Electrum-compatible shape).
  */
 export const getAddressUtxos = async (address) => {
-  return electrumRequest('blockchain.address.listunspent', [address])
+  const base = getBaseUrl(address)
+  const url = `${base}/utxo/bch/${encodeURIComponent(address)}/`
+  const response = await fetchWithTimeout(url)
+
+  if (!response.ok) {
+    throw new Error(`Watchtower UTXO request failed (${response.status})`)
+  }
+
+  const data = await response.json()
+
+  if (!data?.valid) {
+    throw new Error(`Watchtower reports invalid address: ${address}`)
+  }
+
+  // Map Watchtower format to Electrum-compatible format consumed by bchChipnet.js
+  return (data.utxos || []).map((utxo) => ({
+    tx_hash: utxo.txid,
+    tx_pos: utxo.vout,
+    height: utxo.block || 0,
+    value: utxo.value,
+  }))
 }
 
 /**
@@ -177,26 +60,54 @@ export const getAddressUtxos = async (address) => {
  * Returns the transaction id on success.
  */
 export const broadcastTransaction = async (rawTxHex) => {
-  return electrumRequest('blockchain.transaction.broadcast', [rawTxHex])
+  const url = `${CHIPNET_BASE}/broadcast/`
+  const response = await fetchWithTimeout(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ transaction: rawTxHex }),
+  })
+
+  if (!response.ok) {
+    const errorText = await response.text().catch(() => '')
+    throw new Error(`Watchtower broadcast failed (${response.status}): ${errorText}`)
+  }
+
+  const data = await response.json()
+  const txid = data?.txid || data?.tx_hash || data?.transaction_hash || null
+
+  if (!txid) {
+    throw new Error('Watchtower broadcast succeeded but no txid returned.')
+  }
+
+  return txid
 }
 
 /**
  * Get transaction details including confirmation count.
  * @param {string} txid
- * @returns {{ confirmations: number, blockhash?: string }}
+ * @returns {{ confirmations: number }}
  */
 export const getTransaction = async (txid) => {
-  return electrumRequest('blockchain.transaction.get', [txid, true])
+  const url = `${CHIPNET_BASE}/tx/bch/${encodeURIComponent(txid)}/`
+  const response = await fetchWithTimeout(url)
+
+  if (!response.ok) {
+    throw new Error(`Watchtower tx lookup failed (${response.status})`)
+  }
+
+  const data = await response.json()
+  return {
+    confirmations: data?.confirmations ?? 0,
+    blockhash: data?.block_hash || data?.blockhash || null,
+  }
 }
 
 /**
- * Disconnect the active Electrum session.
+ * Disconnect — no-op for REST client (kept for API compatibility).
  */
-export const disconnect = () => {
-  cleanup()
-}
+export const disconnect = () => {}
 
 /**
- * Get the currently connected server URL (for diagnostics).
+ * Get the currently active API base URL (for diagnostics).
  */
-export const getActiveServer = () => activeServerUrl
+export const getActiveServer = () => CHIPNET_BASE
