@@ -1164,13 +1164,21 @@ const submitDonation = async () => {
     let vaultAddr = ''
 
     if (selectedCoin === 'BCH') {
+      // Total = deposit + (cycles × miner fee) so the vault can cover all withdrawal fees
+      const feeSats = BigInt(VAULT_MINER_FEE_SATS)
+      const costPerCycle = withdrawalSatoshis + feeSats
+      const cycles = costPerCycle > 0n ? depositSatoshis / costPerCycle : 0n
+      const totalFees = cycles * feeSats
+      const totalSatoshis = depositSatoshis + totalFees
+      const totalCoin = Number(totalSatoshis) / 1e8
+
       const bchResult = await runChipnetBchDonationFlow({
         walletClient,
         chainId: activeChain,
         senderAddress: activeAccount,
         charityAddress: recipientAddress,
-        amountSatoshis: amountUnits,
-        amountCoin: depositCoin,
+        amountSatoshis: totalSatoshis,
+        amountCoin: totalCoin,
         donationId,
         withdrawalSatoshis,
         withdrawalCoin,

@@ -226,9 +226,10 @@ const donationStore = useDonationStore()
 // ── WalletConnect constants ──
 const projectId = '1e52dff3b9c75d86cfc7b1190c02d3a0'
 const makeWalletConnectStoragePrefix = () => {
-  const uid = typeof crypto !== 'undefined' && crypto.randomUUID
-    ? crypto.randomUUID()
-    : `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`
+  const uid =
+    typeof crypto !== 'undefined' && crypto.randomUUID
+      ? crypto.randomUUID()
+      : `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`
   return `bitohelp-${uid}`
 }
 let walletConnectStoragePrefix = makeWalletConnectStoragePrefix()
@@ -753,12 +754,22 @@ const waitForRelayConnected = async (timeoutMs = 5000) => {
   await new Promise((resolve) => {
     const timer = setTimeout(resolve, timeoutMs)
     const check = () => {
-      if (relayer.connected) { clearTimeout(timer); resolve() }
+      if (relayer.connected) {
+        clearTimeout(timer)
+        resolve()
+      }
     }
-    relayer.on?.('relayer_connect', () => { clearTimeout(timer); resolve() })
+    relayer.on?.('relayer_connect', () => {
+      clearTimeout(timer)
+      resolve()
+    })
     // Poll as fallback in case the event doesn't fire
     const poll = setInterval(() => {
-      if (relayer.connected) { clearInterval(poll); clearTimeout(timer); resolve() }
+      if (relayer.connected) {
+        clearInterval(poll)
+        clearTimeout(timer)
+        resolve()
+      }
     }, 200)
     setTimeout(() => clearInterval(poll), timeoutMs)
     check()

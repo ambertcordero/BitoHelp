@@ -461,7 +461,9 @@ export const startAutoWithdraw = (record, onCycle) => {
       const waitMs = Number(record.intervalBlocks) * BLOCK_TIME_MS + POLL_INTERVAL_MS
       scheduleNext(waitMs)
     } catch (error) {
-      const msg = String(error?.message || '')
+      const rawMsg = String(error?.message || '')
+      // Strip CashScript Bitauth debug URI from error messages
+      const msg = rawMsg.replace(/\s*WARNING:.*Bitauth URI:.*$/s, '').trim()
       const isBip68 = /non-BIP68-final|non-final|mandatory-script-verify-flag|sequence/i.test(msg)
       const isContractRequire = /Require statement failed/i.test(msg)
 
