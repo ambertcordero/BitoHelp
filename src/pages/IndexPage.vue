@@ -973,6 +973,7 @@ const testimonials = [
   }
 }
 
+
 .hero-section .row {
   position: relative;
   width: 100%;

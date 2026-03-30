@@ -58,7 +58,7 @@ class DonationViewSet(viewsets.ModelViewSet):
 
 @api_view(['GET'])
 def donation_stats(request):
-    """Get donation statistics"""
+
     total_donations = Donation.objects.count()
     total_amount = Donation.objects.aggregate(
         total=Sum('amount')

@@ -13,7 +13,6 @@
         </div>
 
         <q-space />
-
         <div class="nav-menu gt-md">
           <q-btn flat no-caps label="Home" class="nav-item" to="/" />
           <q-btn flat no-caps label="Mission" class="nav-item" to="/donate" />
@@ -1391,9 +1390,9 @@ function addCharityNotification(data) {
         color: 'white',
         handler: () => {
           router.push('/dashboard')
-        },
-      },
-    ],
+        }
+      }
+    ]
   })
 }
 
@@ -1401,10 +1400,12 @@ function toggleNotifications() {
   notifications.value.forEach((n) => (n.read = true))
 }
 function markAsRead(id) {
-  const n = notifications.value.find((n) => n.id === id)
-  if (n) {
-    n.read = true
-    if (n.isCharity) router.push('/dashboard')
+  const notification = notifications.value.find(n => n.id === id)
+  if (notification) {
+    notification.read = true
+    if (notification.isCharity) {
+      router.push('/dashboard')
+    }
   }
 }
 function removeNotification(id) {
@@ -1518,6 +1519,7 @@ onBeforeUnmount(() => {
   backdrop-filter: blur(10px);
   color: #333;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  margin-right: 15px;
 }
 
 /* Wallet Toggle Switch */

@@ -12,7 +12,6 @@ const routes = [
       { path: 'user', component: () => import('pages/UserPage.vue') },
     ],
   },
-
   {
     path: '/:catchAll(.*)*',
     component: () => import('pages/ErrorNotFound.vue'),

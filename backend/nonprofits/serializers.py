@@ -2,6 +2,7 @@ from rest_framework import serializers
 from .models import Nonprofit
 
 class NonprofitSerializer(serializers.ModelSerializer):
+    """Full nonprofit serializer with all fields"""
     class Meta:
         model = Nonprofit
         fields = [
@@ -30,6 +31,7 @@ class NonprofitSerializer(serializers.ModelSerializer):
         ]
 
 class NonprofitListSerializer(serializers.ModelSerializer):
+    """Lightweight serializer for dropdown/list views"""
     class Meta:
         model = Nonprofit
         fields = ['id', 'name', 'bch_address', 'category', 'verified']

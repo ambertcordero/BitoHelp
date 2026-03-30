@@ -179,6 +179,23 @@
             <span>{{ summaryTotalAmount }}</span>
           </div>
 
+          <div class="summary-row" v-if="form.contract">
+            <span>Contract</span>
+            <span>{{ form.contract }}</span>
+          </div>
+
+          <div class="summary-row" v-if="!form.contract">
+            <span>Interval</span>
+            <span>{{ form.interval || 'Not selected' }}</span>
+          </div>
+
+          <div class="summary-row" v-if="form.contract">
+            <span>Network Fee</span>
+            <span>
+              {{ form.coin === 'Paytaca Wallet (BCH)' ? '0.0001 BCH' : 'Varies by network' }}
+            </span>
+          </div>
+
           <div class="summary-divider"></div>
 
           <q-btn
