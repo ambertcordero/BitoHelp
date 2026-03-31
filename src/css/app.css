@@ -214,6 +214,89 @@ body {
   gap: 12px;
 }
 
+/* Compact two-column row (Recipient Address | Coin) */
+.compact-row {
+  display: grid;
+  grid-template-columns: 1.4fr 0.6fr;
+  gap: 10px;
+  align-items: start;
+}
+
+/* Compact three-column row (Deposit | Interval | Withdrawal) */
+.compact-row-3 {
+  display: grid;
+  grid-template-columns: 1fr 0.8fr 1fr;
+  gap: 10px;
+  align-items: start;
+}
+
+/* Smaller field height for compact rows */
+.compact-field {
+  min-height: 48px;
+}
+.compact-field input {
+  padding: 20px 12px 8px;
+  font-size: 0.92rem;
+}
+.compact-field label {
+  left: 10px;
+  font-size: 0.88rem;
+}
+
+/* Match compact height on q-select */
+.compact-select .q-field__control {
+  min-height: 48px !important;
+  border-radius: 10px;
+}
+.compact-select .q-field__label {
+  font-size: 0.88rem;
+}
+
+/* Payout option checkboxes */
+.payout-options {
+  display: flex;
+  justify-content: center;
+  gap: 28px;
+  flex-wrap: wrap;
+}
+
+.payout-checkbox {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  user-select: none;
+}
+.payout-checkbox input[type='checkbox'] {
+  width: 16px;
+  height: 16px;
+  accent-color: #1a5d82;
+  cursor: pointer;
+}
+.payout-checkbox input[type='checkbox']:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+.payout-checkbox__label {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: #334155;
+}
+.payout-checkbox__label small {
+  font-weight: 400;
+  color: #94a3b8;
+  font-size: 0.76rem;
+}
+
+.payout-info-icon {
+  color: #94a3b8;
+  cursor: help;
+  transition: color 0.2s;
+}
+.payout-info-icon:hover {
+  color: #1a5d82;
+}
+
 .floating-field {
   position: relative;
   border: 2px solid #0f3750;
@@ -465,6 +548,20 @@ body {
 
   .mini-grid {
     grid-template-columns: 1fr;
+  }
+
+  .compact-row {
+    grid-template-columns: 1fr;
+  }
+
+  .compact-row-3 {
+    grid-template-columns: 1fr;
+  }
+
+  .payout-options {
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
   }
 
   .contact-grid {

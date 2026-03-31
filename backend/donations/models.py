@@ -15,6 +15,8 @@ class Donation(models.Model):
     nonprofit = models.ForeignKey('nonprofits.Nonprofit', on_delete=models.CASCADE, related_name='donations', null=True, blank=True)
     contract = models.CharField(max_length=50, blank=True)
     interval = models.CharField(max_length=50, blank=True)
+    payout_mode = models.CharField(max_length=20, default='smart', blank=True,
+                                   help_text='smart = auto-withdraw, inbox_approval = email approval required')
     class Meta:
         ordering = ['-timestamp']
         verbose_name = 'Donation'

@@ -47,6 +47,7 @@ INSTALLED_APPS = [
     'donations',
     'nonprofits',
     'users',
+    'payouts',
 ]
 
 MIDDLEWARE = [
@@ -183,3 +184,16 @@ REST_FRAMEWORK = {
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 20,
 }
+
+# Email Configuration (Gmail SMTP)
+EMAIL_BACKEND = 'bitohelp_api.email_backend.GmailSMTPBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = 'cryp2care@gmail.com'
+EMAIL_HOST_PASSWORD = 'tcsq ufto gpii qqne'
+DEFAULT_FROM_EMAIL = 'cryp2care@gmail.com'
+PAYOUT_FROM_EMAIL = 'cryp2care@gmail.com'
+
+# Site base URL for email links
+SITE_BASE_URL = 'http://localhost:8001'

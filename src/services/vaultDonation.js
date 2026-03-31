@@ -13,6 +13,7 @@ import { Contract, ElectrumNetworkProvider, TransactionBuilder } from 'cashscrip
 import artifact from '../contracts/VaultDonation.json'
 import { getAddressHash160 } from './bchChipnet.js'
 import { getAddressUtxos } from './electrumClient.js'
+import { api } from '../boot/axios.js'
 
 const VAULT_STORAGE_KEY = 'bitohelp.vaults'
 
@@ -135,7 +136,7 @@ const MINER_FEE = 1000n
  * Returns { eligible, utxo } on success,
  *         { eligible: false, reason: 'no-utxos' | 'too-young' } otherwise.
  */
-const checkVaultUtxo = async (contract, intervalBlocks) => {
+export const checkVaultUtxo = async (contract, intervalBlocks) => {
   const utxos = await contract.getUtxos()
 
   if (!utxos.length) {
@@ -267,6 +268,116 @@ if (!window.__bitohelp_vaultTimers) {
 }
 const activeTimers = window.__bitohelp_vaultTimers
 
+// Track pending approval IDs per cycle to avoid duplicate email requests
+if (!window.__bitohelp_pendingApprovals) {
+  window.__bitohelp_pendingApprovals = new Map()
+}
+const pendingApprovals = window.__bitohelp_pendingApprovals
+
+/**
+ * Handle the inbox-approval flow for a single cycle:
+ * 1. Check UTXO readiness
+ * 2. Request approval (sends email) or reuse existing pending approval
+ * 3. Poll approval status until approved/expired
+ *
+ * Returns: { skip, waiting, expired, approved, approvalId, delayMs }
+ */
+const handleInboxApproval = async (record, cycleNumber, currentBalanceSats = null) => {
+  // First check if the UTXO is ready
+  const contract = contractFromRecord(record)
+  const intervalBlocks = Number(record.intervalBlocks)
+  const check = await checkVaultUtxo(contract, intervalBlocks)
+
+  if (!check.eligible) {
+    if (check.reason === 'too-young') {
+      const blocksLeft = (check.needed || 1) - (check.confirmations || 0)
+      return { skip: true, delayMs: Math.max(blocksLeft * BLOCK_TIME_MS, 60_000) }
+    }
+    return { skip: true, delayMs: POLL_INTERVAL_MS * 2 }
+  }
+
+  const idempotencyKey = `${record.donationId}:cycle:${cycleNumber}`
+
+  // Check if we already have a pending approval for this cycle
+  let approvalId = pendingApprovals.get(idempotencyKey)
+
+  if (!approvalId) {
+    // Request a new approval — this triggers the email
+    try {
+      const res = await api.post('payouts/request/', {
+        donation_id: record.donationId,
+        donor_email: record.donorEmail,
+        donor_name: record.donorName || '',
+        recipient_address: record.recipientAddress,
+        vault_address: record.vaultAddress,
+        payout_amount_satoshis: record.withdrawalSatoshis,
+        coin: record.coin || 'BCH',
+        interval_label: record.intervalLabel || '',
+        interval_blocks: record.intervalBlocks,
+        cycle_number: cycleNumber,
+        total_cycles:
+          record.totalCycles ||
+          Math.floor(
+            Number(record.depositSatoshis) /
+              (Number(record.withdrawalSatoshis) + Number(MINER_FEE)),
+          ) ||
+          1,
+        vault_balance_satoshis: currentBalanceSats !== null ? Number(currentBalanceSats) : null,
+      })
+
+      approvalId = res.data.id
+      pendingApprovals.set(idempotencyKey, approvalId)
+
+      if (import.meta.env.DEV) {
+        console.info('[BitoHelp][vault-approval:requested]', {
+          donationId: record.donationId,
+          approvalId,
+          cycle: cycleNumber,
+        })
+      }
+    } catch (err) {
+      if (import.meta.env.DEV) {
+        console.warn('[BitoHelp][vault-approval:request-failed]', err?.message)
+      }
+      return { skip: true, delayMs: POLL_INTERVAL_MS * 2 }
+    }
+  }
+
+  // Poll the approval status
+  try {
+    const statusRes = await api.get(`payouts/${approvalId}/`)
+    const status = statusRes.data.status
+
+    if (status === 'approved' || status === 'executed') {
+      return { approved: true, approvalId }
+    }
+    if (status === 'expired' || status === 'failed') {
+      pendingApprovals.delete(idempotencyKey)
+      return { expired: true, delayMs: POLL_INTERVAL_MS }
+    }
+    // Still pending — check again soon
+    return { waiting: true, approvalId, delayMs: 10_000 }
+  } catch (err) {
+    if (import.meta.env.DEV) {
+      console.warn('[BitoHelp][vault-approval:poll-failed]', err?.message)
+    }
+    return { waiting: true, approvalId, delayMs: POLL_INTERVAL_MS }
+  }
+}
+
+/**
+ * Report a successful payout execution to the backend.
+ */
+const reportExecution = async (approvalId, txid) => {
+  try {
+    await api.post(`payouts/${approvalId}/execute/`, { txid })
+  } catch (err) {
+    if (import.meta.env.DEV) {
+      console.warn('[BitoHelp][vault-approval:report-failed]', err?.message)
+    }
+  }
+}
+
 const POLL_INTERVAL_MS = 30_000
 const BLOCK_TIME_MS = 10 * 60 * 1000
 
@@ -328,11 +439,16 @@ export const startAutoWithdraw = (record, onCycle) => {
     }
 
     if (import.meta.env.DEV) {
-      console.info('[BitoHelp][vault-autowithdraw:attempt]', {
-        status: 'Attempting',
+      const modeLabel =
+        record.payoutMode === 'inbox_approval'
+          ? 'vault-approval:cycle'
+          : 'vault-autowithdraw:attempt'
+      console.info(`[BitoHelp][${modeLabel}]`, {
+        status: record.payoutMode === 'inbox_approval' ? 'Checking approval' : 'Attempting',
         timeSent: fmtTime(),
         donationId: id,
         vaultAddress: record.vaultAddress,
+        payoutMode: record.payoutMode || 'smart',
         vaultBalance: currentBalanceSats !== null ? satsToBch(currentBalanceSats) : 'unknown',
         fundPercentage:
           currentBalanceSats !== null
@@ -341,6 +457,162 @@ export const startAutoWithdraw = (record, onCycle) => {
       })
     }
     try {
+      // ── Empty vault check: stop permanently if vault can't cover a withdrawal ──
+      if (currentBalanceSats !== null) {
+        const minNeeded = BigInt(record.withdrawalSatoshis) + MINER_FEE
+        if (currentBalanceSats < minNeeded) {
+          if (import.meta.env.DEV) {
+            console.info(
+              '%c[BitoHelp] Vault empty — stopping permanently',
+              'color: #ff9800; font-weight: bold',
+              {
+                donationId: id,
+                vaultBalance: satsToBch(currentBalanceSats),
+                minNeeded: satsToBch(minNeeded),
+              },
+            )
+          }
+          updateVaultRecord(id, { status: 'drained' })
+          stop()
+          return
+        }
+      }
+
+      // ── Inbox Approval mode: request email approval before withdrawing ──
+      if (record.payoutMode === 'inbox_approval') {
+        const approval = await handleInboxApproval(record, cycleNumber + 1, currentBalanceSats)
+
+        if (approval.skip) {
+          scheduleNext(approval.delayMs)
+          return
+        }
+        if (approval.waiting) {
+          if (import.meta.env.DEV) {
+            console.info('[BitoHelp][vault-approval:waiting]', {
+              donationId: id,
+              approvalId: approval.approvalId,
+              cycle: cycleNumber + 1,
+            })
+          }
+          scheduleNext(approval.delayMs)
+          return
+        }
+        if (approval.expired) {
+          if (import.meta.env.DEV) {
+            console.warn('[BitoHelp][vault-approval:expired]', {
+              donationId: id,
+              cycle: cycleNumber + 1,
+            })
+          }
+          scheduleNext(approval.delayMs)
+          return
+        }
+
+        // Approved — execute the withdrawal
+        if (import.meta.env.DEV) {
+          console.info('[BitoHelp][vault-approval:approved]', {
+            donationId: id,
+            approvalId: approval.approvalId,
+            cycle: cycleNumber + 1,
+          })
+        }
+
+        // ── Cycle limit check (inbox_approval) ──
+        const maxCycles = record.totalCycles || 0
+        if (maxCycles > 0 && cycleNumber >= maxCycles) {
+          if (import.meta.env.DEV) {
+            console.info(
+              '%c[BitoHelp] All cycles completed — stopping vault',
+              'color: #4caf50; font-weight: bold',
+              {
+                donationId: id,
+                totalCycles: maxCycles,
+              },
+            )
+          }
+          updateVaultRecord(id, { status: 'completed' })
+          stop()
+          return
+        }
+
+        try {
+          const result = await executeWithdraw(record)
+          if (result.success) {
+            await reportExecution(approval.approvalId, result.txid)
+            const nextCycle = cycleNumber + 1
+            cycleNumber = nextCycle
+            noUtxoStreak = 0
+            updateVaultRecord(id, {
+              lastWithdrawTxid: result.txid,
+              lastWithdrawAt: new Date().toISOString(),
+              cyclesCompleted: cycleNumber,
+              status: result.drained ? 'drained' : 'withdrawing',
+            })
+            if (import.meta.env.DEV) {
+              console.info('[BitoHelp][vault-autowithdraw:success]', {
+                status: result.drained ? 'Successful (final drain)' : 'Successful',
+                timeSent: fmtTime(),
+                donationId: id,
+                txid: result.txid,
+                amount: result.amount.toString(),
+                cycle: cycleNumber,
+                drained: result.drained,
+              })
+            }
+            if (result.drained) {
+              stop()
+              return
+            }
+            const waitMs = Number(record.intervalBlocks) * BLOCK_TIME_MS + POLL_INTERVAL_MS
+            scheduleNext(waitMs)
+          } else {
+            // Withdrawal failed after approval — retry
+            scheduleNext(POLL_INTERVAL_MS)
+          }
+          return
+        } catch (execErr) {
+          const rawMsg = String(execErr?.message || '')
+          const msg = rawMsg.replace(/\s*WARNING:.*Bitauth URI:.*$/s, '').trim()
+          const isBip68 = /non-BIP68-final|non-final|mandatory-script-verify-flag|sequence/i.test(
+            msg,
+          )
+          if (isBip68) {
+            // BIP68 not final after approval — re-save approval and retry
+            const key = `${record.donationId}:cycle:${cycleNumber + 1}`
+            pendingApprovals.set(key, approval.approvalId)
+            if (import.meta.env.DEV) {
+              console.info('[BitoHelp][vault-approval:bip68-retry]', {
+                donationId: id,
+                approvalId: approval.approvalId,
+              })
+            }
+            scheduleNext(60_000)
+          } else {
+            scheduleNext(POLL_INTERVAL_MS * 2)
+          }
+          return
+        }
+      }
+
+      // ── Cycle limit check (smart mode) ──
+      const smartMaxCycles = record.totalCycles || 0
+      if (smartMaxCycles > 0 && cycleNumber >= smartMaxCycles) {
+        if (import.meta.env.DEV) {
+          console.info(
+            '%c[BitoHelp] All cycles completed — stopping vault',
+            'color: #4caf50; font-weight: bold',
+            {
+              donationId: id,
+              totalCycles: smartMaxCycles,
+            },
+          )
+        }
+        updateVaultRecord(id, { status: 'completed' })
+        stop()
+        return
+      }
+
+      // ── Smart (auto) mode: withdraw directly ──
       const result = await executeWithdraw(record)
 
       if (!result.success) {
@@ -524,6 +796,8 @@ export const resumeAllAutoWithdraws = (onCycle) => {
   const vaults = getStoredVaults()
   for (const vault of vaults) {
     if (vault.status === 'drained' || vault.status === 'reclaimed') continue
+    // Skip legacy vaults without an explicit payoutMode
+    if (!vault.payoutMode) continue
     startAutoWithdraw(vault, onCycle)
   }
 

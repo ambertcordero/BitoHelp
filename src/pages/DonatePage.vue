@@ -59,13 +59,40 @@
             </template>
           </q-select>
 
-          <div class="floating-field" :class="{ 'is-filled': form.recipientAddress }">
-            <input :value="form.recipientAddress" type="text" placeholder=" " readonly />
-            <label>Recipient's Address</label>
+          <!-- Row 1: Recipient Address | Coin -->
+          <div class="compact-row q-mt-md">
+            <div
+              class="floating-field compact-field"
+              :class="{ 'is-filled': form.recipientAddress }"
+            >
+              <input
+                :value="truncatedRecipientAddress"
+                type="text"
+                placeholder=" "
+                readonly
+                :title="form.recipientAddress"
+              />
+              <label>Recipient's Address</label>
+            </div>
+
+            <q-select
+              v-model="form.coin"
+              :options="coinOptions"
+              outlined
+              emit-value
+              map-options
+              label="Coin"
+              class="donation-select compact-select"
+              dense
+            />
           </div>
 
-          <div class="mini-grid q-mt-md">
-            <div class="floating-field mini-field" :class="{ 'is-filled': form.deposit !== '' }">
+          <!-- Row 2: Deposit | Interval | Withdrawal -->
+          <div class="compact-row-3 q-mt-md">
+            <div
+              class="floating-field compact-field mini-field"
+              :class="{ 'is-filled': form.deposit !== '' }"
+            >
               <input
                 :value="form.deposit"
                 type="text"
@@ -73,11 +100,25 @@
                 placeholder=" "
                 @input="onDecimalInput('deposit', $event)"
               />
-              <label>Deposit (total)</label>
+              <label>Deposit</label>
               <span class="php-conversion">{{ depositPhp }}</span>
             </div>
 
-            <div class="floating-field mini-field" :class="{ 'is-filled': form.withdrawal !== '' }">
+            <q-select
+              v-model="form.interval"
+              :options="intervalOptions"
+              outlined
+              emit-value
+              map-options
+              label="Interval"
+              class="donation-select compact-select"
+              dense
+            />
+
+            <div
+              class="floating-field compact-field mini-field"
+              :class="{ 'is-filled': form.withdrawal !== '' }"
+            >
               <input
                 :value="form.withdrawal"
                 type="text"
@@ -85,33 +126,57 @@
                 placeholder=" "
                 @input="onDecimalInput('withdrawal', $event)"
               />
-              <label>Withdrawal (per cycle)</label>
+              <label>Withdrawal</label>
               <span class="php-conversion">{{ withdrawalPhp }}</span>
             </div>
           </div>
-
-          <q-select
-            v-model="form.interval"
-            :options="intervalOptions"
-            outlined
-            emit-value
-            map-options
-            label="Interval"
-            class="donation-select q-mt-md"
-          />
           <p v-if="intervalWarning" class="interval-warning q-mt-xs q-mb-none">
             {{ intervalWarning }}
           </p>
 
-          <q-select
-            v-model="form.coin"
-            :options="coinOptions"
-            outlined
-            emit-value
-            map-options
-            label="Coin"
-            class="donation-select q-mt-md"
-          />
+          <!-- Payout Options -->
+          <div class="payout-options q-mt-md">
+            <label class="payout-checkbox">
+              <input
+                type="checkbox"
+                :checked="form.smartPayout"
+                @change="selectPayoutMode('smart')"
+              />
+              <span class="payout-checkbox__label">Smart Payout</span>
+              <q-icon name="info" class="payout-info-icon" size="14px">
+                <q-tooltip
+                  anchor="top middle"
+                  self="bottom middle"
+                  :offset="[0, 6]"
+                  max-width="260px"
+                >
+                  Automatically executes scheduled withdrawals once the interval is reached and
+                  instantly notifies the donor via email with transaction details.
+                </q-tooltip>
+              </q-icon>
+            </label>
+
+            <label class="payout-checkbox">
+              <input
+                type="checkbox"
+                :checked="form.payoutApproval"
+                @change="selectPayoutMode('inbox_approval')"
+              />
+              <span class="payout-checkbox__label">Payout Approval</span>
+              <q-icon name="info" class="payout-info-icon" size="14px">
+                <q-tooltip
+                  anchor="top middle"
+                  self="bottom middle"
+                  :offset="[0, 6]"
+                  max-width="260px"
+                >
+                  Notifies the donor when a withdrawal is ready and requires their confirmation
+                  before releasing funds to the recipient, ensuring full control over each
+                  transaction.
+                </q-tooltip>
+              </q-icon>
+            </label>
+          </div>
 
           <div class="donor-title">DONOR CONTACT INFO</div>
 
@@ -358,11 +423,29 @@ const form = ref({
   deposit: '',
   withdrawal: '',
   interval: '10min',
+  smartPayout: true,
+  payoutApproval: false,
   name: '',
   email: '',
   contact: '',
   message: '',
 })
+
+const selectPayoutMode = (mode) => {
+  if (mode === 'smart') {
+    form.value.smartPayout = !form.value.smartPayout
+    if (form.value.smartPayout) form.value.payoutApproval = false
+  } else {
+    form.value.payoutApproval = !form.value.payoutApproval
+    if (form.value.payoutApproval) form.value.smartPayout = false
+  }
+  // Ensure at least one is selected
+  if (!form.value.smartPayout && !form.value.payoutApproval) {
+    form.value.smartPayout = true
+  }
+}
+
+const payoutMode = computed(() => (form.value.payoutApproval ? 'inbox_approval' : 'smart'))
 
 const conversionRates = ref({ BCH: 0, ETH: 0 })
 const isSubmittingDonation = ref(false)
@@ -387,6 +470,13 @@ const selectedOrganizationName = computed(() => {
 const selectedOrganizationIcon = computed(() => {
   const selected = organizationCatalog.find((o) => o.value === form.value.organization)
   return selected?.icon || ''
+})
+
+const truncatedRecipientAddress = computed(() => {
+  const addr = form.value.recipientAddress || ''
+  if (addr.length <= 16) return addr
+  const clean = addr.includes(':') ? addr.split(':')[1] : addr
+  return `${clean.slice(0, 6)}...${clean.slice(-4)}`
 })
 
 const summaryDeposit = computed(() => {
@@ -829,6 +919,10 @@ const runChipnetBchDonationFlow = async ({
   withdrawalCoin,
   intervalBlocks,
   intervalLabel,
+  totalCycles,
+  mode,
+  donorEmail,
+  donorName,
 }) => {
   // 1. Instantiate the vault contract and derive the P2SH20 address
   submissionStatus.value = { type: '', message: 'Creating vault contract...' }
@@ -915,9 +1009,13 @@ const runChipnetBchDonationFlow = async ({
     withdrawalCoin,
     intervalBlocks,
     intervalLabel,
+    totalCycles: totalCycles || 0,
     recipientAddress: charityAddress,
     funderAddress: senderAddress,
     contractParams: vault.params,
+    payoutMode: mode || 'smart',
+    donorEmail: donorEmail || '',
+    donorName: donorName || '',
     status: 'funded',
   }
   saveVaultRecord(vaultRecord)
@@ -958,6 +1056,8 @@ const resetForm = () => {
     coin: 'BCH',
     recipientAddress: '',
     deposit: '',
+    smartPayout: true,
+    payoutApproval: false,
     withdrawal: '',
     interval: '10min',
     name: '',
@@ -1089,6 +1189,16 @@ const submitDonation = async () => {
     }
   }
 
+  // Require email when inbox_approval is selected
+  if (payoutMode.value === 'inbox_approval' && !form.value.email) {
+    submissionStatus.value = {
+      type: 'negative',
+      message: 'Donor email is required for Payout Approval mode.',
+    }
+    notify({ type: 'warning', message: 'Please enter your email for Payout Approval.' })
+    return
+  }
+
   if (selectedCoin === 'BCH' && !isValidChipnetAddress(typedRecipientAddress)) {
     submissionStatus.value = {
       type: 'negative',
@@ -1184,6 +1294,10 @@ const submitDonation = async () => {
         withdrawalCoin,
         intervalBlocks,
         intervalLabel: selectedInterval,
+        totalCycles: Number(cycles),
+        mode: payoutMode.value,
+        donorEmail: form.value.email,
+        donorName: form.value.name,
       })
       txReference = bchResult.txid
       vaultAddr = bchResult.vaultAddress || ''
@@ -1217,6 +1331,7 @@ const submitDonation = async () => {
         nonprofit: matchedNp?.id,
         contract: vaultAddr,
         interval: form.value.interval,
+        payout_mode: payoutMode.value,
       })
     } catch {
       /* backend save is best-effort */
