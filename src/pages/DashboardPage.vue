@@ -159,7 +159,7 @@
                     <q-btn flat round dense icon="more_vert" size="sm">
                       <q-menu>
                         <q-list style="min-width: 100px">
-                          <q-item clickable v-close-popup>
+                          <q-item clickable v-close-popup @click="openDonationDetails(props.row)">
                             <q-item-section>View Details</q-item-section>
                           </q-item>
                           <q-item clickable v-close-popup>
@@ -170,6 +170,43 @@
                     </q-btn>
                   </q-td>
                 </template>
+                <!-- Donation Details Dialog -->
+                <q-dialog v-model="donationDetailsDialog">
+                  <q-card style="min-width: 400px; max-width: 500px">
+                    <q-card-section class="row items-center q-pb-none">
+                      <div class="text-h6">Donation Details</div>
+                      <q-space />
+                      <q-btn icon="close" flat round dense v-close-popup @click="donationDetailsDialog = false" />
+                    </q-card-section>
+                    <q-card-section>
+                      <div v-if="selectedDonation">
+                        <div class="q-mb-sm"><strong>Date:</strong> {{ selectedDonation.date }}</div>
+                        <div class="q-mb-sm"><strong>Amount:</strong> {{ formatCurrency(selectedDonation.amount) }} BCH</div>
+                        <div class="q-mb-sm"><strong>Donor Name:</strong> {{ selectedDonation.donorName }}</div>
+                        <div class="q-mb-sm"><strong>Donor Email:</strong> {{ selectedDonation.donorEmail }}</div>
+                        <div class="q-mb-sm"><strong>Donor Contact:</strong> {{ selectedDonation.donorContact }}</div>
+                        <div class="q-mb-sm"><strong>Message:</strong> {{ selectedDonation.description }}</div>
+                        <div class="q-mb-sm"><strong>Cause:</strong> {{ selectedDonation.cause }}</div>
+                        <div class="q-mb-sm"><strong>Transaction ID:</strong> {{ selectedDonation.txid }}</div>
+                        <div class="q-mb-sm"><strong>Explorer URL:</strong> <a :href="selectedDonation.explorerUrl" target="_blank">{{ selectedDonation.explorerUrl }}</a></div>
+                        <div class="q-mb-sm"><strong>Contract:</strong> {{ selectedDonation.contract }}</div>
+                        <div class="q-mb-sm"><strong>Interval:</strong> {{ selectedDonation.interval }}</div>
+                      </div>
+                    </q-card-section>
+                    <q-card-actions align="right" class="q-px-md q-pb-md">
+                      <q-btn flat label="Close" color="grey-7" v-close-popup @click="donationDetailsDialog = false" />
+                    </q-card-actions>
+                  </q-card>
+                </q-dialog>
+
+              // Donation Details Dialog State
+              const donationDetailsDialog = ref(false)
+              const selectedDonation = ref(null)
+
+              function openDonationDetails(donation) {
+                selectedDonation.value = donation
+                donationDetailsDialog.value = true
+              }
               </q-table>
             </q-tab-panel>
 
@@ -533,7 +570,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useQuasar } from 'quasar'
 import { api } from 'boot/axios'
 import bchImg from 'src/assets/bch.png'
@@ -651,21 +688,28 @@ const selectedAccount = ref(accounts.value[0])
 const fetchDonations = async () => {
   loadingDonations.value = true
   try {
-    const response = await api.get('donations/')
+    // Use selectedAccount to get the charity/nonprofit id
+    const nonprofitId = selectedAccount.value?.id
+    if (!nonprofitId) {
+      apiDonations.value = []
+      loadingDonations.value = false
+      return
+    }
+    // Fetch donations for the selected nonprofit/charity
+    const response = await api.get(`nonprofits/${nonprofitId}/donations/`)
 
     if (Array.isArray(response.data)) {
       apiDonations.value = response.data
-      console.log('Loaded donations from API:', apiDonations.value.length)
+      console.log('Loaded donations for nonprofit', nonprofitId, ':', apiDonations.value.length)
     } else if (response.data && Array.isArray(response.data.results)) {
       apiDonations.value = response.data.results
-      console.log('Loaded donations from API (paginated):', apiDonations.value.length)
+      console.log('Loaded donations for nonprofit (paginated):', apiDonations.value.length)
     } else {
       console.warn(' Unexpected API response format:', response.data)
       apiDonations.value = []
     }
 
     updateTransactionsFromAPI()
-
     updateAccountStats()
 
     if (apiDonations.value.length > 0) {
@@ -678,9 +722,7 @@ const fetchDonations = async () => {
     }
   } catch (error) {
     console.error(' Failed to fetch donations:', error)
-
     apiDonations.value = []
-
     $q.notify({
       type: 'negative',
       message: 'Failed to load donation data',
@@ -825,13 +867,18 @@ const createWithdrawalAccounts = () => {
   }
 }
 
+
 onMounted(() => {
   fetchDonations()
-
   const saved = localStorage.getItem('withdrawnDonations')
   if (saved) {
     withdrawnDonations.value = new Set(JSON.parse(saved))
   }
+})
+
+// Refetch donations when selectedAccount changes
+watch(selectedAccount, () => {
+  fetchDonations()
 })
 
 const transactionSearch = ref('')
