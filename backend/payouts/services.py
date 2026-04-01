@@ -335,3 +335,28 @@ def mark_failed(approval, error_message):
         action=PayoutAuditLog.Action.EXECUTION_FAILED,
         detail=error_message[:1000],
     )
+
+
+def refresh_and_send(approval):
+    """
+    Generate a fresh approval token, extend the expiry window, and
+    re-send the approval email.  Used when the nonprofit admin clicks
+    "Withdraw Now" from the dashboard.
+    """
+    import hashlib
+    import secrets as _secrets
+
+    raw_token = _secrets.token_urlsafe(32)
+    hashed_token = hashlib.sha256(raw_token.encode()).hexdigest()
+
+    approval.approval_token_hash = hashed_token
+    approval.approval_expires_at = timezone.now() + timedelta(hours=24)
+    approval.save(update_fields=['approval_token_hash', 'approval_expires_at', 'updated_at'])
+
+    PayoutAuditLog.objects.create(
+        payout_approval=approval,
+        action=PayoutAuditLog.Action.CREATED,
+        detail='Approval token refreshed and email re-sent by admin.',
+    )
+
+    send_approval_email(approval, raw_token)

@@ -6,7 +6,7 @@ from rest_framework.response import Response
 
 from .models import PayoutApproval
 from .serializers import PayoutApprovalSerializer, PayoutApprovalListSerializer, PayoutAuditLogSerializer
-from .services import create_pending_approval, send_approval_email, process_approval, mark_executed, mark_failed
+from .services import create_pending_approval, send_approval_email, process_approval, mark_executed, mark_failed, refresh_and_send
 
 
 # ── Gmail ConfirmAction callback ──────────────────────────────────────
@@ -118,6 +118,10 @@ def list_approvals(request):
     if donation_id:
         qs = qs.filter(donation_ref=donation_id)
 
+    nonprofit_id = request.query_params.get('nonprofit_id')
+    if nonprofit_id:
+        qs = qs.filter(donation__nonprofit_id=nonprofit_id)
+
     status = request.query_params.get('status')
     if status:
         qs = qs.filter(status=status)
@@ -157,6 +161,61 @@ def report_execution(request, pk):
         return Response({'message': 'Already executed', 'txid': approval.txid})
 
     mark_executed(approval, txid)
+
+    # Auto-schedule the next cycle if more remain
+    if approval.cycle_number < approval.total_cycles:
+        from datetime import timedelta
+        from django.utils import timezone
+        next_due = approval.executed_at + timedelta(minutes=approval.interval_blocks * 10)
+        try:
+            next_approval, _ = create_pending_approval(
+                donation_id=approval.donation_ref,
+                donor_email=approval.donor_email,
+                donor_name=approval.donor_name,
+                recipient_address=approval.recipient_address,
+                vault_address=approval.vault_address,
+                payout_amount_satoshis=approval.payout_amount_satoshis,
+                coin=approval.coin,
+                interval_label=approval.interval_label,
+                interval_blocks=approval.interval_blocks,
+                cycle_number=approval.cycle_number + 1,
+                total_cycles=approval.total_cycles,
+                due_at=next_due,
+            )
+            if approval.donation_id and next_approval:
+                next_approval.donation_id = approval.donation_id
+                next_approval.save(update_fields=['donation'])
+        except Exception as exc:
+            logger.warning('Failed to create next cycle approval: %s', exc)
+
+    serializer = PayoutApprovalSerializer(approval)
+    return Response(serializer.data)
+
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def trigger_approval(request, pk):
+    """
+    Admin triggers a scheduled withdrawal: refreshes the approval token
+    and sends the approval email to the donor.
+    Only allowed when the approval is in 'pending' status and due_at has passed.
+    """
+    try:
+        approval = PayoutApproval.objects.get(pk=pk)
+    except PayoutApproval.DoesNotExist:
+        return Response({'error': 'Not found'}, status=404)
+
+    if approval.status != PayoutApproval.Status.PENDING:
+        return Response(
+            {'error': f'Cannot trigger: approval is already "{approval.status}"'},
+            status=400,
+        )
+
+    try:
+        refresh_and_send(approval)
+    except Exception as exc:
+        return Response({'error': f'Email send failed: {exc}'}, status=500)
+
     serializer = PayoutApprovalSerializer(approval)
     return Response(serializer.data)
 

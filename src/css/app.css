@@ -569,6 +569,122 @@ body {
   }
 }
 
+/* ── Global Dark Mode Text Overrides ───────────────────────── */
+.body--dark .section-title {
+  color: #e0eaff !important;
+}
+
+/* ── Donate Page Dark Mode ──────────────────────────────────── */
+.body--dark .donation-page {
+  background: linear-gradient(180deg, #0d1738 0%, #121c3a 100%);
+}
+
+.body--dark .donation-hero-copy h1 {
+  color: #e8eeff;
+}
+
+.body--dark .subtitle {
+  color: #8fa8d0;
+}
+
+.body--dark .donation-form-panel {
+  background: #1a2240;
+  border-color: #2e3f6e;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.35);
+}
+
+.body--dark .donation-select .q-field__label {
+  color: #a0b4d6;
+}
+
+.body--dark .donation-select .q-field__native,
+.body--dark .donation-select .q-field__input {
+  color: #e0e8f8;
+}
+
+.body--dark .floating-field {
+  border-color: #2e3f6e;
+  background: transparent;
+}
+
+.body--dark .floating-field input,
+.body--dark .floating-field textarea {
+  color: #e0e8f8;
+  caret-color: #7ba7e0;
+}
+
+.body--dark .floating-field label {
+  background: #1a2240;
+  color: #7ba7e0;
+}
+
+.body--dark .floating-field:focus-within {
+  border-color: #4d7cc7;
+}
+
+.body--dark .floating-field:focus-within label,
+.body--dark .floating-field.is-filled label {
+  color: #7ecbff;
+  background: #1a2240;
+}
+
+.body--dark .mini-field .php-conversion {
+  color: #7ecbff;
+}
+
+.body--dark .payout-checkbox__label {
+  color: #a0b8d8;
+}
+
+.body--dark .payout-info-icon {
+  color: #5580aa;
+}
+
+.body--dark .payout-info-icon:hover {
+  color: #7ecbff;
+}
+
+.body--dark .donor-title {
+  color: #c8d8f0;
+}
+
+.body--dark .donor-title::before,
+.body--dark .donor-title::after {
+  background: #2e3f6e;
+}
+
+.body--dark .donation-summary-panel {
+  background: #1a2240;
+  border-color: #2e3f6e;
+  box-shadow: 0 40px 80px rgba(0, 0, 0, 0.4);
+}
+
+.body--dark .donation-summary-panel h3 {
+  color: #88b4e8;
+}
+
+.body--dark .summary-row {
+  color: #c0d0ea;
+}
+
+.body--dark .summary-divider {
+  background: rgba(100, 130, 200, 0.2);
+}
+
+.body--dark .summary-total {
+  color: #e0eeff;
+}
+
+.body--dark .donate-now-btn {
+  background: linear-gradient(135deg, #1a6fa8, #2563eb) !important;
+  box-shadow: 0 8px 20px rgba(37, 99, 235, 0.45);
+}
+
+.body--dark .donate-now-btn:hover {
+  background: linear-gradient(135deg, #2563eb, #3b82f6) !important;
+  box-shadow: 0 12px 28px rgba(59, 130, 246, 0.55);
+}
+
 @media (max-width: 480px) {
   .donation-hero-copy h1 {
     font-size: 1.9rem;

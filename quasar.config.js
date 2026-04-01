@@ -56,6 +56,14 @@ export default defineConfig((/* ctx */) => {
       // extendViteConf (viteConf) {},
       // viteVuePluginOptions: {},
 
+      extendViteConf (viteConf) {
+        viteConf.optimizeDeps = viteConf.optimizeDeps || {}
+        viteConf.optimizeDeps.include = [
+          ...(viteConf.optimizeDeps.include || []),
+          'plotly.js-gl3d-dist-min'
+        ]
+      },
+
       vitePlugins: [
         [
           'vite-plugin-checker',

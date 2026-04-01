@@ -8,4 +8,5 @@ urlpatterns = [
     path('payouts/<int:pk>/', views.approval_status, name='payout-status'),
     path('payouts/<int:pk>/audit/', views.approval_audit_log, name='payout-audit'),
     path('payouts/<int:pk>/execute/', views.report_execution, name='payout-execute'),
+    path('payouts/<int:pk>/trigger/', views.trigger_approval, name='payout-trigger'),
 ]

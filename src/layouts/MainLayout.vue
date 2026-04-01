@@ -188,6 +188,19 @@
 
           <p v-if="walletError" class="wallet-error">{{ walletError }}</p>
         </div>
+
+        <!-- Dark mode toggle -->
+        <q-btn
+          flat
+          round
+          :icon="$q.dark.isActive ? 'light_mode' : 'dark_mode'"
+          :color="$q.dark.isActive ? 'yellow' : 'grey-7'"
+          class="q-ml-sm"
+          @click="$q.dark.toggle()"
+        >
+          <q-tooltip>{{ $q.dark.isActive ? 'Light mode' : 'Dark mode' }}</q-tooltip>
+        </q-btn>
+
       </q-toolbar>
     </q-header>
 

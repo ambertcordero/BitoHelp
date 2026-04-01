@@ -1227,4 +1227,118 @@ const copyWalletAddress = (address) => {
   color: #333;
   word-break: break-all;
 }
+
+/* ── ProjectPage Dark Mode ───────────────────────────────────── */
+.body--dark .project-page {
+  background: #0f1629;
+}
+
+/* Featured section */
+.body--dark .featured-section {
+  background: #0f1629;
+}
+
+.body--dark .section-header::before,
+.body--dark .section-header::after {
+  background: #2e3f6e;
+}
+
+.body--dark .section-title {
+  color: #e0eaff;
+}
+
+/* Project cards */
+.body--dark .project-card {
+  background: #1a2240;
+  border-color: #2e3f6e;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.body--dark .project-card:hover {
+  box-shadow: 0 10px 28px rgba(9, 111, 212, 0.45);
+}
+
+.body--dark .project-title {
+  color: #d8e8ff;
+}
+
+.body--dark .project-description {
+  color: #8fa8cb;
+}
+
+.body--dark .details-btn {
+  color: #5d9cf5;
+}
+
+.body--dark .details-btn:hover {
+  background: rgba(93, 156, 245, 0.1);
+}
+
+/* Register section */
+.body--dark .charity-register-section {
+  background: #0f1629;
+}
+
+.body--dark .charity-register-section::before {
+  background: #2e3f6e;
+}
+
+.body--dark .register-title {
+  color: #e0eaff;
+}
+
+.body--dark .register-subtitle {
+  color: #8fa8cb;
+}
+
+/* Register dialog */
+.body--dark .glass-dialog-card {
+  background: #1a2240 !important;
+}
+
+.body--dark .dialog-title {
+  color: #e0eaff;
+}
+
+.body--dark .dialog-subtitle {
+  color: #8fa8cb;
+}
+
+.body--dark .field-label {
+  color: #c0d4f0;
+}
+
+/* Details dialog */
+.body--dark .section-label {
+  color: #c0d4f0;
+}
+
+.body--dark .details-text {
+  color: #8fa8cb;
+}
+
+.body--dark .impact-card {
+  background: linear-gradient(135deg, #1a2a4a 0%, #1a2240 100%);
+}
+
+.body--dark .contact-item {
+  background: #111827;
+}
+
+.body--dark .contact-label {
+  color: #6a88aa;
+}
+
+.body--dark .contact-value {
+  color: #c0d4f0;
+}
+
+.body--dark .wallet-container {
+  background: #111827;
+  border-color: #2e3f6e;
+}
+
+.body--dark .wallet-address {
+  color: #7ecbff;
+}
 </style>
