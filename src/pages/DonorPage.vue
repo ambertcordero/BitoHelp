@@ -1882,6 +1882,9 @@ onMounted(async () => {
     }
   }
 }
+.body--dark .accounts-sidebar h5 {
+  color: #c5cae9;
+}
 
 .sidebar-account-card {
   background: rgba(255, 255, 255, 0.75);
@@ -1932,6 +1935,9 @@ onMounted(async () => {
   background: #e8f0fe;
   flex-shrink: 0;
 }
+.body--dark .sidebar-avatar {
+  background: rgba(93, 156, 245, 0.15);
+}
 
 .sidebar-account-name {
   font-size: 13.5px;
@@ -1950,6 +1956,9 @@ onMounted(async () => {
   margin-top: 1px;
   font-weight: 500;
 }
+.body--dark .sidebar-account-sub {
+  color: #5a7a9e;
+}
 
 .sidebar-stat-label {
   font-size: 10px;
@@ -1958,6 +1967,9 @@ onMounted(async () => {
   letter-spacing: 0.5px;
   color: #90a4ae;
   margin-bottom: 2px;
+}
+.body--dark .sidebar-stat-label {
+  color: #5a7a9e;
 }
 
 .sidebar-stat-value {
@@ -1999,6 +2011,14 @@ onMounted(async () => {
 
 .body--dark .sidebar-stat-block--green {
   background: rgba(20, 46, 30, 0.6);
+}
+
+.view-all-link {
+  color: #1976d2;
+  font-size: 13px;
+}
+.body--dark .view-all-link {
+  color: #5d9cf5 !important;
 }
 
 .body--dark .sidebar-account-card .sidebar-stat-value[style*="2e7d32"] {

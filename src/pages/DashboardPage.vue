@@ -82,13 +82,13 @@
 
               <!-- BCH stat blocks -->
               <div class="row q-mb-sm" style="gap: 8px;">
-                <div style="flex: 1; background: #f5f7fa; border-radius: 8px; padding: 8px 10px;">
+                <div class="sidebar-stat-block sidebar-stat-block--neutral">
                   <div class="sidebar-stat-label">Total BCH</div>
                   <div class="sidebar-stat-value">{{ formatCurrency(account.current) }}</div>
                 </div>
-                <div style="flex: 1; background: #f0faf2; border-radius: 8px; padding: 8px 10px;">
+                <div class="sidebar-stat-block sidebar-stat-block--positive">
                   <div class="sidebar-stat-label">Available</div>
-                  <div class="sidebar-stat-value" style="color: #2e7d32;">{{ formatCurrency(account.available) }}</div>
+                  <div class="sidebar-stat-value sidebar-stat-value--positive">{{ formatCurrency(account.available) }}</div>
                 </div>
               </div>
 
@@ -114,14 +114,14 @@
                   class="row items-center no-wrap" style="gap: 6px;"
                 >
                   <q-icon name="schedule" color="blue-6" size="14px" style="flex-shrink: 0;" />
-                  <span style="font-size: 11.5px; color: #546e7a; font-weight: 600;">
+                  <span class="sidebar-next-text">
                     Next:
                     {{ new Date(getAccountPayoutInfo(account).upcoming.due_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) }}
                   </span>
                 </div>
                 <div v-else class="row items-center no-wrap" style="gap: 6px;">
                   <q-icon name="check_circle_outline" color="grey-4" size="14px" />
-                  <span style="font-size: 11px; color: #bdbdbd;">No pending withdrawals</span>
+                  <span class="sidebar-no-pending-text">No pending withdrawals</span>
                 </div>
               </div>
             </div>
@@ -262,7 +262,7 @@
                   <div class="row no-wrap items-stretch">
 
                     <!-- Left: Avatar + name + role -->
-                    <div class="row items-center q-pa-lg" style="flex: 0 0 auto; min-width: 260px; border-right: 1px solid #f0f0f0; gap: 18px;">
+                    <div class="row items-center q-pa-lg profile-left-col" style="flex: 0 0 auto; min-width: 260px; border-right: 1px solid #f0f0f0; gap: 18px;">
                       <!-- Org avatar / logo -->
                       <div style="flex-shrink: 0;">
                         <div
@@ -282,15 +282,15 @@
                       </div>
                       <!-- Name + category -->
                       <div style="min-width: 0;">
-                        <div style="font-size: 18px; font-weight: 700; color: #1a237e; line-height: 1.2;" class="ellipsis">
+                        <div style="font-size: 18px; font-weight: 700; color: #1a237e; line-height: 1.2;" class="ellipsis org-name-text">
                           {{ selectedAccount.name }}
                         </div>
                         <div class="q-mt-xs" style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
-                          <span style="font-size: 13px; color: #1976d2; font-weight: 600;">
+                          <span class="org-category-text" style="font-size: 13px; color: #1976d2; font-weight: 600;">
                             {{ nonprofitDetail?.category || 'Nonprofit' }}
                           </span>
                           <span style="color: #bdbdbd;">|</span>
-                          <span style="font-size: 12px; color: #9e9e9e;">
+                          <span class="org-status-text" style="font-size: 12px; color: #9e9e9e;">
                             {{ nonprofitDetail?.active === false ? 'Inactive' : 'Active Organization' }}
                           </span>
                         </div>
@@ -338,7 +338,8 @@
                         >{{ stat.value }}</a>
                         <div
                           v-else
-                          :style="{ fontSize: '13px', fontWeight: 600, color: '#212121', wordBreak: 'break-all', fontFamily: stat.mono ? 'monospace' : 'inherit' }"
+                          class="stat-value-text"
+                          :style="{ fontSize: '13px', fontWeight: 600, wordBreak: 'break-all', fontFamily: stat.mono ? 'monospace' : 'inherit' }"
                         >{{ stat.value }}</div>
                       </div>
                     </div>
@@ -355,7 +356,7 @@
                   <q-card flat class="detail-info-card" style="border-radius: 14px; height: 100%;">
                     <q-card-section class="q-pb-xs">
                       <div class="row items-center justify-between">
-                        <div style="font-size: 14px; font-weight: 700; color: #37474f;">Wallet Information</div>
+                        <div class="info-card-title" style="font-size: 14px; font-weight: 700; color: #37474f;">Wallet Information</div>
                         <q-icon name="account_balance_wallet" color="blue-4" size="20px" />
                       </div>
                     </q-card-section>
@@ -365,17 +366,18 @@
 
                         <div class="col-6">
                           <div class="text-caption text-grey-5" style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">Wallet Type</div>
-                          <div style="font-size: 14px; font-weight: 700; color: #212121;">{{ selectedAccount.type || '—' }}</div>
+                          <div class="field-value-text" style="font-size: 14px; font-weight: 700; color: #212121;">{{ selectedAccount.type || '—' }}</div>
                         </div>
 
                         <div class="col-6">
                           <div class="text-caption text-grey-5" style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">Network Fee Paid</div>
-                          <div style="font-size: 14px; font-weight: 700; color: #212121;">{{ selectedAccount.totalFees || '0' }} BCH</div>
+                          <div class="field-value-text" style="font-size: 14px; font-weight: 700; color: #212121;">{{ selectedAccount.totalFees || '0' }} BCH</div>
                         </div>
 
                         <div class="col-12">
                           <div class="text-caption text-grey-5" style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">BCH Address</div>
                           <div
+                            class="bch-address-box"
                             style="font-size: 12px; font-weight: 600; font-family: monospace; color: #1565c0; background: #e8f0fe; border-radius: 6px; padding: 8px 12px; word-break: break-all; cursor: pointer;"
                             @click="$q.copyToClipboard(selectedAccount.address).then(() => $q.notify({ type: 'positive', message: 'Address copied', position: 'top', timeout: 1500 }))"
                           >
@@ -386,17 +388,17 @@
 
                         <div class="col-6">
                           <div class="text-caption text-grey-5" style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">Total Received</div>
-                          <div style="font-size: 18px; font-weight: 800; color: #1565c0;">
+                          <div class="total-received-value" style="font-size: 18px; font-weight: 800; color: #1565c0;">
                             {{ formatCurrency(selectedAccount.totalReceived) }}
-                            <span style="font-size: 12px; font-weight: 600; color: #90a4ae;">BCH</span>
+                            <span class="bch-unit-label" style="font-size: 12px; font-weight: 600; color: #90a4ae;">BCH</span>
                           </div>
                         </div>
 
                         <div class="col-6">
                           <div class="text-caption text-grey-5" style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">Available Balance</div>
-                          <div style="font-size: 18px; font-weight: 800; color: #2e7d32;">
+                          <div class="available-balance-value" style="font-size: 18px; font-weight: 800; color: #2e7d32;">
                             {{ formatCurrency(selectedAccount.available) }}
-                            <span style="font-size: 12px; font-weight: 600; color: #90a4ae;">BCH</span>
+                            <span class="bch-unit-label" style="font-size: 12px; font-weight: 600; color: #90a4ae;">BCH</span>
                           </div>
                         </div>
 
@@ -410,7 +412,7 @@
                   <q-card flat class="detail-info-card" style="border-radius: 14px; height: 100%;">
                     <q-card-section class="q-pb-xs">
                       <div class="row items-center justify-between">
-                        <div style="font-size: 14px; font-weight: 700; color: #37474f;">Donation Statistics</div>
+                        <div class="info-card-title" style="font-size: 14px; font-weight: 700; color: #37474f;">Donation Statistics</div>
                         <q-icon name="bar_chart" color="purple-4" size="20px" />
                       </div>
                     </q-card-section>
@@ -420,29 +422,29 @@
 
                         <div class="col-6">
                           <div class="text-caption text-grey-5" style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">Total Donations</div>
-                          <div style="font-size: 14px; font-weight: 700; color: #212121;">{{ selectedAccount.transactionCount || 0 }}</div>
+                          <div class="field-value-text" style="font-size: 14px; font-weight: 700; color: #212121;">{{ selectedAccount.transactionCount || 0 }}</div>
                         </div>
 
                         <div class="col-6">
                           <div class="text-caption text-grey-5" style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">Active Since</div>
-                          <div style="font-size: 14px; font-weight: 700; color: #212121;">
+                          <div class="field-value-text" style="font-size: 14px; font-weight: 700; color: #212121;">
                             {{ nonprofitDetail?.created_at ? new Date(nonprofitDetail.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '—' }}
                           </div>
                         </div>
 
                         <div class="col-6">
                           <div class="text-caption text-grey-5" style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">First Donation</div>
-                          <div style="font-size: 14px; font-weight: 700; color: #212121;">{{ selectedAccount.firstDonation || '—' }}</div>
+                          <div class="field-value-text" style="font-size: 14px; font-weight: 700; color: #212121;">{{ selectedAccount.firstDonation || '—' }}</div>
                         </div>
 
                         <div class="col-6">
                           <div class="text-caption text-grey-5" style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">Last Donation</div>
-                          <div style="font-size: 14px; font-weight: 700; color: #212121;">{{ selectedAccount.lastDonation || '—' }}</div>
+                          <div class="field-value-text" style="font-size: 14px; font-weight: 700; color: #212121;">{{ selectedAccount.lastDonation || '—' }}</div>
                         </div>
 
                         <div class="col-12">
                           <div class="text-caption text-grey-5" style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px;">Charity Description</div>
-                          <div style="font-size: 13px; color: #546e7a; line-height: 1.6; background: #fafafa; border-radius: 8px; padding: 10px 12px; border: 1px solid #f0f0f0;">
+                          <div class="description-box" style="font-size: 13px; color: #546e7a; line-height: 1.6; background: #fafafa; border-radius: 8px; padding: 10px 12px; border: 1px solid #f0f0f0;">
                             {{ nonprofitDetail?.description || 'No description available.' }}
                           </div>
                         </div>
@@ -528,8 +530,7 @@
               <!-- Empty state -->
               <div
                 v-if="pendingScheduleGroups.length === 0"
-                class="text-center q-py-xl"
-                style="border: 2px dashed #e0e0e0; border-radius: 12px;"
+                class="text-center q-py-xl pending-empty-state"
               >
                 <q-icon name="pending_actions" size="48px" color="grey-4" />
                 <div class="text-grey-6 q-mt-sm text-weight-medium">No scheduled withdrawals</div>
@@ -545,22 +546,25 @@
                 >
                   <!-- Contract header card -->
                   <div
+                    class="contract-header-card"
                     :style="{
                       background: group.hasDue
-                        ? 'linear-gradient(135deg, #fff8e1 0%, #fff3cd 100%)'
-                        : 'linear-gradient(135deg, #e8f0fe 0%, #ede7f6 100%)',
+                        ? ($q.dark.isActive ? 'linear-gradient(135deg, #2a1e00 0%, #2d2100 100%)' : 'linear-gradient(135deg, #fff8e1 0%, #fff3cd 100%)')
+                        : ($q.dark.isActive ? 'linear-gradient(135deg, #0d1a3d 0%, #151435 100%)' : 'linear-gradient(135deg, #e8f0fe 0%, #ede7f6 100%)'),
                       borderRadius: '12px',
                       padding: '16px 20px',
                       marginBottom: '10px',
-                      border: group.hasDue ? '1px solid #ffcc02' : '1px solid #c5d8ff',
+                      border: group.hasDue
+                        ? ($q.dark.isActive ? '1px solid #7a5400' : '1px solid #ffcc02')
+                        : ($q.dark.isActive ? '1px solid #2e3f6e' : '1px solid #c5d8ff'),
                     }"
                   >
                     <div class="row items-center justify-between no-wrap">
                       <div style="min-width: 0; flex: 1;">
-                        <div style="font-size: 16px; font-weight: 700; color: #1a237e;" class="ellipsis">
+                        <div class="ellipsis contract-donor-name" style="font-size: 16px; font-weight: 700; color: #1a237e;">
                           {{ group.donorName }}
                         </div>
-                        <div class="text-caption q-mt-xs" style="color: #546e7a;">
+                        <div class="text-caption q-mt-xs contract-meta-caption" style="color: #546e7a;">
                           <q-icon name="schedule" size="13px" />
                           <span class="q-ml-xs">{{ group.intervalLabel }} interval</span>
                           &nbsp;&middot;&nbsp;
@@ -597,27 +601,30 @@
                   </div>
 
                   <!-- Cycle timeline table -->
-                  <div style="border: 1px solid #e3e8ef; border-radius: 10px; overflow: hidden;">
+                  <div class="cycle-table-wrapper">
                     <!-- Table header -->
-                    <div
-                      class="row items-center"
-                      style="background: #f7f9fc; padding: 8px 18px; border-bottom: 1px solid #e3e8ef;"
-                    >
-                      <div class="col-2" style="font-size: 10.5px; font-weight: 700; color: #90a4ae; text-transform: uppercase; letter-spacing: 0.5px;">Cycle</div>
-                      <div class="col-4" style="font-size: 10.5px; font-weight: 700; color: #90a4ae; text-transform: uppercase; letter-spacing: 0.5px;">Scheduled Date</div>
-                      <div class="col-3 text-right" style="font-size: 10.5px; font-weight: 700; color: #90a4ae; text-transform: uppercase; letter-spacing: 0.5px;">Amount</div>
-                      <div class="col-3 text-center" style="font-size: 10.5px; font-weight: 700; color: #90a4ae; text-transform: uppercase; letter-spacing: 0.5px;">Status</div>
+                    <div class="row items-center cycle-table-header">
+                      <div class="col-2 cycle-col-label">Cycle</div>
+                      <div class="col-4 cycle-col-label">Scheduled Date</div>
+                      <div class="col-3 text-right cycle-col-label">Amount</div>
+                      <div class="col-3 text-center cycle-col-label">Status</div>
                     </div>
 
                     <!-- Cycle rows -->
                     <div
                       v-for="(cycle, idx) in group.cycles"
                       :key="cycle.cycleNumber"
-                      class="row items-center"
+                      class="row items-center cycle-row"
                       :style="{
                         padding: '11px 18px',
-                        borderBottom: idx < group.cycles.length - 1 ? '1px solid #f0f4f8' : 'none',
-                        background: cycle.status === 'due' ? '#fffde7' : idx % 2 === 0 ? '#ffffff' : '#fafbfc',
+                        borderBottom: idx < group.cycles.length - 1
+                          ? ($q.dark.isActive ? '1px solid #1e2d50' : '1px solid #f0f4f8')
+                          : 'none',
+                        background: cycle.status === 'due'
+                          ? ($q.dark.isActive ? '#1f1a00' : '#fffde7')
+                          : (idx % 2 === 0
+                            ? ($q.dark.isActive ? '#0f1629' : '#ffffff')
+                            : ($q.dark.isActive ? '#111d3a' : '#fafbfc')),
                         transition: 'background 0.2s',
                       }"
                     >
@@ -634,18 +641,18 @@
 
                       <!-- Date & time -->
                       <div class="col-4">
-                        <div style="font-size: 13px; font-weight: 600; color: #263238;">
+                        <div class="cycle-date-text" style="font-size: 13px; font-weight: 600; color: #263238;">
                           {{ cycle.dueAt.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) }}
                         </div>
-                        <div style="font-size: 11px; color: #9e9e9e;">
+                        <div class="cycle-time-text" style="font-size: 11px; color: #9e9e9e;">
                           {{ cycle.dueAt.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }) }}
                         </div>
                       </div>
 
                       <!-- Amount -->
                       <div class="col-3 text-right">
-                        <div style="font-size: 13px; font-weight: 700; color: #1565c0;">{{ cycle.amountBch }}</div>
-                        <div style="font-size: 10px; color: #90a4ae;">BCH</div>
+                        <div class="cycle-amount-text" style="font-size: 13px; font-weight: 700; color: #1565c0;">{{ cycle.amountBch }}</div>
+                        <div class="cycle-bch-label" style="font-size: 10px; color: #90a4ae;">BCH</div>
                       </div>
 
                       <!-- Status + optional Withdraw button -->
@@ -992,7 +999,7 @@
          Professional Withdraw Confirm Dialog
          ═══════════════════════════════════════════════════════════ -->
     <q-dialog v-model="withdrawConfirmDialog.open" persistent>
-      <q-card style="min-width: 480px; max-width: 560px; border-radius: 16px; overflow: hidden; box-shadow: 0 20px 60px rgba(0,0,0,0.18);">
+      <q-card class="withdraw-confirm-card">
 
         <!-- ── Gradient Header ──────────────────────────────────── -->
         <div
@@ -1004,9 +1011,7 @@
           }"
         >
           <div class="row items-center no-wrap">
-            <div
-              style="width: 44px; height: 44px; border-radius: 50%; background: rgba(255,255,255,0.18); display: flex; align-items: center; justify-content: center; margin-right: 14px; flex-shrink: 0;"
-            >
+            <div class="wcd-header-icon-circle">
               <q-icon
                 :name="withdrawConfirmDialog.mode === 'inbox_approval' ? 'mark_email_read' : 'account_balance_wallet'"
                 color="white"
@@ -1040,37 +1045,37 @@
 
             <!-- Total BCH -->
             <div class="col-4">
-              <div style="background: #e8f0fe; border-radius: 10px; padding: 14px 12px; border: 1px solid #c5d8ff; text-align: center;">
+              <div class="wcd-stat-box wcd-stat-box--blue">
                 <q-icon name="currency_bitcoin" color="blue-8" size="20px" />
-                <div style="font-size: 11px; font-weight: 700; color: #1a56db; text-transform: uppercase; letter-spacing: 0.6px; margin-top: 4px;">Total Amount</div>
-                <div style="font-size: 17px; font-weight: 800; color: #1a56db; margin-top: 2px; line-height: 1;">
+                <div class="wcd-stat-label wcd-stat-label--blue">Total Amount</div>
+                <div class="wcd-stat-value wcd-stat-value--blue">
                   {{ withdrawConfirmDialog.totalBch }}
                 </div>
-                <div style="font-size: 11px; color: #6b8cc7; margin-top: 1px;">BCH</div>
+                <div class="wcd-stat-unit wcd-stat-unit--blue">BCH</div>
               </div>
             </div>
 
             <!-- Payout Count -->
             <div class="col-4">
-              <div style="background: #e6f4ea; border-radius: 10px; padding: 14px 12px; border: 1px solid #b7dcc3; text-align: center;">
+              <div class="wcd-stat-box wcd-stat-box--green">
                 <q-icon name="receipt_long" color="green-8" size="20px" />
-                <div style="font-size: 11px; font-weight: 700; color: #1e6b3a; text-transform: uppercase; letter-spacing: 0.6px; margin-top: 4px;">Payouts Due</div>
-                <div style="font-size: 17px; font-weight: 800; color: #1e6b3a; margin-top: 2px; line-height: 1;">
+                <div class="wcd-stat-label wcd-stat-label--green">Payouts Due</div>
+                <div class="wcd-stat-value wcd-stat-value--green">
                   {{ withdrawConfirmDialog.payouts.length }}
                 </div>
-                <div style="font-size: 11px; color: #5a9970; margin-top: 1px;">scheduled</div>
+                <div class="wcd-stat-unit wcd-stat-unit--green">scheduled</div>
               </div>
             </div>
 
             <!-- Date & Time -->
             <div class="col-4">
-              <div style="background: #fef3e8; border-radius: 10px; padding: 14px 12px; border: 1px solid #f5d4ae; text-align: center;">
+              <div class="wcd-stat-box wcd-stat-box--orange">
                 <q-icon name="schedule" color="orange-9" size="20px" />
-                <div style="font-size: 11px; font-weight: 700; color: #c45e0a; text-transform: uppercase; letter-spacing: 0.6px; margin-top: 4px;">Executed On</div>
-                <div style="font-size: 12px; font-weight: 800; color: #c45e0a; margin-top: 2px; line-height: 1.2;">
+                <div class="wcd-stat-label wcd-stat-label--orange">Executed On</div>
+                <div class="wcd-stat-value wcd-stat-value--orange">
                   {{ fmtDialogDate(new Date()) }}
                 </div>
-                <div style="font-size: 11px; color: #c07940; margin-top: 1px;">{{ fmtDialogTime(new Date()) }}</div>
+                <div class="wcd-stat-unit wcd-stat-unit--orange">{{ fmtDialogTime(new Date()) }}</div>
               </div>
             </div>
 
@@ -1079,37 +1084,38 @@
 
         <!-- ── Payout Details Table ──────────────────────────────── -->
         <div class="q-px-lg q-pb-sm">
-          <div style="font-size: 11px; font-weight: 700; color: #78909c; text-transform: uppercase; letter-spacing: 0.7px; margin-bottom: 8px;">
-            Payout Details
-          </div>
-          <div style="border: 1px solid #e3e8ef; border-radius: 10px; overflow: hidden;">
+          <div class="wcd-table-heading">Payout Details</div>
+          <div class="wcd-table-wrapper">
 
             <!-- Table Header -->
-            <div class="row" style="background: #f5f7fa; padding: 8px 14px; border-bottom: 1px solid #e3e8ef;">
-              <div class="col-5" style="font-size: 10.5px; font-weight: 700; color: #90a4ae; text-transform: uppercase; letter-spacing: 0.5px;">Donor</div>
-              <div class="col-3 text-right" style="font-size: 10.5px; font-weight: 700; color: #90a4ae; text-transform: uppercase; letter-spacing: 0.5px;">Amount</div>
-              <div class="col-2 text-center" style="font-size: 10.5px; font-weight: 700; color: #90a4ae; text-transform: uppercase; letter-spacing: 0.5px;">Cycle</div>
-              <div class="col text-right" style="font-size: 10.5px; font-weight: 700; color: #90a4ae; text-transform: uppercase; letter-spacing: 0.5px;">Scheduled</div>
+            <div class="row wcd-table-header">
+              <div class="col-5 wcd-col-label">Donor</div>
+              <div class="col-3 text-right wcd-col-label">Amount</div>
+              <div class="col-2 text-center wcd-col-label">Cycle</div>
+              <div class="col text-right wcd-col-label">Scheduled</div>
             </div>
 
             <!-- Table Rows -->
             <div
               v-for="(payout, idx) in withdrawConfirmDialog.payouts"
               :key="payout.id"
-              class="row items-center"
+              class="row items-center wcd-table-row"
               :style="{
-                padding: '10px 14px',
-                borderBottom: idx < withdrawConfirmDialog.payouts.length - 1 ? '1px solid #f0f4f8' : 'none',
-                background: idx % 2 === 0 ? '#ffffff' : '#fafbfc',
+                borderBottom: idx < withdrawConfirmDialog.payouts.length - 1
+                  ? ($q.dark.isActive ? '1px solid #1e2d50' : '1px solid #f0f4f8')
+                  : 'none',
+                background: idx % 2 === 0
+                  ? ($q.dark.isActive ? '#0f1629' : '#ffffff')
+                  : ($q.dark.isActive ? '#111d3a' : '#fafbfc'),
               }"
             >
               <div class="col-5" style="min-width: 0;">
-                <div class="ellipsis" style="font-size: 13px; font-weight: 600; color: #1a237e;">{{ payout.donorName }}</div>
-                <div class="ellipsis" style="font-size: 11px; color: #9e9e9e;">{{ payout.donorEmail || '—' }}</div>
+                <div class="ellipsis wcd-donor-name">{{ payout.donorName }}</div>
+                <div class="ellipsis wcd-donor-email">{{ payout.donorEmail || '—' }}</div>
               </div>
               <div class="col-3 text-right">
-                <div style="font-size: 13px; font-weight: 700; color: #1565c0;">{{ payout.amountBch }}</div>
-                <div style="font-size: 10px; color: #90a4ae;">BCH</div>
+                <div class="wcd-payout-amount">{{ payout.amountBch }}</div>
+                <div class="wcd-payout-bch">BCH</div>
               </div>
               <div class="col-2 text-center">
                 <q-chip
@@ -1121,8 +1127,8 @@
                 />
               </div>
               <div class="col text-right">
-                <div style="font-size: 11px; font-weight: 600; color: #e65100;">{{ fmtDialogDateShort(new Date(payout.dueAt)) }}</div>
-                <div style="font-size: 10px; color: #9e9e9e;">{{ fmtDialogTime(new Date(payout.dueAt)) }}</div>
+                <div class="wcd-due-date">{{ fmtDialogDateShort(new Date(payout.dueAt)) }}</div>
+                <div class="wcd-due-time">{{ fmtDialogTime(new Date(payout.dueAt)) }}</div>
               </div>
             </div>
 
@@ -1134,20 +1140,20 @@
           <!-- inbox_approval notice -->
           <div
             v-if="withdrawConfirmDialog.mode === 'inbox_approval'"
-            style="background: #fff8e1; border-left: 4px solid #ffc107; border-radius: 6px; padding: 10px 14px; display: flex; align-items: flex-start; gap: 8px;"
+            class="wcd-notice wcd-notice--approval"
           >
             <q-icon name="mail_outline" color="orange-8" size="16px" style="margin-top: 1px; flex-shrink: 0;" />
-            <div style="font-size: 12px; color: #6d4c00; line-height: 1.5;">
+            <div class="wcd-notice-text wcd-notice-text--approval">
               <strong>Approval Required</strong> — An email will be sent to each donor asking them to approve this scheduled withdrawal. Funds will only move once they confirm.
             </div>
           </div>
           <!-- smart notice -->
           <div
             v-else
-            style="background: #e8f5e9; border-left: 4px solid #43a047; border-radius: 6px; padding: 10px 14px; display: flex; align-items: flex-start; gap: 8px;"
+            class="wcd-notice wcd-notice--smart"
           >
             <q-icon name="bolt" color="green-8" size="16px" style="margin-top: 1px; flex-shrink: 0;" />
-            <div style="font-size: 12px; color: #1b5e20; line-height: 1.5;">
+            <div class="wcd-notice-text wcd-notice-text--smart">
               <strong>Smart Withdrawal</strong> — This payout will execute automatically on the Bitcoin Cash blockchain. This action cannot be undone.
             </div>
           </div>
@@ -2553,6 +2559,9 @@ const viewTransactionDetails = (transaction) => {
   background: #e8f0fe;
   flex-shrink: 0;
 }
+.body--dark .sidebar-avatar {
+  background: rgba(93, 156, 245, 0.15);
+}
 
 .sidebar-account-name {
   font-size: 13.5px;
@@ -2571,6 +2580,27 @@ const viewTransactionDetails = (transaction) => {
   margin-top: 1px;
   font-weight: 500;
 }
+.body--dark .sidebar-account-sub {
+  color: #5a7a9e;
+}
+
+.sidebar-stat-block {
+  flex: 1;
+  border-radius: 8px;
+  padding: 8px 10px;
+}
+.sidebar-stat-block--neutral {
+  background: #f5f7fa;
+}
+.sidebar-stat-block--positive {
+  background: #f0faf2;
+}
+.body--dark .sidebar-stat-block--neutral {
+  background: rgba(255, 255, 255, 0.05);
+}
+.body--dark .sidebar-stat-block--positive {
+  background: rgba(46, 125, 50, 0.12);
+}
 
 .sidebar-stat-label {
   font-size: 10px;
@@ -2580,6 +2610,9 @@ const viewTransactionDetails = (transaction) => {
   color: #90a4ae;
   margin-bottom: 2px;
 }
+.body--dark .sidebar-stat-label {
+  color: #5a7a9e;
+}
 
 .sidebar-stat-value {
   font-size: 14px;
@@ -2587,9 +2620,31 @@ const viewTransactionDetails = (transaction) => {
   color: #263238;
   line-height: 1;
 }
-
+.sidebar-stat-value--positive {
+  color: #2e7d32;
+}
 .body--dark .sidebar-stat-value {
   color: #eceff1;
+}
+.body--dark .sidebar-stat-value--positive {
+  color: #4caf50 !important;
+}
+
+.sidebar-next-text {
+  font-size: 11.5px;
+  color: #546e7a;
+  font-weight: 600;
+}
+.body--dark .sidebar-next-text {
+  color: #7a96b8;
+}
+
+.sidebar-no-pending-text {
+  font-size: 11px;
+  color: #bdbdbd;
+}
+.body--dark .sidebar-no-pending-text {
+  color: #3d5470;
 }
 
 .details-panel {
@@ -2657,6 +2712,128 @@ const viewTransactionDetails = (transaction) => {
     border-color: #5c8ee0 !important;
     box-shadow: 0 4px 20px rgba(92, 142, 224, 0.18);
   }
+}
+
+/* Dashboard Details Tab Dark Mode */
+.body--dark .profile-left-col {
+  border-right-color: #2e3f6e !important;
+}
+.body--dark .org-name-text {
+  color: #d8e8ff !important;
+}
+.body--dark .org-category-text {
+  color: #5d9cf5 !important;
+}
+.body--dark .org-status-text {
+  color: #7a96b8 !important;
+}
+.stat-value-text {
+  color: #212121;
+}
+.body--dark .stat-value-text {
+  color: #c8d8f0 !important;
+}
+.body--dark .info-card-title {
+  color: #c8d8f0 !important;
+}
+.body--dark .field-value-text {
+  color: #c8d8f0 !important;
+}
+.body--dark .bch-address-box {
+  color: #7ecbff !important;
+  background: rgba(30, 58, 110, 0.7) !important;
+}
+.body--dark .total-received-value {
+  color: #5d9cf5 !important;
+}
+.body--dark .available-balance-value {
+  color: #4caf50 !important;
+}
+.body--dark .bch-unit-label {
+  color: #7a96b8 !important;
+}
+.body--dark .description-box {
+  color: #8fa8cb !important;
+  background: rgba(26, 34, 64, 0.6) !important;
+  border-color: #2e3f6e !important;
+}
+.body--dark .detail-info-card .text-grey-5 {
+  color: #5a7a9e !important;
+}
+
+/* Pending Tab Dark Mode */
+.pending-empty-state {
+  border: 2px dashed #e0e0e0;
+  border-radius: 12px;
+}
+.body--dark .pending-empty-state {
+  border-color: #2e3f6e;
+}
+.body--dark .pending-empty-state .text-grey-6,
+.body--dark .pending-empty-state .text-grey-4 {
+  color: #5a7a9e !important;
+}
+
+.body--dark .contract-donor-name {
+  color: #d8e8ff !important;
+}
+.body--dark .contract-meta-caption {
+  color: #7a96b8 !important;
+}
+
+.cycle-table-wrapper {
+  border: 1px solid #e3e8ef;
+  border-radius: 10px;
+  overflow: hidden;
+}
+.body--dark .cycle-table-wrapper {
+  border-color: #2e3f6e;
+}
+
+.cycle-table-header {
+  background: #f7f9fc;
+  padding: 8px 18px;
+  border-bottom: 1px solid #e3e8ef;
+}
+.body--dark .cycle-table-header {
+  background: #111d3a;
+  border-bottom-color: #2e3f6e;
+}
+
+.cycle-col-label {
+  font-size: 10.5px;
+  font-weight: 700;
+  color: #90a4ae;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.body--dark .cycle-col-label {
+  color: #5a7a9e;
+}
+
+.cycle-date-text {
+  color: #263238;
+}
+.body--dark .cycle-date-text {
+  color: #c8d8f0 !important;
+}
+.cycle-time-text {
+  color: #9e9e9e;
+}
+.body--dark .cycle-time-text {
+  color: #5a7a9e !important;
+}
+.cycle-amount-text {
+  color: #1565c0;
+}
+.body--dark .cycle-amount-text {
+  color: #5d9cf5 !important;
+}
+.cycle-bch-label {
+  color: #90a4ae;
+}
+.body--dark .cycle-bch-label {
+  color: #5a7a9e !important;
 }
 
 :deep(.q-tab-panels) {
@@ -3249,4 +3426,232 @@ const viewTransactionDetails = (transaction) => {
   background: rgba(144, 202, 249, 0.07);
   color: rgba(255, 255, 255, 0.5);
 }
+
+/* ─── Withdraw Confirm Dialog ───────────────────────────────────────── */
+.withdraw-confirm-card {
+  min-width: 480px;
+  max-width: 560px;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.18);
+}
+
+.body--dark .withdraw-confirm-card {
+  background: #0f1629;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.55);
+}
+
+/* Header icon circle */
+.wcd-header-icon-circle {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.18);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 14px;
+  flex-shrink: 0;
+}
+
+/* Stat boxes */
+.wcd-stat-box {
+  border-radius: 10px;
+  padding: 14px 12px;
+  border: 1px solid;
+  text-align: center;
+}
+
+.wcd-stat-box--blue {
+  background: #e8f0fe;
+  border-color: #c5d8ff;
+}
+.wcd-stat-box--green {
+  background: #e6f4ea;
+  border-color: #b7dcc3;
+}
+.wcd-stat-box--orange {
+  background: #fef3e8;
+  border-color: #f5d4ae;
+}
+
+.body--dark .wcd-stat-box--blue {
+  background: rgba(26, 86, 219, 0.15);
+  border-color: #1e3a6e;
+}
+.body--dark .wcd-stat-box--green {
+  background: rgba(30, 107, 58, 0.18);
+  border-color: #1a3d28;
+}
+.body--dark .wcd-stat-box--orange {
+  background: rgba(196, 94, 10, 0.15);
+  border-color: #3d2510;
+}
+
+/* Stat labels */
+.wcd-stat-label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  margin-top: 4px;
+}
+.wcd-stat-label--blue { color: #1a56db; }
+.wcd-stat-label--green { color: #1e6b3a; }
+.wcd-stat-label--orange { color: #c45e0a; }
+
+.body--dark .wcd-stat-label--blue { color: #7ecbff; }
+.body--dark .wcd-stat-label--green { color: #81c995; }
+.body--dark .wcd-stat-label--orange { color: #ffb74d; }
+
+/* Stat values */
+.wcd-stat-value {
+  font-size: 17px;
+  font-weight: 800;
+  margin-top: 2px;
+  line-height: 1;
+}
+.wcd-stat-value--blue { color: #1a56db; }
+.wcd-stat-value--green { color: #1e6b3a; }
+.wcd-stat-value--orange { font-size: 12px; font-weight: 800; color: #c45e0a; line-height: 1.2; }
+
+.body--dark .wcd-stat-value--blue { color: #7ecbff; }
+.body--dark .wcd-stat-value--green { color: #81c995; }
+.body--dark .wcd-stat-value--orange { color: #ffb74d; }
+
+/* Stat units */
+.wcd-stat-unit {
+  font-size: 11px;
+  margin-top: 1px;
+}
+.wcd-stat-unit--blue { color: #6b8cc7; }
+.wcd-stat-unit--green { color: #5a9970; }
+.wcd-stat-unit--orange { color: #c07940; }
+
+.body--dark .wcd-stat-unit--blue { color: #5a7a9e; }
+.body--dark .wcd-stat-unit--green { color: #4a7a5e; }
+.body--dark .wcd-stat-unit--orange { color: #8a6240; }
+
+/* Table heading label */
+.wcd-table-heading {
+  font-size: 11px;
+  font-weight: 700;
+  color: #78909c;
+  text-transform: uppercase;
+  letter-spacing: 0.7px;
+  margin-bottom: 8px;
+}
+.body--dark .wcd-table-heading { color: #5a7a9e; }
+
+/* Table wrapper */
+.wcd-table-wrapper {
+  border: 1px solid #e3e8ef;
+  border-radius: 10px;
+  overflow: hidden;
+}
+.body--dark .wcd-table-wrapper {
+  border-color: #2e3f6e;
+}
+
+/* Table header row */
+.wcd-table-header {
+  background: #f5f7fa;
+  padding: 8px 14px;
+  border-bottom: 1px solid #e3e8ef;
+}
+.body--dark .wcd-table-header {
+  background: #111d3a;
+  border-bottom-color: #2e3f6e;
+}
+
+/* Column labels */
+.wcd-col-label {
+  font-size: 10.5px;
+  font-weight: 700;
+  color: #90a4ae;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.body--dark .wcd-col-label { color: #5a7a9e; }
+
+/* Table rows */
+.wcd-table-row {
+  padding: 10px 14px;
+}
+
+/* Donor name / email */
+.wcd-donor-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: #1a237e;
+}
+.wcd-donor-email {
+  font-size: 11px;
+  color: #9e9e9e;
+}
+.body--dark .wcd-donor-name { color: #c8d8f0; }
+.body--dark .wcd-donor-email { color: #5a7a9e; }
+
+/* Payout amount */
+.wcd-payout-amount {
+  font-size: 13px;
+  font-weight: 700;
+  color: #1565c0;
+}
+.wcd-payout-bch {
+  font-size: 10px;
+  color: #90a4ae;
+}
+.body--dark .wcd-payout-amount { color: #7ecbff; }
+.body--dark .wcd-payout-bch { color: #5a7a9e; }
+
+/* Due date / time */
+.wcd-due-date {
+  font-size: 11px;
+  font-weight: 600;
+  color: #e65100;
+}
+.wcd-due-time {
+  font-size: 10px;
+  color: #9e9e9e;
+}
+.body--dark .wcd-due-date { color: #ffb74d; }
+.body--dark .wcd-due-time { color: #5a7a9e; }
+
+/* Notice boxes */
+.wcd-notice {
+  border-left: 4px solid;
+  border-radius: 6px;
+  padding: 10px 14px;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+.wcd-notice--approval {
+  background: #fff8e1;
+  border-color: #ffc107;
+}
+.wcd-notice--smart {
+  background: #e8f5e9;
+  border-color: #43a047;
+}
+
+.body--dark .wcd-notice--approval {
+  background: rgba(255, 193, 7, 0.1);
+  border-color: #b8860b;
+}
+.body--dark .wcd-notice--smart {
+  background: rgba(67, 160, 71, 0.1);
+  border-color: #2e7d32;
+}
+
+.wcd-notice-text {
+  font-size: 12px;
+  line-height: 1.5;
+}
+.wcd-notice-text--approval { color: #6d4c00; }
+.wcd-notice-text--smart { color: #1b5e20; }
+
+.body--dark .wcd-notice-text--approval { color: #ffe082; }
+.body--dark .wcd-notice-text--smart { color: #a5d6a7; }
 </style>

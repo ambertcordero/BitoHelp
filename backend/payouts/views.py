@@ -80,6 +80,23 @@ def request_approval(request):
         vault_balance_satoshis=int(vault_bal) if vault_bal is not None else None,
     )
 
+    # Link the donation FK so the dashboard can filter by nonprofit_id.
+    # Try matching by vault address (stored as Donation.contract) first,
+    # then fall back to the donation_ref string if it looks like a numeric DB ID.
+    if approval.donation_id is None:
+        from donations.models import Donation
+        vault_address = data.get('vault_address', '')
+        linked = None
+        if vault_address:
+            linked = Donation.objects.filter(contract=vault_address).first()
+        if linked is None:
+            ref = data.get('donation_id', '')
+            if ref and str(ref).isdigit():
+                linked = Donation.objects.filter(pk=int(ref)).first()
+        if linked is not None:
+            approval.donation = linked
+            approval.save(update_fields=['donation'])
+
     if raw_token:
         try:
             send_approval_email(approval, raw_token)
@@ -120,7 +137,23 @@ def list_approvals(request):
 
     nonprofit_id = request.query_params.get('nonprofit_id')
     if nonprofit_id:
-        qs = qs.filter(donation__nonprofit_id=nonprofit_id)
+        from django.db.models import Q
+        from donations.models import Donation
+        # Primary: match via donation FK (preferred, set at creation time)
+        # Fallback: match via vault_address → Donation.contract for records created
+        # before the FK-linking fix was deployed
+        try:
+            nid = int(nonprofit_id)
+        except (TypeError, ValueError):
+            nid = None
+        if nid is not None:
+            matching_contracts = Donation.objects.filter(nonprofit_id=nid).values_list('contract', flat=True)
+            qs = qs.filter(
+                Q(donation__nonprofit_id=nid) |
+                Q(vault_address__in=[c for c in matching_contracts if c])
+            ).distinct()
+        else:
+            qs = qs.none()
 
     status = request.query_params.get('status')
     if status:
