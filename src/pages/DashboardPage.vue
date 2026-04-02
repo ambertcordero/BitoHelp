@@ -11,7 +11,7 @@
                 <div class="sidebar-title">Charity Dashboard</div>
                 <div class="sidebar-subtitle">{{ accounts.length }} active account{{ accounts.length !== 1 ? 's' : '' }}</div>
               </div>
-              <div style="width: 38px; height: 38px; border-radius: 10px; background: #1a237e; display: flex; align-items: center; justify-content: center;">
+              <div class="sidebar-header-icon">
                 <q-icon name="dashboard" color="white" size="20px" />
               </div>
             </div>
@@ -62,14 +62,17 @@
               :class="{ 'sidebar-account-card--active': selectedAccount?.id === account.id }"
               @click="selectAccount(account)"
             >
-              <!-- Top row: colored avatar + name + due badge -->
-              <div class="row items-start no-wrap q-mb-sm">
+              <!-- Active accent bar -->
+              <div class="sidebar-card-accent" />
+
+              <!-- Top row: avatar + name + due badge -->
+              <div class="row items-start no-wrap q-mb-xs">
                 <div class="sidebar-avatar">
                   <img src="~assets/paytaca.png" alt="wallet" style="width: 24px; height: 24px; object-fit: contain;" />
                 </div>
                 <div style="flex: 1; min-width: 0; margin-left: 10px;">
                   <div class="sidebar-account-name ellipsis">{{ account.name }}</div>
-                  <div class="sidebar-account-sub">{{ account.number }}</div>
+                  <div class="sidebar-account-sub">{{ account.type || 'Paytaca' }}</div>
                 </div>
                 <q-badge
                   v-if="getAccountPayoutInfo(account)?.dueApproval?.length > 0 || getAccountPayoutInfo(account)?.dueSmart?.length > 0"
@@ -80,20 +83,42 @@
                 />
               </div>
 
+              <!-- Address copy pill -->
+              <div class="q-mt-xs" v-if="account.address">
+                <div
+                  class="sidebar-address-pill ellipsis"
+                  @click.stop="$q.copyToClipboard(account.address).then(() => $q.notify({ type: 'positive', message: 'Address copied', position: 'top', timeout: 1500 }))"
+                >
+                  <q-icon name="person" size="10px" class="q-mr-xs" style="flex-shrink:0;" />
+                  <span class="sidebar-address-pill-label">Addr:</span>
+                  <span class="q-ml-xs">{{ account.address }}</span>
+                  <q-icon name="content_copy" size="10px" class="q-ml-xs sidebar-address-copy-icon" style="flex-shrink:0;" />
+                </div>
+              </div>
+
+              <!-- Divider -->
+              <div class="sidebar-card-divider" />
+
               <!-- BCH stat blocks -->
-              <div class="row q-mb-sm" style="gap: 8px;">
+              <div class="row q-mt-xs q-mb-sm" style="gap: 8px;">
                 <div class="sidebar-stat-block sidebar-stat-block--neutral">
-                  <div class="sidebar-stat-label">Total BCH</div>
-                  <div class="sidebar-stat-value">{{ formatCurrency(account.current) }}</div>
+                  <div class="row items-center no-wrap" style="gap: 4px; margin-bottom: 2px;">
+                    <q-icon name="currency_bitcoin" size="11px" color="blue-grey-5" />
+                    <div class="sidebar-stat-label">Total Received</div>
+                  </div>
+                  <div class="sidebar-stat-value">{{ formatCurrency(account.totalReceived ?? account.current) }}</div>
                 </div>
                 <div class="sidebar-stat-block sidebar-stat-block--positive">
-                  <div class="sidebar-stat-label">Available</div>
-                  <div class="sidebar-stat-value sidebar-stat-value--positive">{{ formatCurrency(account.available) }}</div>
+                  <div class="row items-center no-wrap" style="gap: 4px; margin-bottom: 2px;">
+                    <q-icon name="receipt_long" size="11px" color="green-7" />
+                    <div class="sidebar-stat-label">Transactions</div>
+                  </div>
+                  <div class="sidebar-stat-value sidebar-stat-value--positive">{{ account.transactionCount ?? 0 }}</div>
                 </div>
               </div>
 
               <!-- Payout action row -->
-              <q-separator style="opacity: 0.08; margin-bottom: 10px;" />
+              <q-separator class="sidebar-card-sep" style="margin-bottom: 10px;" />
               <div v-if="getAccountPayoutInfo(account)">
                 <q-btn
                   v-if="getAccountPayoutInfo(account).dueApproval.length > 0"
@@ -127,7 +152,7 @@
             </div>
 
             <div class="text-center q-mt-sm">
-              <a href="#" class="view-all-link text-blue-7 text-weight-medium" style="text-decoration: none; font-size: 13px;">View all</a>
+              <a href="#" class="view-all-link text-weight-medium" style="text-decoration: none; font-size: 13px;">View all</a>
             </div>
           </div>
 
@@ -1290,109 +1315,22 @@ const fmtDialogDateShort = (d) =>
 const fmtDialogTime = (d) =>
   d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })
 
-const accounts = ref([
-  {
-    id: 1,
-    name: 'Kapamilya Donor',
-    number: '',
-    address: 'qr5agtachyxvm8pqg2z7z8z9z5z6z7z8z9zdef789',
-    current: 122267.85,
-    available: 122267.85,
-    type: 'Paytaca',
-    totalFees: 1000,
-    charityName: 'Kapamilya Foundation',
-    email: 'contact@kapamilya.org',
-    totalReceived: 122267.85,
-    firstDonation: 'Jan 10, 2026',
-    lastDonation: 'Mar 13, 2026',
-    transactionCount: 200,
-    cards: [
-      {
-        id: 1,
-        title1: 'TOTAL DONATION',
-        title2: 'RECEIVED',
-        colorClass: 'wallet-stat-card-blue',
-        icon: bchImg,
-        largeValue: '122.85',
-        rightIcon: bchImg,
-      },
-      {
-        id: 2,
-        title1: 'TOTAL',
-        title2: 'PROJECTS',
-        colorClass: 'wallet-stat-card-purple',
-        icon: projectImg,
-        largeValue: '50+',
-        rightIcon: projectImg,
-      },
-      {
-        id: 3,
-        title1: 'VERIFIED',
-        title2: 'TRANSACTION',
-        colorClass: 'wallet-stat-card-yellow',
-        icon: transactionImg,
-        largeValue: '200+',
-        rightIcon: transactionImg,
-      },
-    ],
-  },
-  {
-    id: 2,
-    name: 'GMA Kapuso Donor',
-    number: '',
-    address: 'qq8z6kx7qzj3zjz5qz9z5z6z7z8z9zabc123456',
-    current: 95420.5,
-    available: 95420.5,
-    type: 'Paytaca',
-    totalFees: 850,
-    charityName: 'GMA Kapuso Foundation',
-    email: 'info@kapuso.org',
-    totalReceived: 95420.5,
-    firstDonation: 'Dec 5, 2025',
-    lastDonation: 'Mar 12, 2026',
-    transactionCount: 175,
-    cards: [],
-  },
-  {
-    id: 3,
-    name: 'Tulong Dunong ',
-    number: '',
-    address: 'qr5agtachyxvm8pqg2z7z8z9z5z6z7z8z9zdef789',
-    current: 78350.25,
-    available: 78350.25,
-    type: 'Paytaca',
-    totalFees: 650,
-    charityName: 'Tulong Dunong Foundation',
-    email: 'support@tulongdunong.org',
-    totalReceived: 78350.25,
-    firstDonation: 'Jan 20, 2026',
-    lastDonation: 'Mar 11, 2026',
-    transactionCount: 150,
-    cards: [],
-  },
-])
+const accounts = ref([])
 
-const selectedAccount = ref(accounts.value[0])
+const selectedAccount = ref(null)
 
 const fetchDonations = async () => {
   loadingDonations.value = true
   try {
-    // Use selectedAccount to get the charity/nonprofit id
-    const nonprofitId = selectedAccount.value?.id
-    if (!nonprofitId) {
-      apiDonations.value = []
-      loadingDonations.value = false
-      return
-    }
-    // Fetch donations for the selected nonprofit/charity
-    const response = await api.get(`nonprofits/${nonprofitId}/donations/`)
+    // Fetch all donations and group by charity into sidebar accounts
+    const response = await api.get('donations/')
 
     if (Array.isArray(response.data)) {
       apiDonations.value = response.data
-      console.log('Loaded donations for nonprofit', nonprofitId, ':', apiDonations.value.length)
+      console.log('Loaded donations:', apiDonations.value.length)
     } else if (response.data && Array.isArray(response.data.results)) {
       apiDonations.value = response.data.results
-      console.log('Loaded donations for nonprofit (paginated):', apiDonations.value.length)
+      console.log('Loaded donations (paginated):', apiDonations.value.length)
     } else {
       console.warn(' Unexpected API response format:', response.data)
       apiDonations.value = []
@@ -1626,9 +1564,8 @@ onMounted(() => {
   }
 })
 
-// Refetch donations + payouts when selectedAccount changes
+// Fetch payouts + details when selected account changes (donations already loaded globally)
 watch(selectedAccount, (acct) => {
-  fetchDonations()
   if (acct?.nonprofitId) {
     fetchPayoutsForNonprofit(acct.nonprofitId)
     fetchNonprofitDetail(acct.nonprofitId)
@@ -2412,6 +2349,20 @@ const viewTransactionDetails = (transaction) => {
   padding: 24px 20px 20px;
 }
 
+.sidebar-header-icon {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  background: #1a237e;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.body--dark .sidebar-header-icon {
+  background: rgba(93, 156, 245, 0.25);
+}
+
 .sidebar-toggle {
   display: flex;
   background: rgba(0, 0, 0, 0.06);
@@ -2521,6 +2472,8 @@ const viewTransactionDetails = (transaction) => {
   border: 1.5px solid rgba(255, 255, 255, 0.6);
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
   transition: all 0.2s ease;
+  position: relative;
+  overflow: hidden;
 
   &:hover {
     border-color: #90caf9;
@@ -2531,7 +2484,80 @@ const viewTransactionDetails = (transaction) => {
   &.sidebar-account-card--active {
     border-color: #1565c0;
     box-shadow: 0 4px 20px rgba(21, 101, 192, 0.2);
+
+    .sidebar-card-accent {
+      opacity: 1;
+    }
   }
+}
+
+.sidebar-card-accent {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: linear-gradient(180deg, #1565c0, #42a5f5);
+  border-radius: 3px 0 0 3px;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+.body--dark .sidebar-account-card.sidebar-account-card--active .sidebar-card-accent {
+  background: linear-gradient(180deg, #5d9cf5, #7ecbff);
+}
+
+.sidebar-card-divider {
+  height: 1px;
+  background: rgba(0, 0, 0, 0.07);
+  margin: 8px 0 6px;
+  border-radius: 1px;
+}
+.body--dark .sidebar-card-divider {
+  background: rgba(255, 255, 255, 0.07);
+}
+
+.sidebar-address-pill {
+  display: inline-flex;
+  align-items: center;
+  background: rgba(21, 101, 192, 0.07);
+  border: 1px solid rgba(21, 101, 192, 0.15);
+  border-radius: 20px;
+  padding: 2px 8px;
+  font-size: 10px;
+  color: #546e7a;
+  cursor: pointer;
+  max-width: 100%;
+  transition: background 0.15s;
+
+  &:hover {
+    background: rgba(21, 101, 192, 0.13);
+    .sidebar-address-copy-icon { opacity: 1; }
+  }
+}
+.body--dark .sidebar-address-pill {
+  background: rgba(93, 156, 245, 0.1);
+  border-color: rgba(93, 156, 245, 0.2);
+  color: #7a96b8;
+
+  &:hover {
+    background: rgba(93, 156, 245, 0.18);
+  }
+}
+
+.sidebar-address-pill-label {
+  font-weight: 700;
+  color: #1565c0;
+  margin-right: 3px;
+  flex-shrink: 0;
+}
+.body--dark .sidebar-address-pill-label {
+  color: #5d9cf5;
+}
+
+.sidebar-address-copy-icon {
+  opacity: 0.4;
+  transition: opacity 0.15s;
+  flex-shrink: 0;
 }
 
 .body--dark .sidebar-account-card {
@@ -2546,6 +2572,10 @@ const viewTransactionDetails = (transaction) => {
   &.sidebar-account-card--active {
     border-color: #5c8ee0;
     box-shadow: 0 4px 20px rgba(92, 142, 224, 0.25);
+
+    .sidebar-card-accent {
+      opacity: 1;
+    }
   }
 }
 
@@ -2582,6 +2612,13 @@ const viewTransactionDetails = (transaction) => {
 }
 .body--dark .sidebar-account-sub {
   color: #5a7a9e;
+}
+
+.sidebar-card-sep {
+  opacity: 0.15;
+}
+.body--dark .sidebar-card-sep {
+  opacity: 0.08;
 }
 
 .sidebar-stat-block {
@@ -2641,7 +2678,7 @@ const viewTransactionDetails = (transaction) => {
 
 .sidebar-no-pending-text {
   font-size: 11px;
-  color: #bdbdbd;
+  color: #90a4ae;
 }
 .body--dark .sidebar-no-pending-text {
   color: #3d5470;
@@ -3249,11 +3286,15 @@ const viewTransactionDetails = (transaction) => {
 }
 
 .view-all-link {
+  color: #1565c0;
   transition: color 0.3s ease;
 
   &:hover {
     color: #2196f3 !important;
   }
+}
+.body--dark .view-all-link {
+  color: #5d9cf5;
 }
 
 :deep(.q-tab) {

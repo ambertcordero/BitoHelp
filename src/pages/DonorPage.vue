@@ -51,26 +51,51 @@
               :class="{ 'sidebar-account-card--active': selectedWallet?.id === wallet.id }"
               @click="selectWallet(wallet)"
             >
+              <!-- Active accent bar -->
+              <div class="sidebar-card-accent" />
+
               <!-- Top row: avatar + name + address -->
-              <div class="row items-start no-wrap q-mb-sm">
+              <div class="row items-start no-wrap q-mb-xs">
                 <div class="sidebar-avatar">
                   <img src="~assets/paytaca.png" alt="wallet" style="width: 24px; height: 24px; object-fit: contain;" />
                 </div>
                 <div style="flex: 1; min-width: 0; margin-left: 10px;">
                   <div class="sidebar-account-name ellipsis">{{ wallet.name }}</div>
-                  <div class="sidebar-account-sub">{{ wallet.address.substring(0, 14) }}…</div>
+                  <div class="sidebar-account-sub">{{ wallet.type || 'Paytaca' }}</div>
                 </div>
-                <q-btn flat round dense icon="more_vert" size="xs" @click.stop />
+                <q-btn flat round dense icon="more_vert" size="xs" class="sidebar-menu-btn" @click.stop />
               </div>
 
+              <!-- Address copy pill -->
+              <div class="q-mt-xs">
+                <div
+                  class="sidebar-address-pill ellipsis"
+                  @click.stop="$q.copyToClipboard(wallet.address).then(() => $q.notify({ type: 'positive', message: 'Donor address copied', position: 'top', timeout: 1500 }))"
+                >
+                  <q-icon name="person" size="10px" class="q-mr-xs" style="flex-shrink:0;" />
+                  <span class="sidebar-address-pill-label">Donor:</span>
+                  <span class="q-ml-xs">{{ wallet.address }}</span>
+                  <q-icon name="content_copy" size="10px" class="q-ml-xs sidebar-address-copy-icon" style="flex-shrink:0;" />
+                </div>
+              </div>
+
+              <!-- Divider -->
+              <div class="sidebar-card-divider" />
+
               <!-- BCH stat blocks -->
-              <div class="row q-mb-xs" style="gap: 8px;">
+              <div class="row q-mt-xs" style="gap: 8px;">
                 <div class="sidebar-stat-block sidebar-stat-block--blue">
-                  <div class="sidebar-stat-label">Total Donated</div>
+                  <div class="row items-center no-wrap" style="gap: 4px; margin-bottom: 2px;">
+                    <q-icon name="currency_bitcoin" size="11px" color="blue-7" />
+                    <div class="sidebar-stat-label">Total Donated</div>
+                  </div>
                   <div class="sidebar-stat-value">{{ formatCurrency(wallet.totalDonated) }} BCH</div>
                 </div>
                 <div class="sidebar-stat-block sidebar-stat-block--green">
-                  <div class="sidebar-stat-label">Donations</div>
+                  <div class="row items-center no-wrap" style="gap: 4px; margin-bottom: 2px;">
+                    <q-icon name="volunteer_activism" size="11px" color="green-7" />
+                    <div class="sidebar-stat-label">Donations</div>
+                  </div>
                   <div class="sidebar-stat-value sidebar-stat-value--green">{{ wallet.donationCount }}</div>
                 </div>
               </div>
@@ -537,7 +562,7 @@
        
         <div v-if="activeTab === 'activity'" class="activity-view">
           <div class="row items-center justify-between q-mb-lg">
-            <h4 class="q-my-none">Donation Activity</h4>
+            <h4 class="q-my-none activity-heading">Donation Activity</h4>
             <div>
               <q-btn flat icon="download" label="Export" />
               <q-btn flat icon="refresh" @click="refreshActivity" />
@@ -581,7 +606,7 @@
           </div>
 
          
-          <q-card flat class="q-mt-md">
+          <q-card flat class="q-mt-md activity-section-card">
             <q-card-section>
               <div class="row q-col-gutter-md q-mb-md">
                 <div class="col-12 col-md-6">
@@ -1897,17 +1922,91 @@ onMounted(async () => {
   border: 1.5px solid rgba(255, 255, 255, 0.6);
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
   transition: all 0.2s ease;
+  position: relative;
+  overflow: hidden;
+
+  /* hide more_vert until hover */
+  .sidebar-menu-btn {
+    opacity: 0;
+    transition: opacity 0.15s ease;
+  }
 
   &:hover {
     border-color: #90caf9;
     box-shadow: 0 4px 20px rgba(21, 101, 192, 0.14);
     transform: translateY(-1px);
+
+    .sidebar-menu-btn {
+      opacity: 1;
+    }
   }
 
   &.sidebar-account-card--active {
     border-color: #1565c0;
     box-shadow: 0 4px 20px rgba(21, 101, 192, 0.2);
+
+    .sidebar-menu-btn {
+      opacity: 1;
+    }
+
+    .sidebar-card-accent {
+      opacity: 1;
+    }
   }
+}
+
+.sidebar-card-accent {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 4px;
+  height: 100%;
+  background: linear-gradient(180deg, #1565c0, #42a5f5);
+  border-radius: 14px 0 0 14px;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.sidebar-card-divider {
+  height: 1px;
+  background: rgba(144, 202, 249, 0.3);
+  margin: 8px 0 0;
+}
+
+.sidebar-address-pill {
+  display: flex;
+  align-items: center;
+  font-size: 10.5px;
+  font-family: monospace;
+  font-weight: 600;
+  color: #5c7ea6;
+  background: rgba(144, 202, 249, 0.12);
+  border: 1px solid rgba(144, 202, 249, 0.3);
+  border-radius: 20px;
+  padding: 3px 10px;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+
+  &:hover {
+    background: rgba(21, 101, 192, 0.1);
+    color: #1565c0;
+  }
+}
+
+
+.sidebar-address-pill-label {
+  font-family: sans-serif;
+  font-size: 9.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  opacity: 0.7;
+  flex-shrink: 0;
+}
+
+.sidebar-address-copy-icon {
+  flex-shrink: 0;
+  opacity: 0.5;
 }
 
 .body--dark .sidebar-account-card {
@@ -1922,8 +2021,28 @@ onMounted(async () => {
   &.sidebar-account-card--active {
     border-color: #5c8ee0;
     box-shadow: 0 4px 20px rgba(92, 142, 224, 0.25);
+
+    .sidebar-card-accent {
+      background: linear-gradient(180deg, #5d9cf5, #7ecbff);
+    }
   }
 }
+
+.body--dark .sidebar-card-divider {
+  background: rgba(100, 160, 255, 0.15);
+}
+
+.body--dark .sidebar-address-pill {
+  color: #5a7a9e;
+  background: rgba(93, 156, 245, 0.08);
+  border-color: rgba(93, 156, 245, 0.2);
+
+  &:hover {
+    background: rgba(93, 156, 245, 0.15);
+    color: #90caf9;
+  }
+}
+
 
 .sidebar-avatar {
   width: 38px;
@@ -2504,6 +2623,41 @@ onMounted(async () => {
 }
 
 
+/* ─── Donation Activity section ─────────────────────────────────── */
+.activity-heading {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: #1a237e;
+}
+.body--dark .activity-heading {
+  color: #d8e8ff;
+}
+
+.activity-section-card {
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.9) !important;
+  border: 1.5px solid rgba(144, 202, 249, 0.5);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
+}
+.body--dark .activity-section-card {
+  background: rgba(18, 26, 52, 0.85) !important;
+  border-color: rgba(100, 160, 255, 0.2) !important;
+}
+
+/* fix stats-card label contrast in light mode */
+.stats-card .text-caption {
+  color: #546e7a !important;
+}
+.stats-card .text-h5 {
+  color: #1a237e !important;
+}
+.body--dark .stats-card .text-caption {
+  color: #7a96b8 !important;
+}
+.body--dark .stats-card .text-h5 {
+  color: #d8e8ff !important;
+}
+
 .transactions-table {
   :deep(.q-table__container),
   :deep(.q-table__card) {
@@ -2518,10 +2672,11 @@ onMounted(async () => {
   :deep(.q-table__top),
   :deep(.q-table__bottom) {
     background: transparent !important;
+    color: #546e7a;
   }
 
   :deep(thead tr th) {
-    background: rgba(144, 202, 249, 0.15);
+    background: rgba(144, 202, 249, 0.18);
     color: #1565c0;
     font-weight: 600;
   }
@@ -2530,8 +2685,12 @@ onMounted(async () => {
     background: transparent !important;
   }
 
+  :deep(tbody tr td) {
+    color: rgba(0, 0, 0, 0.82);
+  }
+
   :deep(tbody tr:hover td) {
-    background: rgba(144, 202, 249, 0.08) !important;
+    background: rgba(144, 202, 249, 0.1) !important;
   }
 }
 
