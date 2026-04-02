@@ -928,7 +928,7 @@
     <!-- ═══════════════════════════════════════════════════════════
          Transaction Detail Dialog
          ═══════════════════════════════════════════════════════════ -->
-    <q-dialog v-model="txDetailDialog.open">
+    <q-dialog v-model="txDetailDialog.open" :position="$q.screen.lt.sm ? 'bottom' : 'standard'">
       <q-card class="tx-detail-dialog">
 
         <!-- Header -->
@@ -3286,14 +3286,46 @@ const viewTransactionDetails = (transaction) => {
 
 // ── Transaction Detail Dialog ────────────────────────────────────────────────
 .tx-detail-dialog {
-  min-width: 480px;
-  max-width: 560px;
+  width: 540px;
+  max-width: 95vw;
   border-radius: 16px !important;
   overflow: hidden;
   border: 1.5px solid rgba(144, 202, 249, 0.5);
   background: rgba(255, 255, 255, 0.92);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
+}
+
+@media (max-width: 520px) {
+  .tx-detail-dialog {
+    width: 100%;
+    max-width: 100%;
+    border-radius: 16px 16px 0 0 !important;
+  }
+
+  .tx-detail-header {
+    padding: 16px 16px 13px;
+  }
+
+  .tx-detail-title {
+    font-size: 16px;
+  }
+
+  .tx-detail-row {
+    flex-direction: column;
+    gap: 3px;
+    padding: 10px 12px;
+  }
+
+  .tx-detail-label {
+    min-width: 0;
+    font-size: 11px;
+  }
+
+  .tx-detail-value {
+    font-size: 12.5px;
+    text-align: left;
+  }
 }
 
 .body--dark .tx-detail-dialog {
