@@ -266,7 +266,7 @@
     <div class="mobile-bottom-nav-wrap lt-md">
       <!-- the floating pill -->
       <nav class="mobile-bottom-nav">
-        <router-link to="/" class="mobile-nav-item" active-class="mobile-nav-item--active" exact>
+        <router-link to="/" class="mobile-nav-item" exact-active-class="mobile-nav-item--active">
           <svg class="mobile-nav-svg" viewBox="0 0 24 24" fill="currentColor">
             <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
           </svg>
@@ -2110,7 +2110,7 @@ onBeforeUnmount(() => {
 .menu-btn:hover {
   background: rgba(255, 255, 255, 0.72);
   border-color: rgba(255, 255, 255, 0.9);
-  box-shadow: 0 4px 16px rgba(46, 88, 216, 0.14), inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  box-shadow: 0 4px 16px rgba(46, 88, 216, 0.22), 0 8px 32px rgba(30, 40, 80, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.9);
   transform: translateY(-1px);
 }
 
@@ -2195,13 +2195,13 @@ onBeforeUnmount(() => {
   background: rgba(255, 255, 255, 0.07);
   border-color: rgba(255, 255, 255, 0.12);
   color: rgba(210, 218, 245, 0.85);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4), 0 6px 24px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.08);
 }
 
 .body--dark .menu-btn:hover {
   background: rgba(255, 255, 255, 0.12);
   border-color: rgba(255, 255, 255, 0.22);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5), 0 8px 32px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.1);
 }
 
 .body--dark .notif-btn {
@@ -2433,7 +2433,7 @@ onBeforeUnmount(() => {
   height: 62px;
   border-radius: 32px;
   /* glassmorphism light */
-  background: rgba(255, 255, 255, 0.72);
+  background: rgba(255, 255, 255, 0.553);
   backdrop-filter: blur(24px) saturate(180%);
   -webkit-backdrop-filter: blur(24px) saturate(180%);
   border: 1px solid rgba(255, 255, 255, 0.5);
@@ -2693,7 +2693,7 @@ onBeforeUnmount(() => {
   -webkit-backdrop-filter: blur(24px) saturate(180%);
   border-left: 1px solid rgba(255, 255, 255, 0.7);
   border-radius: 20px 0 0 20px;
-  box-shadow: -12px 0 48px rgba(30, 40, 80, 0.16);
+  box-shadow: -4px 0 12px rgba(0, 0, 0, 0.08), -16px 0 64px rgba(30, 40, 80, 0.35), -32px 0 80px rgba(30, 40, 80, 0.18);
   overflow: hidden;
 }
 
@@ -3023,7 +3023,7 @@ onBeforeUnmount(() => {
 .body--dark .mobile-drawer {
   background: rgba(15, 17, 28, 0.82);
   border-left-color: rgba(255, 255, 255, 0.07);
-  box-shadow: -12px 0 48px rgba(0, 0, 0, 0.5);
+  box-shadow: -4px 0 12px rgba(0, 0, 0, 0.2), -16px 0 64px rgba(0, 0, 0, 0.65), -32px 0 80px rgba(0, 0, 0, 0.4);
 }
 
 .body--dark .mobile-drawer-header {

@@ -97,7 +97,7 @@
           <div class="col-12 col-md-5">
             <h2 class="text-h5 text-weight-bold q-mb-lg">Other Ways to Reach Us</h2>
 
-            <div class="contact-info-card q-mb-md">
+            <div class="contact-info-card q-mb-md" :class="{ 'contact-info-card--active': selectedCard === 'email' }" @click="selectedCard = selectedCard === 'email' ? null : 'email'">
               <div class="contact-icon-wrap" style="background: #e3f2fd;">
                 <q-icon name="email" color="primary" size="22px" />
               </div>
@@ -108,7 +108,7 @@
               </div>
             </div>
 
-            <div class="contact-info-card q-mb-md">
+            <div class="contact-info-card q-mb-md" :class="{ 'contact-info-card--active': selectedCard === 'telegram' }" @click="selectedCard = selectedCard === 'telegram' ? null : 'telegram'">
               <div class="contact-icon-wrap" style="background: #e8f5e9;">
                 <q-icon name="chat" color="positive" size="22px" />
               </div>
@@ -119,7 +119,7 @@
               </div>
             </div>
 
-            <div class="contact-info-card q-mb-md">
+            <div class="contact-info-card q-mb-md" :class="{ 'contact-info-card--active': selectedCard === 'location' }" @click="selectedCard = selectedCard === 'location' ? null : 'location'">
               <div class="contact-icon-wrap" style="background: #fff3e0;">
                 <q-icon name="place" color="orange" size="22px" />
               </div>
@@ -130,7 +130,7 @@
               </div>
             </div>
 
-            <div class="contact-info-card">
+            <div class="contact-info-card" :class="{ 'contact-info-card--active': selectedCard === 'bch' }" @click="selectedCard = selectedCard === 'bch' ? null : 'bch'">
               <div class="contact-icon-wrap" style="background: #f3e5f5;">
                 <q-icon name="currency_bitcoin" color="purple" size="22px" />
               </div>
@@ -172,6 +172,8 @@
           <div class="col-12 col-md-8">
             <q-expansion-item
               class="faq-item q-mb-sm"
+              :class="{ 'faq-item--active': selectedFaq === 'donate' }"
+              @click="selectedFaq = selectedFaq === 'donate' ? null : 'donate'"
               label="How do I donate using Bitcoin Cash?"
               icon="help_outline"
               expand-separator
@@ -187,6 +189,8 @@
 
             <q-expansion-item
               class="faq-item q-mb-sm"
+              :class="{ 'faq-item--active': selectedFaq === 'verified' }"
+              @click="selectedFaq = selectedFaq === 'verified' ? null : 'verified'"
               label="Are the charities on BitoHelp verified?"
               icon="verified"
               expand-separator
@@ -201,6 +205,8 @@
 
             <q-expansion-item
               class="faq-item q-mb-sm"
+              :class="{ 'faq-item--active': selectedFaq === 'fees' }"
+              @click="selectedFaq = selectedFaq === 'fees' ? null : 'fees'"
               label="What are the platform fees?"
               icon="savings"
               expand-separator
@@ -215,6 +221,8 @@
 
             <q-expansion-item
               class="faq-item q-mb-sm"
+              :class="{ 'faq-item--active': selectedFaq === 'recurring' }"
+              @click="selectedFaq = selectedFaq === 'recurring' ? null : 'recurring'"
               label="Can I set up recurring donations?"
               icon="repeat"
               expand-separator
@@ -229,6 +237,8 @@
 
             <q-expansion-item
               class="faq-item"
+              :class="{ 'faq-item--active': selectedFaq === 'register' }"
+              @click="selectedFaq = selectedFaq === 'register' ? null : 'register'"
               label="How do I register my charity?"
               icon="business"
               expand-separator
@@ -277,6 +287,8 @@ const form = ref({
 })
 const sending = ref(false)
 const messageSent = ref(false)
+const selectedCard = ref(null)
+const selectedFaq = ref(null)
 
 function scrollToForm () {
   window.scrollTo({ top: 0, behavior: 'smooth' })
@@ -362,9 +374,22 @@ function submitForm () {
   align-items: flex-start;
   gap: 16px;
   padding: 16px;
-  border: 1px solid #e0e0e0;
+  border: 1.5px solid #e0e0e0;
   border-radius: 12px;
   background: white;
+  cursor: pointer;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08), 0 1px 4px rgba(0, 0, 0, 0.04);
+  transition: box-shadow 0.2s ease, transform 0.2s ease, border-color 0.2s ease;
+  user-select: none;
+}
+.contact-info-card:hover {
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.13), 0 2px 8px rgba(0, 0, 0, 0.07);
+  transform: translateY(-3px);
+}
+.contact-info-card--active {
+  border-color: #1565c0 !important;
+  box-shadow: 0 0 0 3px rgba(21, 101, 192, 0.18), 0 8px 28px rgba(0, 0, 0, 0.13) !important;
+  transform: translateY(-3px);
 }
 
 .contact-icon-wrap {
@@ -387,9 +412,21 @@ function submitForm () {
 /* FAQ items */
 .faq-item {
   background: white;
-  border: 1px solid #e0e0e0;
+  border: 1.5px solid #e0e0e0;
   border-radius: 12px;
   overflow: hidden;
+  cursor: pointer;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08), 0 1px 4px rgba(0, 0, 0, 0.04);
+  transition: box-shadow 0.2s ease, transform 0.2s ease, border-color 0.2s ease;
+}
+.faq-item:hover {
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.13), 0 2px 8px rgba(0, 0, 0, 0.07);
+  transform: translateY(-3px);
+}
+.faq-item--active {
+  border-color: #1565c0 !important;
+  box-shadow: 0 0 0 3px rgba(21, 101, 192, 0.18), 0 8px 28px rgba(0, 0, 0, 0.13) !important;
+  transform: translateY(-3px);
 }
 
 /* FAQ CTA box */
@@ -411,6 +448,14 @@ function submitForm () {
 .body--dark .contact-info-card {
   background: #1e2a3a;
   border-color: rgba(255, 255, 255, 0.08);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25), 0 1px 4px rgba(0, 0, 0, 0.15);
+}
+.body--dark .contact-info-card:hover {
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.4), 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+.body--dark .contact-info-card--active {
+  border-color: #42a5f5 !important;
+  box-shadow: 0 0 0 3px rgba(66, 165, 245, 0.22), 0 8px 28px rgba(0, 0, 0, 0.4) !important;
 }
 
 .body--dark .contact-icon-wrap {
@@ -440,6 +485,14 @@ function submitForm () {
 .body--dark .faq-item {
   background: #1e2a3a;
   border-color: rgba(255, 255, 255, 0.08);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25), 0 1px 4px rgba(0, 0, 0, 0.15);
+}
+.body--dark .faq-item:hover {
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.4), 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+.body--dark .faq-item--active {
+  border-color: #42a5f5 !important;
+  box-shadow: 0 0 0 3px rgba(66, 165, 245, 0.22), 0 8px 28px rgba(0, 0, 0, 0.4) !important;
 }
 
 .body--dark .faq-cta-box {

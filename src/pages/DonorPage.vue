@@ -43,7 +43,26 @@
           </q-input>
 
           
-          <div class="q-px-sm q-pb-sm">
+          <!-- Sidebar skeleton while loading -->
+          <div v-if="loadingDonations" class="q-px-sm q-pb-sm">
+            <div v-for="n in 3" :key="n" class="sidebar-account-card" style="pointer-events: none;">
+              <div class="row items-center no-wrap q-mb-sm" style="gap: 10px;">
+                <q-skeleton type="QAvatar" size="32px" />
+                <div style="flex: 1;">
+                  <q-skeleton type="text" width="60%" style="margin-bottom: 4px;" />
+                  <q-skeleton type="text" width="40%" />
+                </div>
+              </div>
+              <q-skeleton type="text" width="85%" style="margin-bottom: 10px; border-radius: 20px;" />
+              <div class="sidebar-card-divider" />
+              <div class="row q-mt-xs" style="gap: 8px;">
+                <q-skeleton style="flex: 1; height: 38px; border-radius: 8px;" />
+                <q-skeleton style="flex: 1; height: 38px; border-radius: 8px;" />
+              </div>
+            </div>
+          </div>
+
+          <div v-else class="q-px-sm q-pb-sm">
             <div
               v-for="wallet in filteredWallets"
               :key="wallet.id"
@@ -121,7 +140,33 @@
       </div>
 
       <div class="col-12 col-md-8 col-lg-9 q-pa-md q-pa-lg-lg main-content">
-        <div v-if="activeTab === 'donations' && selectedWallet" class="wallet-details">
+
+        <!-- Main content skeleton while loading -->
+        <div v-if="loadingDonations">
+          <!-- Header skeleton -->
+          <div class="row items-center justify-between q-mb-lg">
+            <q-skeleton type="text" width="180px" style="height: 28px;" />
+            <div class="row q-gutter-sm">
+              <q-skeleton type="QBtn" width="36px" height="36px" style="border-radius: 50%;" />
+              <q-skeleton type="QBtn" width="80px" height="36px" style="border-radius: 8px;" />
+            </div>
+          </div>
+          <!-- Tabs skeleton -->
+          <div class="row q-gutter-md q-mb-md">
+            <q-skeleton v-for="t in 4" :key="t" type="text" width="100px" style="height: 20px;" />
+          </div>
+          <q-separator class="q-mb-lg" />
+          <!-- Stat cards -->
+          <div class="row q-col-gutter-md q-mb-lg">
+            <div v-for="s in 4" :key="s" class="col-6 col-md-3">
+              <q-skeleton style="height: 80px; border-radius: 12px;" />
+            </div>
+          </div>
+          <!-- Table skeleton -->
+          <q-skeleton style="height: 320px; border-radius: 12px;" />
+        </div>
+
+        <div v-if="activeTab === 'donations' && selectedWallet && !loadingDonations" class="wallet-details">
           <div class="row items-center justify-between q-mb-lg flex-wrap">
             <h4 class="q-my-none col-12 col-sm-auto">{{ selectedWallet.name }}</h4>
             <div class="col-12 col-sm-auto q-mt-sm q-mt-sm-none">
@@ -615,7 +660,7 @@
         </div>
 
        
-        <div v-if="activeTab === 'activity'" class="activity-view">
+        <div v-if="activeTab === 'activity' && !loadingDonations" class="activity-view">
           <div class="row items-center justify-between q-mb-lg activity-view__header">
             <h4 class="q-my-none activity-heading">Donation Activity</h4>
             <div class="activity-view__actions">
@@ -1063,6 +1108,8 @@ import transactionImg from 'src/assets/transaction.png'
 
 const $q = useQuasar()
 const donationStore = useDonationStore()
+
+const loadingDonations = ref(true)
 
 const recipientDetailDialog = ref({
   open: false,
@@ -1959,7 +2006,12 @@ watch(
 // ─────────────────────────────────────────────────────────────────────────────
 
 onMounted(async () => {
-  await donationStore.fetchDonations(50)
+  loadingDonations.value = true
+  await Promise.all([
+    donationStore.fetchDonations(50),
+    new Promise((resolve) => setTimeout(resolve, 600)),
+  ])
+  loadingDonations.value = false
   console.log('DonorPage mounted')
   await nextTick()
   build3dScatter()

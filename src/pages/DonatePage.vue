@@ -1454,6 +1454,70 @@ const submitDonation = async () => {
 </script>
 
 <style scoped>
+/* ── Glassmorphism panels ────────────────────────────────────── */
+.donation-form-panel {
+  background: rgba(255, 255, 255, 0.60);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border: 2px solid #1565c0;
+  border-radius: 20px;
+  box-shadow:
+    0 2px 0 rgba(21, 101, 192, 0.12),
+    0 8px 32px rgba(30, 40, 80, 0.14),
+    0 16px 48px rgba(30, 40, 80, 0.08);
+  padding: 28px;
+  transition: box-shadow 0.25s ease, transform 0.25s ease;
+}
+.donation-form-panel:hover {
+  box-shadow:
+    0 2px 0 rgba(21, 101, 192, 0.18),
+    0 12px 40px rgba(30, 40, 80, 0.18),
+    0 24px 60px rgba(30, 40, 80, 0.10);
+  transform: translateY(-3px);
+}
+
+.donation-summary-panel {
+  background: rgba(255, 255, 255, 0.60);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border: 2px solid #1565c0;
+  border-radius: 20px;
+  box-shadow:
+    0 2px 0 rgba(21, 101, 192, 0.12),
+    0 8px 32px rgba(30, 40, 80, 0.14),
+    0 16px 48px rgba(30, 40, 80, 0.08);
+  padding: 28px;
+  transition: box-shadow 0.25s ease, transform 0.25s ease;
+}
+.donation-summary-panel:hover {
+  box-shadow:
+    0 2px 0 rgba(21, 101, 192, 0.18),
+    0 12px 40px rgba(30, 40, 80, 0.18),
+    0 24px 60px rgba(30, 40, 80, 0.10);
+  transform: translateY(-3px);
+}
+
+/* Dark mode */
+.body--dark .donation-form-panel,
+.body--dark .donation-summary-panel {
+  background: rgba(20, 24, 40, 0.65);
+  backdrop-filter: blur(20px) saturate(160%);
+  -webkit-backdrop-filter: blur(20px) saturate(160%);
+  border: 2px solid #42a5f5;
+  box-shadow:
+    0 2px 0 rgba(66, 165, 245, 0.12),
+    0 8px 32px rgba(0, 0, 0, 0.4),
+    0 16px 48px rgba(0, 0, 0, 0.22);
+}
+.body--dark .donation-form-panel:hover,
+.body--dark .donation-summary-panel:hover {
+  box-shadow:
+    0 2px 0 rgba(66, 165, 245, 0.2),
+    0 12px 40px rgba(0, 0, 0, 0.5),
+    0 24px 60px rgba(0, 0, 0, 0.28);
+  transform: translateY(-3px);
+}
+
 .donation-status {
   font-size: 0.86rem;
   color: #1f7a1f;

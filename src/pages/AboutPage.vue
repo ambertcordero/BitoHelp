@@ -103,7 +103,7 @@
 
           <!-- Card 1 -->
           <div class="col-12 col-sm-6 col-md-3">
-            <div class="team-card">
+            <div class="team-card" :class="{ 'card--active': selectedCard === 'team1' }" @click="selectedCard = selectedCard === 'team1' ? null : 'team1'">
               <div class="team-card-banner" style="background: linear-gradient(135deg, #1565c0, #42a5f5);"></div>
               <div class="team-card-body">
                 <div class="team-avatar" style="background: linear-gradient(135deg, #1565c0, #0d47a1);">
@@ -123,7 +123,7 @@
 
           <!-- Card 2 -->
           <div class="col-12 col-sm-6 col-md-3">
-            <div class="team-card">
+            <div class="team-card" :class="{ 'card--active': selectedCard === 'team2' }" @click="selectedCard = selectedCard === 'team2' ? null : 'team2'">
               <div class="team-card-banner" style="background: linear-gradient(135deg, #2e7d32, #66bb6a);"></div>
               <div class="team-card-body">
                 <div class="team-avatar" style="background: linear-gradient(135deg, #2e7d32, #1b5e20);">
@@ -143,7 +143,7 @@
 
           <!-- Card 3 -->
           <div class="col-12 col-sm-6 col-md-3">
-            <div class="team-card">
+            <div class="team-card" :class="{ 'card--active': selectedCard === 'team3' }" @click="selectedCard = selectedCard === 'team3' ? null : 'team3'">
               <div class="team-card-banner" style="background: linear-gradient(135deg, #e65100, #ff8a65);"></div>
               <div class="team-card-body">
                 <div class="team-avatar" style="background: linear-gradient(135deg, #e65100, #bf360c);">
@@ -163,7 +163,7 @@
 
           <!-- Card 4 -->
           <div class="col-12 col-sm-6 col-md-3">
-            <div class="team-card">
+            <div class="team-card" :class="{ 'card--active': selectedCard === 'team4' }" @click="selectedCard = selectedCard === 'team4' ? null : 'team4'">
               <div class="team-card-banner" style="background: linear-gradient(135deg, #6a1b9a, #ce93d8);"></div>
               <div class="team-card-body">
                 <div class="team-avatar" style="background: linear-gradient(135deg, #6a1b9a, #4a148c);">
@@ -194,7 +194,7 @@
 
         <div class="row q-col-gutter-lg q-mb-xl">
           <div class="col-12 col-md-4">
-            <div class="metric-card">
+            <div class="metric-card" :class="{ 'card--active': selectedCard === 'metric1' }" @click="selectedCard = selectedCard === 'metric1' ? null : 'metric1'">
               <div class="metric-number text-primary">500+</div>
               <div class="metric-label">Donations Processed</div>
               <div class="metric-description">Transactions recorded on Bitcoin Cash blockchain</div>
@@ -206,7 +206,7 @@
           </div>
 
           <div class="col-12 col-md-4">
-            <div class="metric-card">
+            <div class="metric-card" :class="{ 'card--active': selectedCard === 'metric2' }" @click="selectedCard = selectedCard === 'metric2' ? null : 'metric2'">
               <div class="metric-number text-positive">30+</div>
               <div class="metric-label">Verified Charities</div>
               <div class="metric-description">Nonprofits registered and verified on the platform</div>
@@ -218,7 +218,7 @@
           </div>
 
           <div class="col-12 col-md-4">
-            <div class="metric-card">
+            <div class="metric-card" :class="{ 'card--active': selectedCard === 'metric3' }" @click="selectedCard = selectedCard === 'metric3' ? null : 'metric3'">
               <div class="metric-number text-secondary">100%</div>
               <div class="metric-label">On-Chain Transparency</div>
               <div class="metric-description">Every donation has a verifiable transaction ID</div>
@@ -233,7 +233,7 @@
         <!-- Impact stories -->
         <div class="row q-col-gutter-lg">
           <div class="col-12 col-md-6">
-            <div class="impact-story-card">
+            <div class="impact-story-card" :class="{ 'card--active': selectedCard === 'story1' }" @click="selectedCard = selectedCard === 'story1' ? null : 'story1'">
               <div class="row q-col-gutter-md items-center">
                 <div class="col-4">
                   <div class="story-image">
@@ -252,7 +252,7 @@
           </div>
 
           <div class="col-12 col-md-6">
-            <div class="impact-story-card">
+            <div class="impact-story-card" :class="{ 'card--active': selectedCard === 'story2' }" @click="selectedCard = selectedCard === 'story2' ? null : 'story2'">
               <div class="row q-col-gutter-md items-center">
                 <div class="col-4">
                   <div class="story-image">
@@ -271,7 +271,7 @@
           </div>
 
           <div class="col-12 col-md-6">
-            <div class="impact-story-card">
+            <div class="impact-story-card" :class="{ 'card--active': selectedCard === 'story3' }" @click="selectedCard = selectedCard === 'story3' ? null : 'story3'">
               <div class="row q-col-gutter-md items-center">
                 <div class="col-4">
                   <div class="story-image">
@@ -290,7 +290,7 @@
           </div>
 
           <div class="col-12 col-md-6">
-            <div class="impact-story-card">
+            <div class="impact-story-card" :class="{ 'card--active': selectedCard === 'story4' }" @click="selectedCard = selectedCard === 'story4' ? null : 'story4'">
               <div class="row q-col-gutter-md items-center">
                 <div class="col-4">
                   <div class="story-image">
@@ -337,8 +337,10 @@
 </template>
 
 <script setup>
-import { onMounted } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
+
+const selectedCard = ref(null)
 
 const route = useRoute()
 
@@ -537,8 +539,16 @@ onMounted(() => {
   background: white;
   border-radius: 16px;
   padding: 28px;
-  border: 1px solid #e0e0e0;
+  border: 1.5px solid #e0e0e0;
   height: 100%;
+  cursor: pointer;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.08), 0 1px 4px rgba(0,0,0,0.04);
+  transition: box-shadow 0.2s ease, transform 0.2s ease, border-color 0.2s ease;
+  user-select: none;
+}
+.metric-card:hover {
+  box-shadow: 0 8px 28px rgba(0,0,0,0.13), 0 2px 8px rgba(0,0,0,0.07);
+  transform: translateY(-3px);
 }
 
 .metric-number {
@@ -573,8 +583,16 @@ onMounted(() => {
   background: white;
   border-radius: 16px;
   padding: 20px;
-  border: 1px solid #e0e0e0;
+  border: 1.5px solid #e0e0e0;
   margin-bottom: 8px;
+  cursor: pointer;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.08), 0 1px 4px rgba(0,0,0,0.04);
+  transition: box-shadow 0.2s ease, transform 0.2s ease, border-color 0.2s ease;
+  user-select: none;
+}
+.impact-story-card:hover {
+  box-shadow: 0 8px 28px rgba(0,0,0,0.13), 0 2px 8px rgba(0,0,0,0.07);
+  transform: translateY(-3px);
 }
 
 .story-image {
@@ -601,6 +619,17 @@ onMounted(() => {
   padding: 32px 36px;
 }
 
+/* Active card blue border (shared) */
+.card--active {
+  border-color: #1565c0 !important;
+  box-shadow: 0 0 0 3px rgba(21,101,192,0.18), 0 8px 28px rgba(0,0,0,0.13) !important;
+  transform: translateY(-3px);
+}
+.body--dark .card--active {
+  border-color: #42a5f5 !important;
+  box-shadow: 0 0 0 3px rgba(66,165,245,0.22), 0 8px 28px rgba(0,0,0,0.4) !important;
+}
+
 /* ── Dark Mode ──────────────────────────────────────────────── */
 .body--dark .about-page {
   background: #0d1117;
@@ -625,10 +654,11 @@ onMounted(() => {
 .body--dark .team-card {
   background: #1e2a3a;
   border-color: rgba(255, 255, 255, 0.08);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.25), 0 1px 4px rgba(0,0,0,0.15);
 }
 
 .body--dark .team-card:hover {
-  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 8px 28px rgba(0,0,0,0.4), 0 2px 8px rgba(0,0,0,0.2);
 }
 
 .body--dark .team-card-body .team-avatar {
@@ -659,7 +689,11 @@ onMounted(() => {
 
 .body--dark .metric-card {
   background: #1e2a3a;
-  border-color: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255,255,255,0.08);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.25), 0 1px 4px rgba(0,0,0,0.15);
+}
+.body--dark .metric-card:hover {
+  box-shadow: 0 8px 28px rgba(0,0,0,0.4), 0 2px 8px rgba(0,0,0,0.2);
 }
 
 .body--dark .metric-label {
@@ -672,7 +706,11 @@ onMounted(() => {
 
 .body--dark .impact-story-card {
   background: #1e2a3a;
-  border-color: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255,255,255,0.08);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.25), 0 1px 4px rgba(0,0,0,0.15);
+}
+.body--dark .impact-story-card:hover {
+  box-shadow: 0 8px 28px rgba(0,0,0,0.4), 0 2px 8px rgba(0,0,0,0.2);
 }
 
 .body--dark .impact-cta-section {

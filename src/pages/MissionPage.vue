@@ -96,19 +96,19 @@
         <!-- Stats ini -->
         <div class="row q-col-gutter-md q-mt-xl q-pt-xl">
           <div class="col-12 col-sm-4 text-center">
-            <div class="stat-card q-pa-md">
+            <div class="stat-card q-pa-md" :class="{ 'card--active': selectedCard === 'stat1' }" @click="selectedCard = selectedCard === 'stat1' ? null : 'stat1'">
               <div class="text-h3 text-weight-bold text-primary">500+</div>
               <div class="text-subtitle1 text-grey-7">Donations Processed</div>
             </div>
           </div>
           <div class="col-12 col-sm-4 text-center">
-            <div class="stat-card q-pa-md">
+            <div class="stat-card q-pa-md" :class="{ 'card--active': selectedCard === 'stat2' }" @click="selectedCard = selectedCard === 'stat2' ? null : 'stat2'">
               <div class="text-h3 text-weight-bold text-positive">30+</div>
               <div class="text-subtitle1 text-grey-7">Verified Charities</div>
             </div>
           </div>
           <div class="col-12 col-sm-4 text-center">
-            <div class="stat-card q-pa-md">
+            <div class="stat-card q-pa-md" :class="{ 'card--active': selectedCard === 'stat3' }" @click="selectedCard = selectedCard === 'stat3' ? null : 'stat3'">
               <div class="text-h3 text-weight-bold text-secondary">100%</div>
               <div class="text-subtitle1 text-grey-7">On-Chain Verified</div>
             </div>
@@ -133,7 +133,7 @@
 
         <div class="row q-col-gutter-lg">
           <div class="col-12 col-md-6">
-            <div class="howit-card">
+            <div class="howit-card" :class="{ 'card--active': selectedCard === 'how1' }" @click="selectedCard = selectedCard === 'how1' ? null : 'how1'">
               <div class="howit-number">01</div>
               <h3 class="text-h5 text-weight-bold q-mb-sm">Connect Your Wallet</h3>
               <p class="text-body1 text-grey-8" style="line-height: 1.7">
@@ -149,7 +149,7 @@
           </div>
 
           <div class="col-12 col-md-6">
-            <div class="howit-card">
+            <div class="howit-card" :class="{ 'card--active': selectedCard === 'how2' }" @click="selectedCard = selectedCard === 'how2' ? null : 'how2'">
               <div class="howit-number">02</div>
               <h3 class="text-h5 text-weight-bold q-mb-sm">Choose a Cause</h3>
               <p class="text-body1 text-grey-8" style="line-height: 1.7">
@@ -165,7 +165,7 @@
           </div>
 
           <div class="col-12 col-md-6">
-            <div class="howit-card">
+            <div class="howit-card" :class="{ 'card--active': selectedCard === 'how3' }" @click="selectedCard = selectedCard === 'how3' ? null : 'how3'">
               <div class="howit-number">03</div>
               <h3 class="text-h5 text-weight-bold q-mb-sm">Send BCH</h3>
               <p class="text-body1 text-grey-8" style="line-height: 1.7">
@@ -186,7 +186,7 @@
           </div>
 
           <div class="col-12 col-md-6">
-            <div class="howit-card">
+            <div class="howit-card" :class="{ 'card--active': selectedCard === 'how4' }" @click="selectedCard = selectedCard === 'how4' ? null : 'how4'">
               <div class="howit-number">04</div>
               <h3 class="text-h5 text-weight-bold q-mb-sm">Track Your Impact</h3>
               <p class="text-body1 text-grey-8" style="line-height: 1.7">
@@ -211,7 +211,7 @@
         <h3 class="text-h5 text-weight-bold q-mb-lg">Where Your Donations Make an Impact</h3>
         <div class="row q-col-gutter-md">
           <div class="col-12 col-sm-6 col-md-3">
-            <div class="cause-area-card">
+            <div class="cause-area-card" :class="{ 'card--active': selectedCard === 'cause1' }" @click="selectedCard = selectedCard === 'cause1' ? null : 'cause1'">
               <div class="cause-icon-wrapper q-mb-sm">
                 <img src="~assets/scholar.jpg" alt="Education" class="cause-image" />
               </div>
@@ -220,7 +220,7 @@
             </div>
           </div>
           <div class="col-12 col-sm-6 col-md-3">
-            <div class="cause-area-card">
+            <div class="cause-area-card" :class="{ 'card--active': selectedCard === 'cause2' }" @click="selectedCard = selectedCard === 'cause2' ? null : 'cause2'">
               <div class="cause-icon-wrapper q-mb-sm">
                 <img src="~assets/medical.jpg" alt="Healthcare" class="cause-image" />
               </div>
@@ -229,7 +229,7 @@
             </div>
           </div>
           <div class="col-12 col-sm-6 col-md-3">
-            <div class="cause-area-card">
+            <div class="cause-area-card" :class="{ 'card--active': selectedCard === 'cause3' }" @click="selectedCard = selectedCard === 'cause3' ? null : 'cause3'">
               <div class="cause-icon-wrapper q-mb-sm">
                 <img src="~assets/typhoon.jpeg" alt="Disaster Relief" class="cause-image" />
               </div>
@@ -238,7 +238,7 @@
             </div>
           </div>
           <div class="col-12 col-sm-6 col-md-3">
-            <div class="cause-area-card">
+            <div class="cause-area-card" :class="{ 'card--active': selectedCard === 'cause4' }" @click="selectedCard = selectedCard === 'cause4' ? null : 'cause4'">
               <div class="cause-icon-wrapper q-mb-sm">
                 <img src="~assets/community.jpg" alt="Community" class="cause-image" />
               </div>
@@ -275,6 +275,8 @@
 </template>
 
 <script setup>
+import { ref } from 'vue'
+const selectedCard = ref(null)
 </script>
 
 <style scoped>
@@ -356,9 +358,17 @@
 
 /* Stats */
 .stat-card {
-  border: 1px solid #e0e0e0;
+  border: 1.5px solid #e0e0e0;
   border-radius: 16px;
   background: white;
+  cursor: pointer;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.08), 0 1px 4px rgba(0,0,0,0.04);
+  transition: box-shadow 0.2s ease, transform 0.2s ease, border-color 0.2s ease;
+  user-select: none;
+}
+.stat-card:hover {
+  box-shadow: 0 8px 28px rgba(0,0,0,0.13), 0 2px 8px rgba(0,0,0,0.07);
+  transform: translateY(-3px);
 }
 
 /* How It Works */
@@ -372,6 +382,14 @@
   border-radius: 16px;
   background: white;
   height: 100%;
+  cursor: pointer;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.08), 0 1px 4px rgba(0,0,0,0.04);
+  transition: box-shadow 0.2s ease, transform 0.2s ease, border-color 0.2s ease;
+  user-select: none;
+}
+.howit-card:hover {
+  box-shadow: 0 8px 28px rgba(0,0,0,0.13), 0 2px 8px rgba(0,0,0,0.07);
+  transform: translateY(-3px);
 }
 
 .howit-number {
@@ -394,7 +412,15 @@
   border-radius: 16px;
   padding: 16px;
   text-align: center;
-  border: 1px solid #e0e0e0;
+  border: 1.5px solid #e0e0e0;
+  cursor: pointer;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.08), 0 1px 4px rgba(0,0,0,0.04);
+  transition: box-shadow 0.2s ease, transform 0.2s ease, border-color 0.2s ease;
+  user-select: none;
+}
+.cause-area-card:hover {
+  box-shadow: 0 8px 28px rgba(0,0,0,0.13), 0 2px 8px rgba(0,0,0,0.07);
+  transform: translateY(-3px);
 }
 
 .cause-icon-wrapper {
@@ -417,6 +443,17 @@
   padding: 32px 36px;
 }
 
+/* Active card blue border (shared) */
+.card--active {
+  border-color: #1565c0 !important;
+  box-shadow: 0 0 0 3px rgba(21,101,192,0.18), 0 8px 28px rgba(0,0,0,0.13) !important;
+  transform: translateY(-3px);
+}
+.body--dark .card--active {
+  border-color: #42a5f5 !important;
+  box-shadow: 0 0 0 3px rgba(66,165,245,0.22), 0 8px 28px rgba(0,0,0,0.4) !important;
+}
+
 /* ── Dark Mode ──────────────────────────────────────────────── */
 .body--dark .mission-page {
   background: #0d1117;
@@ -425,7 +462,11 @@
 /* What We Stand For section */
 .body--dark .stat-card {
   background: #1e2a3a;
-  border-color: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255,255,255,0.08);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.25), 0 1px 4px rgba(0,0,0,0.15);
+}
+.body--dark .stat-card:hover {
+  box-shadow: 0 8px 28px rgba(0,0,0,0.4), 0 2px 8px rgba(0,0,0,0.2);
 }
 
 /* How It Works */
@@ -435,7 +476,11 @@
 
 .body--dark .howit-card {
   background: #1e2a3a;
-  border-color: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255,255,255,0.08);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.25), 0 1px 4px rgba(0,0,0,0.15);
+}
+.body--dark .howit-card:hover {
+  box-shadow: 0 8px 28px rgba(0,0,0,0.4), 0 2px 8px rgba(0,0,0,0.2);
 }
 
 .body--dark .howit-number {
@@ -449,7 +494,11 @@
 
 .body--dark .cause-area-card {
   background: #1e2a3a;
-  border-color: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255,255,255,0.08);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.25), 0 1px 4px rgba(0,0,0,0.15);
+}
+.body--dark .cause-area-card:hover {
+  box-shadow: 0 8px 28px rgba(0,0,0,0.4), 0 2px 8px rgba(0,0,0,0.2);
 }
 
 /* CTA */
