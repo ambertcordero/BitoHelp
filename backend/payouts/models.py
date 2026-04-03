@@ -31,7 +31,7 @@ class PayoutApproval(models.Model):
     )
 
     # Donor info
-    donor_email = models.EmailField()
+    donor_email = models.EmailField(blank=True)
     donor_name = models.CharField(max_length=255, blank=True)
 
     # Payout details

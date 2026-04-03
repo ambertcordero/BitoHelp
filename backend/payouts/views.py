@@ -59,12 +59,24 @@ def request_approval(request):
     Frontend calls this to create a pending approval and trigger the email.
     """
     data = request.data
-    required = ['donation_id', 'donor_email', 'recipient_address', 'payout_amount_satoshis']
+    # donor_email is only strictly required for inbox_approval mode
+    payout_mode = data.get('payout_mode', 'smart')
+    required = ['donation_id', 'recipient_address', 'payout_amount_satoshis']
+    if payout_mode == 'inbox_approval':
+        required.append('donor_email')
     missing = [f for f in required if not data.get(f)]
     if missing:
         return Response({'error': f'Missing fields: {", ".join(missing)}'}, status=400)
 
     vault_bal = data.get('vault_balance_satoshis')
+
+    # Parse optional due_at ISO string from frontend
+    due_at = None
+    due_at_str = data.get('due_at')
+    if due_at_str:
+        from django.utils.dateparse import parse_datetime
+        due_at = parse_datetime(due_at_str)
+
     approval, raw_token = create_pending_approval(
         donation_id=data['donation_id'],
         donor_email=data['donor_email'],
@@ -78,6 +90,7 @@ def request_approval(request):
         cycle_number=int(data.get('cycle_number', 1)),
         total_cycles=int(data.get('total_cycles', 1)),
         vault_balance_satoshis=int(vault_bal) if vault_bal is not None else None,
+        due_at=due_at,
     )
 
     # Link the donation FK so the dashboard can filter by nonprofit_id.

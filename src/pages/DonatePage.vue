@@ -313,7 +313,7 @@ const WALLET_BALANCE_ADJUST_EVENT = 'bitohelp:wallet-balance-adjust'
 const WALLET_BALANCE_REFRESH_EVENT = 'bitohelp:wallet-balance-refresh'
 const DONATION_SENT_EVENT = 'bitohelp:donation-sent'
 const WALLET_CLIENT_GLOBAL_KEY = '__bitohelpWalletClient__'
-const WALLET_REQUEST_TIMEOUT_MS = 90000
+const WALLET_REQUEST_TIMEOUT_MS = 30000
 const PAYTACA_BCH_CHIPNET_WC_LIMITATION_MESSAGE =
   'Paytaca approved the request but did not return a signed BCH chipnet transaction over WalletConnect. No funds were sent. This appears to be a wallet-side issue.'
 
@@ -717,21 +717,6 @@ const summarizeBchSigningCompatibility = (payload, walletClient) => {
   }
 }
 
-const ensureWalletSessionReachable = async (walletClient, timeoutMs = 10000) => {
-  if (typeof walletClient?.ping !== 'function') return true
-  await Promise.race([
-    walletClient.ping(),
-    new Promise((_, reject) => {
-      window.setTimeout(() => {
-        reject(
-          new Error('WalletConnect session is not responding. Reconnect wallet and try again.'),
-        )
-      }, timeoutMs)
-    }),
-  ])
-  return true
-}
-
 const validateBchWalletSession = (walletClient, chainId) => {
   const summary = getWalletSessionSummary(walletClient)
   const normalizedAddress = normalizeChipnetAddress(summary.address)
@@ -766,22 +751,72 @@ const executeWalletRequest = async (walletClient, chainId, method, candidatePara
       if (import.meta.env.DEV) {
         console.info('[BitoHelp][donation-request:start]', { method, chainId, params })
       }
-      const response = await Promise.race([
-        walletClient.request({ chainId, request: { method, params } }),
-        new Promise((_, reject) => {
-          window.setTimeout(
-            () => reject(new Error('Wallet approval request timed out.')),
-            WALLET_REQUEST_TIMEOUT_MS,
+
+      // Capture request ID in parallel (not blocking) — needed for history fallback.
+      let capturedRequestId = null
+      if (typeof walletClient?.waitForRequestSent === 'function') {
+        walletClient.waitForRequestSent(method, 8000).then((rec) => {
+          capturedRequestId = rec?.id ?? null
+        })
+      }
+
+      // Fire the request immediately — relay timeout races from this point.
+      const requestPromise = walletClient.request({ chainId, request: { method, params } })
+
+      let response
+      try {
+        response = await Promise.race([
+          requestPromise,
+          new Promise((_, reject) =>
+            window.setTimeout(() => reject(new Error('RELAY_TIMEOUT')), WALLET_REQUEST_TIMEOUT_MS),
+          ),
+        ])
+      } catch (relayError) {
+        if (relayError?.message !== 'RELAY_TIMEOUT') throw relayError
+
+        // Relay timed out delivering the response. The WalletConnect SDK stores
+        // responses in its local history even when relay delivery fails — poll it.
+        if (capturedRequestId !== null && typeof walletClient?.getHistoryRecord === 'function') {
+          if (import.meta.env.DEV) {
+            console.warn(
+              '[BitoHelp][donation-request:relay-drop] Polling history for id:',
+              capturedRequestId,
+            )
+          }
+          const deadline = Date.now() + 20000
+          while (Date.now() < deadline) {
+            await new Promise((r) => window.setTimeout(r, 1500))
+            const record = await walletClient.getHistoryRecord(capturedRequestId)
+            if (record?.response?.result !== undefined) {
+              if (import.meta.env.DEV) {
+                console.info('[BitoHelp][donation-request:history-recovered]', record.response.result)
+              }
+              response = record.response.result
+              break
+            }
+            if (record?.response?.error) {
+              throw new Error(
+                record.response.error?.message ||
+                  record.response.error?.reason ||
+                  'Wallet rejected the request.',
+              )
+            }
+          }
+        }
+
+        if (response === undefined) {
+          throw new Error(
+            'Wallet accepted but the relay did not deliver the response. Please try again.',
           )
-        }),
-      ])
+        }
+      }
+
       if (import.meta.env.DEV) {
         console.info('[BitoHelp][donation-request:success]', { method, response })
       }
       return response
     } catch (error) {
       lastError = error
-      if (/timed out/i.test(String(error?.message || ''))) break
     }
   }
   throw lastError || new Error(`Wallet did not accept ${method} request.`)
@@ -880,8 +915,6 @@ const signBchTransactionWithWalletConnect = async ({ walletClient, chainId, sign
     validateBchWalletSession(walletClient, resolvedChainId)
   }
 
-  await ensureWalletSessionReachable(walletClient)
-
   try {
     return await executeWalletRequest(walletClient, resolvedChainId, 'bch_signTransaction', [
       signingPayload,
@@ -977,7 +1010,7 @@ const runChipnetBchDonationFlow = async ({
 
   submissionStatus.value = {
     type: '',
-    message: 'Waiting for wallet signature... confirm in Paytaca.',
+    message: 'Waiting for wallet signature... confirm in Paytaca. (May take a moment after accepting)',
   }
 
   const signedResult = await signBchTransactionWithWalletConnect({
@@ -986,9 +1019,9 @@ const runChipnetBchDonationFlow = async ({
     signingPayload,
   })
 
-  const { rawTxHex, signedTxid } = extractWalletSignedTransaction(signedResult)
+  submissionStatus.value = { type: '', message: 'Signature received. Broadcasting to Chipnet...' }
 
-  submissionStatus.value = { type: '', message: 'Broadcasting signed transaction to Chipnet...' }
+  const { rawTxHex, signedTxid } = extractWalletSignedTransaction(signedResult)
 
   const broadcast = await broadcastRawTransaction({ rawTxHex })
 
@@ -1317,7 +1350,7 @@ const submitDonation = async () => {
     try {
       const matchedNp = nonprofits.value.find((np) => np.name === form.value.organization)
       const explorerUrl = txReference ? `https://chipnet.chaingraph.cash/tx/${txReference}` : ''
-      await api.post('donations/', {
+      const donationRes = await api.post('donations/', {
         txid: txReference,
         recipient: form.value.recipientAddress,
         amount: depositCoin,
@@ -1331,8 +1364,39 @@ const submitDonation = async () => {
         nonprofit: matchedNp?.id,
         contract: vaultAddr,
         interval: form.value.interval,
+        interval_blocks: intervalBlocks,
         payout_mode: payoutMode.value,
       })
+
+      // Schedule all payout cycles in the backend so the dashboard
+      // can display them in Pending Withdrawals and show the Withdraw button.
+      if (selectedCoin === 'BCH' && withdrawalSatoshis && intervalBlocks) {
+        const savedDonationId = donationRes?.data?.id
+        const feeSats = BigInt(VAULT_MINER_FEE_SATS)
+        const costPerCycle = withdrawalSatoshis + feeSats
+        const totalCycles = costPerCycle > 0n ? Number(depositSatoshis / costPerCycle) : 0
+        const intervalMs = Number(intervalBlocks) * 10 * 60 * 1000
+
+        for (let cycle = 1; cycle <= totalCycles; cycle++) {
+          const dueAt = new Date(Date.now() + cycle * intervalMs).toISOString()
+          // best-effort — don't block on failures
+          api.post('payouts/request/', {
+            donation_id: savedDonationId ?? donationId,
+            donor_email: form.value.email || '',
+            donor_name: form.value.name || 'Anonymous',
+            recipient_address: form.value.recipientAddress,
+            vault_address: vaultAddr,
+            payout_amount_satoshis: Number(withdrawalSatoshis),
+            coin: form.value.coin,
+            interval_label: form.value.interval,
+            interval_blocks: intervalBlocks,
+            cycle_number: cycle,
+            total_cycles: totalCycles,
+            due_at: dueAt,
+            payout_mode: payoutMode.value,
+          }).catch(() => { /* best-effort */ })
+        }
+      }
     } catch {
       /* backend save is best-effort */
     }

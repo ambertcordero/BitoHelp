@@ -468,7 +468,7 @@
           <!-- Brand strip -->
           <div class="mobile-drawer-footer__brand">
             <svg viewBox="0 0 24 24" fill="#f7931a" width="14" height="14"><path d="M23.638 14.904c-1.602 6.43-8.113 10.34-14.542 8.736C2.67 22.05-1.244 15.525.362 9.105 1.962 2.67 8.475-1.243 14.9.358c6.43 1.605 10.342 8.115 8.738 14.546z"/></svg>
-            <span>Powered by Bitcoin Cash</span>
+            <span>Developed by ESSU Student</span>
           </div>
         </div>
 
@@ -560,6 +560,7 @@ const bitcoinLoaderContainer = ref(null)
 let signClient
 let wcModal
 let sessionTopic
+let sessionWatchdogTimer
 let walletLottieAnimation
 let walletLottieTimeout
 let bitcoinLoaderAnimation
@@ -794,7 +795,30 @@ const scheduleBalanceRetry = () => {
 }
 
 // ── Reset state ──
+const stopSessionWatchdog = () => {
+  if (sessionWatchdogTimer) {
+    clearInterval(sessionWatchdogTimer)
+    sessionWatchdogTimer = undefined
+  }
+}
+
+const startSessionWatchdog = (topic) => {
+  stopSessionWatchdog()
+  sessionWatchdogTimer = setInterval(() => {
+    if (!isConnected.value || !signClient || !topic) return
+    // Local session store check — the SDK removes the session when it processes
+    // a session_delete / session_expire event. This catches cases where the
+    // event was processed silently (e.g. on reconnect) without firing our handler.
+    try {
+      signClient.session.get(topic)
+    } catch {
+      resetWalletState()
+    }
+  }, 20000)
+}
+
 const resetWalletState = () => {
+  stopSessionWatchdog()
   clearBalanceRetry()
   isConnected.value = false
   isConnecting.value = false
@@ -998,7 +1022,7 @@ const purgeAllWalletConnectStorage = () => {
   }
 }
 
-const disposeWalletConnectClient = async () => {
+const disposeWalletConnectClient = async (purgeStorage = false) => {
   if (signClient) {
     try {
       await disconnectAllWalletConnectSessions()
@@ -1011,9 +1035,15 @@ const disposeWalletConnectClient = async () => {
       /* optional */
     }
   }
-  signClient = undefined
+  // Do NOT set signClient = undefined — the WalletConnectCore singleton
+  // cannot be re-initialised in the same page lifetime without triggering
+  // "Core is already initialized" and relay decryption failures.
+  // We keep the client alive and just purge sessions/pairings instead.
   walletConnectInitPromise = undefined
-  purgeAllWalletConnectStorage()
+  // Only purge localStorage when fully tearing down (page unmount),
+  // not during reconnect — wiping keys while signClient is alive causes
+  // "failed to process inbound message" errors for stale relay messages.
+  if (purgeStorage) purgeAllWalletConnectStorage()
 }
 
 const disconnectAllWalletConnectSessions = async () => {
@@ -1485,6 +1515,7 @@ const initWalletConnect = async () => {
       sessionTopic = restoredTopic
       isConnected.value = true
       updateFromSession(session)
+      startSessionWatchdog(restoredTopic)
 
       // Verify relay in the background. If unreachable, restart the transport
       // but keep the session — only the wallet or user should trigger a disconnect.
@@ -1510,16 +1541,21 @@ const handleConnect = async () => {
   qrDismissed = false
 
   if (isConnected.value && sessionTopic) {
-    await initWalletConnect()
-    if (!signClient) {
-      walletError.value = 'WalletConnect client failed to initialize.'
-      return
-    }
-    await signClient.disconnect({
-      topic: sessionTopic,
-      reason: { code: 6000, message: 'User disconnected' },
-    })
+    const topicToDisconnect = sessionTopic
+    // Reset UI immediately so the user sees it disconnect instantly
     resetWalletState()
+    // Best-effort: tell the relay to close the session.
+    // We reset first so a relay error doesn't leave the UI stuck "connected".
+    try {
+      if (signClient) {
+        await signClient.disconnect({
+          topic: topicToDisconnect,
+          reason: { code: 6000, message: 'User disconnected' },
+        })
+      }
+    } catch {
+      /* session may already be gone on relay side — ignore */
+    }
     return
   }
 
@@ -1532,7 +1568,7 @@ const handleConnect = async () => {
     let connection
     try {
       connection = await signClient.connect({
-        requiredNamespaces: {
+        optionalNamespaces: {
           bch: {
             methods: ['bch_signMessage', 'bch_signTransaction', 'bch_sendTransaction'],
             chains: bchChains,
@@ -1543,7 +1579,7 @@ const handleConnect = async () => {
     } catch {
       try {
         connection = await signClient.connect({
-          requiredNamespaces: {
+          optionalNamespaces: {
             bch: {
               methods: ['bch_signMessage', 'bch_signTransaction', 'bch_sendTransaction'],
               chains: bchChains,
@@ -1558,7 +1594,7 @@ const handleConnect = async () => {
         })
       } catch {
         connection = await signClient.connect({
-          requiredNamespaces: {
+          optionalNamespaces: {
             eip155: {
               methods: ['eth_getBalance', 'eth_sign', 'personal_sign', 'eth_sendTransaction'],
               chains: evmChains,
@@ -1577,6 +1613,7 @@ const handleConnect = async () => {
     isConnecting.value = false
     isConnected.value = true
     updateFromSession(session)
+    startSessionWatchdog(session.topic)
   } catch {
     const wasDismissed = qrDismissed
     qrDismissed = false
@@ -1778,7 +1815,8 @@ onBeforeUnmount(() => {
   window.removeEventListener(WALLET_BALANCE_REFRESH_EVENT, handleWalletBalanceRefresh)
   if (typeof unsubscribeModalState === 'function') unsubscribeModalState()
   clearBalanceRetry()
-  void disposeWalletConnectClient()
+  stopSessionWatchdog()
+  void disposeWalletConnectClient(true)
   destroyWalletLottie()
   destroyBitcoinLoader()
   if (pollInterval) clearInterval(pollInterval)

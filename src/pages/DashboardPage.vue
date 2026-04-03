@@ -197,7 +197,7 @@
             align="left"
             mobile-arrows
           >
-            <q-tab name="transactions" label="All Donations" />
+            <q-tab name="transactions" label="Withdrawal History" />
             <q-tab name="details" label="Details" />
             <q-tab name="pending" label="Pending Withdrawals" />
           </q-tabs>
@@ -1908,12 +1908,19 @@ const executedColumns = [
   { name: 'payout_status', label: 'Status', field: 'status', align: 'center' },
 ]
 
-// Pending schedule grouped by contract (donation_id), with projected future cycles
+// Pending schedule grouped by contract (donation_id)
+// All cycles are now stored in the backend with their own due_at,
+// so we just display each record directly — no projection needed.
 const pendingScheduleGroups = computed(() => {
   if (!selectedAccount.value) return []
   const { pending } = getAccountSchedule(selectedAccount.value)
   const groups = {}
-  pending.forEach((p) => {
+  const now = new Date()
+
+  // Sort ascending by due_at so cycles are in order
+  const sorted = [...pending].sort((a, b) => new Date(a.due_at) - new Date(b.due_at))
+
+  sorted.forEach((p) => {
     const key = p.donation_id
     if (!groups[key]) {
       groups[key] = {
@@ -1923,31 +1930,45 @@ const pendingScheduleGroups = computed(() => {
         intervalLabel: p.interval_label || '—',
         amountBch: (p.payout_amount_satoshis / 1e8).toFixed(8),
         totalCycles: p.total_cycles,
-        cyclesRemaining: p.total_cycles - p.cycle_number + 1,
-        hasDue: new Date(p.due_at) <= new Date(),
+        cyclesRemaining: 0,
+        hasDue: false,
         payoutId: p.id,
         payoutMode: p.payout_mode,
         cycles: [],
       }
     }
     const pg = groups[key]
-    const intervalMs = p.interval_blocks * 10 * 60 * 1000
-    const baseDue = new Date(p.due_at)
-    const now = new Date()
-    for (let c = p.cycle_number; c <= p.total_cycles; c++) {
-      const dueAt = new Date(baseDue.getTime() + (c - p.cycle_number) * intervalMs)
-      let status = 'scheduled'
-      if (c === p.cycle_number) status = dueAt <= now ? 'due' : 'next'
-      else if (c === p.cycle_number + 1) status = 'upcoming'
-      pg.cycles.push({
-        cycleNumber: c,
-        dueAt,
-        amountBch: (p.payout_amount_satoshis / 1e8).toFixed(8),
-        status,
-        payoutId: c === p.cycle_number ? p.id : null,
-      })
+    const dueAt = new Date(p.due_at)
+    const isDue = dueAt <= now
+
+    if (isDue) {
+      pg.hasDue = true
+      pg.payoutId = p.id // keep last due payout id for sidebar button
     }
+
+    // status: due (past) → next (first future) → upcoming (second future) → scheduled (rest)
+    const futureCycles = pg.cycles.filter(c => c.status !== 'due').length
+    let status = 'scheduled'
+    if (isDue) status = 'due'
+    else if (futureCycles === 0) status = 'next'
+    else if (futureCycles === 1) status = 'upcoming'
+
+    pg.cyclesRemaining = pg.cycles.filter(c => c.status !== 'due').length + (isDue ? 0 : 1)
+
+    pg.cycles.push({
+      cycleNumber: p.cycle_number,
+      dueAt,
+      amountBch: (p.payout_amount_satoshis / 1e8).toFixed(8),
+      status,
+      payoutId: p.id,
+    })
   })
+
+  // Recalculate cyclesRemaining after all records are processed
+  Object.values(groups).forEach((g) => {
+    g.cyclesRemaining = g.cycles.filter(c => c.status !== 'due').length
+  })
+
   return Object.values(groups)
 })
 
@@ -2547,26 +2568,26 @@ const viewTransactionDetails = (transaction) => {
   background: rgba(255, 255, 255, 0.55);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  border-right: 1px solid rgba(255, 255, 255, 0.4);
+  border-right: 1.5px solid rgba(21, 101, 192, 0.14);
   min-height: 100vh;
   padding: 0;
 }
 
 .body--dark .sidebar-container {
   background: rgba(20, 24, 40, 0.6);
-  border-right: 1px solid rgba(255, 255, 255, 0.08);
+  border-right: 1.5px solid rgba(93, 156, 245, 0.14);
 }
 
 .main-content {
   background: rgba(255, 255, 255, 0.6);
   backdrop-filter: blur(18px);
   -webkit-backdrop-filter: blur(18px);
-  border-left: 1px solid rgba(255, 255, 255, 0.5);
+  border-left: 1.5px solid rgba(21, 101, 192, 0.10);
 }
 
 .body--dark .main-content {
   background: rgba(18, 22, 38, 0.65);
-  border-left: 1px solid rgba(255, 255, 255, 0.06);
+  border-left: 1.5px solid rgba(93, 156, 245, 0.12);
 }
 
 .accounts-sidebar {
@@ -2668,15 +2689,22 @@ const viewTransactionDetails = (transaction) => {
 }
 
 .sidebar-title {
-  font-size: 18px;
-  font-weight: 800;
-  color: #1a237e;
+  font-family: 'Space Grotesk', 'Inter', sans-serif;
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: -0.4px;
   line-height: 1.2;
-  letter-spacing: -0.3px;
+  background: linear-gradient(125deg, #0d47a1 0%, #1976d2 55%, #1565c0 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
 .body--dark .sidebar-title {
-  color: #e8eaf6;
+  background: linear-gradient(125deg, #90caf9 0%, #e8eaf6 55%, #bbdefb 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
 .sidebar-subtitle {
@@ -2705,8 +2733,8 @@ const viewTransactionDetails = (transaction) => {
 .detail-skeleton-card {
   background: rgba(255, 255, 255, 0.75);
   border-radius: 14px;
-  border: 1px solid rgba(255, 255, 255, 0.6);
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05);
+  border: 1.5px solid rgba(21, 101, 192, 0.12);
+  box-shadow: 0 2px 10px rgba(21, 101, 192, 0.07);
 }
 .body--dark .detail-skeleton-card {
   background: rgba(30, 36, 60, 0.7);
@@ -2714,28 +2742,35 @@ const viewTransactionDetails = (transaction) => {
 }
 
 .sidebar-account-card {
-  background: rgba(255, 255, 255, 0.75);
+  background: rgba(255, 255, 255, 0.82);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
   border-radius: 14px;
   padding: 14px;
   margin-bottom: 10px;
   cursor: pointer;
-  border: 1.5px solid rgba(255, 255, 255, 0.6);
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
-  transition: all 0.2s ease;
+  border: 1.5px solid #e2e8f0;
+  box-shadow:
+    0 1px 3px rgba(0, 0, 0, 0.07),
+    0 3px 10px rgba(0, 0, 0, 0.06);
+  transition: all 0.22s cubic-bezier(0.34, 1.56, 0.64, 1);
   position: relative;
   overflow: hidden;
 
   &:hover {
     border-color: #90caf9;
-    box-shadow: 0 4px 20px rgba(21, 101, 192, 0.14);
-    transform: translateY(-1px);
+    box-shadow:
+      0 2px 6px rgba(0, 0, 0, 0.08),
+      0 8px 24px rgba(21, 101, 192, 0.18);
+    transform: translateY(-2px);
   }
 
   &.sidebar-account-card--active {
     border-color: #1565c0;
-    box-shadow: 0 4px 20px rgba(21, 101, 192, 0.2);
+    box-shadow:
+      0 0 0 2px rgba(21, 101, 192, 0.18),
+      0 4px 8px rgba(0, 0, 0, 0.08),
+      0 10px 28px rgba(21, 101, 192, 0.22);
 
     .sidebar-card-accent {
       opacity: 1;
@@ -2813,17 +2848,25 @@ const viewTransactionDetails = (transaction) => {
 }
 
 .body--dark .sidebar-account-card {
-  background: rgba(30, 36, 60, 0.7);
-  border-color: rgba(255, 255, 255, 0.08);
+  background: rgba(30, 36, 60, 0.75);
+  border-color: rgba(255, 255, 255, 0.10);
+  box-shadow:
+    0 1px 3px rgba(0, 0, 0, 0.25),
+    0 4px 14px rgba(0, 0, 0, 0.22);
 
   &:hover {
     border-color: #5c8ee0;
-    box-shadow: 0 4px 20px rgba(92, 142, 224, 0.2);
+    box-shadow:
+      0 2px 6px rgba(0, 0, 0, 0.3),
+      0 8px 24px rgba(92, 142, 224, 0.22);
   }
 
   &.sidebar-account-card--active {
     border-color: #5c8ee0;
-    box-shadow: 0 4px 20px rgba(92, 142, 224, 0.25);
+    box-shadow:
+      0 0 0 2px rgba(92, 142, 224, 0.22),
+      0 4px 8px rgba(0, 0, 0, 0.3),
+      0 10px 28px rgba(92, 142, 224, 0.28);
 
     .sidebar-card-accent {
       opacity: 1;
@@ -4019,10 +4062,11 @@ const viewTransactionDetails = (transaction) => {
 .dash-mobile-card {
   width: 100%;
   border-radius: 14px;
-  border: 1px solid rgba(144, 202, 249, 0.35);
-  background: rgba(255, 255, 255, 0.85);
+  border: 1.5px solid rgba(21, 101, 192, 0.16);
+  background: rgba(255, 255, 255, 0.88);
   overflow: hidden;
   margin-bottom: 2px;
+  box-shadow: 0 1px 4px rgba(21, 101, 192, 0.08);
 }
 
 .dash-mobile-card__header {
@@ -4030,7 +4074,7 @@ const viewTransactionDetails = (transaction) => {
   align-items: center;
   justify-content: space-between;
   padding: 11px 14px 8px;
-  border-bottom: 1px solid rgba(144, 202, 249, 0.18);
+  border-bottom: 1.5px solid rgba(21, 101, 192, 0.10);
   gap: 8px;
 }
 
@@ -4095,21 +4139,22 @@ const viewTransactionDetails = (transaction) => {
   justify-content: flex-end;
   gap: 2px;
   padding: 4px 8px 6px;
-  border-top: 1px solid rgba(144, 202, 249, 0.12);
+  border-top: 1.5px solid rgba(21, 101, 192, 0.08);
 }
 
 /* Dark mode */
 .body--dark .dash-mobile-card {
   background: rgba(18, 26, 52, 0.82);
-  border-color: rgba(100, 160, 255, 0.18);
+  border-color: rgba(93, 156, 245, 0.22);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25);
 }
 .body--dark .dash-mobile-card__header {
-  border-bottom-color: rgba(100, 160, 255, 0.1);
+  border-bottom-color: rgba(93, 156, 245, 0.14);
 }
 .body--dark .dash-mobile-card__title { color: #90caf9; }
 .body--dark .dash-mobile-card__label { color: rgba(255, 255, 255, 0.45); }
 .body--dark .dash-mobile-card__value { color: rgba(255, 255, 255, 0.85); }
-.body--dark .dash-mobile-card__footer { border-top-color: rgba(255, 255, 255, 0.07); }
+.body--dark .dash-mobile-card__footer { border-top-color: rgba(93, 156, 245, 0.10); }
 
 /* ── Pending cycles — mobile card ─────────────────────────────── */
 .cycle-mobile-card {

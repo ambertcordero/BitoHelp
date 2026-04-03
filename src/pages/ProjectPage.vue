@@ -201,8 +201,8 @@
     </section>
 
 
-    <q-dialog v-model="showRegisterDialog">
-      <q-card style="min-width: 500px; max-width: 600px; border-radius: 5px;">
+    <q-dialog v-model="showRegisterDialog" :maximized="$q.screen.lt.sm">
+      <q-card class="register-dialog-card">
         <q-card-section class="text-center" style="padding: 24px 24px 16px;">
           <div style="margin-bottom: 16px;">
             <q-icon name="currency_bitcoin" size="48px" color="orange" />
@@ -233,7 +233,7 @@
           </div>
 
           <div class="row q-col-gutter-md form-field">
-            <div class="col-6">
+            <div class="col-12 col-sm-6">
               <label class="field-label">Contact Email</label>
               <q-input
                 v-model="charityForm.email"
@@ -243,10 +243,9 @@
                 placeholder="Enter email address"
               />
             </div>
-            <div class="col-6">
+            <div class="col-12 col-sm-6">
               <label class="field-label">Phone Number</label>
               <q-input
-                v-model="charityForm.phone"
                 outlined
                 dense
                 placeholder="Enter phone number"
@@ -964,6 +963,23 @@ const copyWalletAddress = (address) => {
   }
 }
 
+
+.register-dialog-card {
+  width: 100%;
+  max-width: 600px;
+  border-radius: 12px;
+  overflow-y: auto;
+  max-height: 90vh;
+}
+
+@media (max-width: 599px) {
+  .register-dialog-card {
+    border-radius: 0;
+    max-height: 100dvh;
+    min-height: 100dvh;
+    max-width: 100vw;
+  }
+}
 
 .dialog-title {
   font-size: 24px;

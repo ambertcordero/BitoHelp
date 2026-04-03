@@ -1281,7 +1281,7 @@ const allDonations = computed(() => {
 
 // ── Chart helpers ─────────────────────────────────────────────────────────────
 const chartTextColor = computed(() => $q.dark.isActive ? 'rgba(255,255,255,0.65)' : '#546e7a')
-const chartGridColor  = computed(() => $q.dark.isActive ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.07)')
+const chartGridColor  = computed(() => $q.dark.isActive ? 'rgba(255,255,255,0.10)' : 'rgba(0,0,0,0.18)')
 
 // Line chart: BCH donated over time (last 15 donations sorted by date)
 const lineChartData = computed(() => {
@@ -1878,9 +1878,12 @@ const build3dScatter = async () => {
   const baseTime = new Date(sorted[0].timestamp || sorted[0].date || Date.now()).getTime()
 
   const isDark = $q.dark.isActive
-  const bgColor  = isDark ? 'rgba(18,24,46,0)' : 'rgba(255,255,255,0)'
-  const textColor = isDark ? 'rgba(255,255,255,0.7)' : '#546e7a'
-  const gridColor = isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.12)'
+  // paper_bgcolor / plot_bgcolor are 2-D-only properties; scene.bgcolor controls the GL3D viewport.
+  // WebGL ignores alpha, so we use solid colours to avoid a black scene background.
+  const paperBg    = isDark ? 'rgba(0,0,0,0)'    : 'rgba(0,0,0,0)'
+  const sceneBg    = isDark ? '#12182e'           : '#f8faff'
+  const textColor  = isDark ? 'rgba(255,255,255,0.75)' : '#37474f'
+  const gridColor  = isDark ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.22)'
 
   // Group by cause for separate traces (legend)
   const traces = causeList.map((cause, ci) => {
@@ -1904,8 +1907,8 @@ const build3dScatter = async () => {
   })
 
   const layout = {
-    paper_bgcolor: bgColor,
-    plot_bgcolor:  bgColor,
+    paper_bgcolor: paperBg,
+    plot_bgcolor:  paperBg,
     margin: { l: 0, r: 0, t: 10, b: 0 },
     legend: {
       font: { color: textColor, size: 11 },
@@ -1914,23 +1917,26 @@ const build3dScatter = async () => {
       x: 0, y: -0.05
     },
     scene: {
-      bgcolor: bgColor,
+      bgcolor: sceneBg,
       xaxis: {
         title: { text: 'Days Since First', font: { color: textColor, size: 10 } },
         gridcolor: gridColor, zerolinecolor: gridColor,
-        tickfont: { color: textColor, size: 9 }
+        tickfont: { color: textColor, size: 9 },
+        showbackground: false
       },
       yaxis: {
         title: { text: 'BCH Amount', font: { color: textColor, size: 10 } },
         gridcolor: gridColor, zerolinecolor: gridColor,
-        tickfont: { color: textColor, size: 9 }
+        tickfont: { color: textColor, size: 9 },
+        showbackground: false
       },
       zaxis: {
         title: { text: 'Recipient', font: { color: textColor, size: 10 } },
         gridcolor: gridColor, zerolinecolor: gridColor,
         tickfont: { color: textColor, size: 9 },
         tickvals: recipientNames.map((_, i) => i),
-        ticktext: recipientNames.map(n => n.length > 12 ? n.slice(0, 12) + '…' : n)
+        ticktext: recipientNames.map(n => n.length > 12 ? n.slice(0, 12) + '…' : n),
+        showbackground: false
       }
     }
   }
@@ -1981,22 +1987,24 @@ onMounted(async () => {
   background: rgba(255, 255, 255, 0.55);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  border-right: 1px solid rgba(255, 255, 255, 0.3);
+  border-right: 1.5px solid rgba(21, 101, 192, 0.14);
 }
 
 .body--dark .sidebar-container {
   background: rgba(20, 24, 40, 0.6);
-  border-right: 1px solid rgba(255, 255, 255, 0.08);
+  border-right: 1.5px solid rgba(93, 156, 245, 0.14);
 }
 
 .main-content {
   background: rgba(255, 255, 255, 0.72);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
+  border-left: 1.5px solid rgba(21, 101, 192, 0.10);
 }
 
 .body--dark .main-content {
   background: rgba(18, 24, 46, 0.92);
+  border-left: 1.5px solid rgba(93, 156, 245, 0.12);
 }
 
 .accounts-sidebar {
@@ -2017,16 +2025,18 @@ onMounted(async () => {
 }
 
 .sidebar-account-card {
-  background: rgba(255, 255, 255, 0.75);
+  background: rgba(255, 255, 255, 0.82);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
   border-radius: 14px;
   padding: 14px;
   margin-bottom: 10px;
   cursor: pointer;
-  border: 1.5px solid rgba(255, 255, 255, 0.6);
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
-  transition: all 0.2s ease;
+  border: 1.5px solid #e2e8f0;
+  box-shadow:
+    0 1px 3px rgba(0, 0, 0, 0.07),
+    0 3px 10px rgba(0, 0, 0, 0.06);
+  transition: all 0.22s cubic-bezier(0.34, 1.56, 0.64, 1);
   position: relative;
   overflow: hidden;
 
@@ -2038,8 +2048,10 @@ onMounted(async () => {
 
   &:hover {
     border-color: #90caf9;
-    box-shadow: 0 4px 20px rgba(21, 101, 192, 0.14);
-    transform: translateY(-1px);
+    box-shadow:
+      0 2px 6px rgba(0, 0, 0, 0.08),
+      0 8px 24px rgba(21, 101, 192, 0.18);
+    transform: translateY(-2px);
 
     .sidebar-menu-btn {
       opacity: 1;
@@ -2048,7 +2060,10 @@ onMounted(async () => {
 
   &.sidebar-account-card--active {
     border-color: #1565c0;
-    box-shadow: 0 4px 20px rgba(21, 101, 192, 0.2);
+    box-shadow:
+      0 0 0 2px rgba(21, 101, 192, 0.18),
+      0 4px 8px rgba(0, 0, 0, 0.08),
+      0 10px 28px rgba(21, 101, 192, 0.22);
 
     .sidebar-menu-btn {
       opacity: 1;
@@ -2115,17 +2130,25 @@ onMounted(async () => {
 }
 
 .body--dark .sidebar-account-card {
-  background: rgba(30, 36, 60, 0.7);
-  border-color: rgba(255, 255, 255, 0.08);
+  background: rgba(30, 36, 60, 0.75);
+  border-color: rgba(255, 255, 255, 0.10);
+  box-shadow:
+    0 1px 3px rgba(0, 0, 0, 0.25),
+    0 4px 14px rgba(0, 0, 0, 0.22);
 
   &:hover {
     border-color: #5c8ee0;
-    box-shadow: 0 4px 20px rgba(92, 142, 224, 0.2);
+    box-shadow:
+      0 2px 6px rgba(0, 0, 0, 0.3),
+      0 8px 24px rgba(92, 142, 224, 0.22);
   }
 
   &.sidebar-account-card--active {
     border-color: #5c8ee0;
-    box-shadow: 0 4px 20px rgba(92, 142, 224, 0.25);
+    box-shadow:
+      0 0 0 2px rgba(92, 142, 224, 0.22),
+      0 4px 8px rgba(0, 0, 0, 0.3),
+      0 10px 28px rgba(92, 142, 224, 0.28);
 
     .sidebar-card-accent {
       background: linear-gradient(180deg, #5d9cf5, #7ecbff);
@@ -2385,20 +2408,20 @@ onMounted(async () => {
 
 .wallet-stat-card-blue {
   background: linear-gradient(135deg, #6c85f5dc 0%, #8799f3 100%);
-  border: 4px solid #fffdf9;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+  border: 2px solid rgba(255, 255, 255, 0.5);
+  box-shadow: 0 4px 16px rgba(108, 133, 245, 0.45), 0 1px 4px rgba(0,0,0,0.18);
 }
 
 .wallet-stat-card-purple {
   background: linear-gradient(135deg, #a9a4ffd3 0%, #7e7affd0 100%);
-  border: 4px solid #fffdf9;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+  border: 2px solid rgba(255, 255, 255, 0.5);
+  box-shadow: 0 4px 16px rgba(126, 122, 255, 0.45), 0 1px 4px rgba(0,0,0,0.18);
 }
 
 .wallet-stat-card-yellow {
   background: linear-gradient(135deg, #e3d273d9 0%, #ebcf89e2 100%);
-  border: 4px solid #fffdf9;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+  border: 2px solid rgba(255, 255, 255, 0.5);
+  box-shadow: 0 4px 16px rgba(227, 210, 115, 0.45), 0 1px 4px rgba(0,0,0,0.18);
 }
 
 .wallet-stat-header {
@@ -3144,10 +3167,11 @@ onMounted(async () => {
 .donation-mobile-card {
   width: 100%;
   border-radius: 14px;
-  border: 1px solid rgba(144, 202, 249, 0.35);
-  background: rgba(255, 255, 255, 0.85);
+  border: 1.5px solid rgba(21, 101, 192, 0.16);
+  background: rgba(255, 255, 255, 0.88);
   overflow: hidden;
   margin-bottom: 2px;
+  box-shadow: 0 1px 4px rgba(21, 101, 192, 0.08);
 }
 
 .donation-mobile-card__header {
@@ -3155,7 +3179,7 @@ onMounted(async () => {
   align-items: center;
   justify-content: space-between;
   padding: 11px 14px 8px;
-  border-bottom: 1px solid rgba(144, 202, 249, 0.2);
+  border-bottom: 1.5px solid rgba(21, 101, 192, 0.10);
 }
 
 .donation-mobile-card__recipient {
@@ -3203,17 +3227,18 @@ onMounted(async () => {
   justify-content: flex-end;
   gap: 2px;
   padding: 4px 8px 6px;
-  border-top: 1px solid rgba(144, 202, 249, 0.15);
+  border-top: 1.5px solid rgba(21, 101, 192, 0.08);
 }
 
 /* Dark mode for mobile cards */
 .body--dark .donation-mobile-card {
   background: rgba(18, 26, 52, 0.82);
-  border-color: rgba(100, 160, 255, 0.18);
+  border-color: rgba(93, 156, 245, 0.22);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25);
 }
 
 .body--dark .donation-mobile-card__header {
-  border-bottom-color: rgba(100, 160, 255, 0.12);
+  border-bottom-color: rgba(93, 156, 245, 0.14);
 }
 
 .body--dark .donation-mobile-card__recipient {
@@ -3229,6 +3254,6 @@ onMounted(async () => {
 }
 
 .body--dark .donation-mobile-card__footer {
-  border-top-color: rgba(255, 255, 255, 0.07);
+  border-top-color: rgba(93, 156, 245, 0.10);
 }
 </style>
