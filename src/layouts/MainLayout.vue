@@ -570,7 +570,7 @@ let balanceRetryTimer
 let balanceRetryDelay = 0
 let walletConnectInitPromise
 
-const WALLETCONNECT_SESSION_PING_TIMEOUT_MS = 10000
+const WALLETCONNECT_SESSION_PING_TIMEOUT_MS = 30000
 
 const WALLET_CONNECTED_STORAGE_KEY = 'bitohelp.wallet.connected'
 const WALLET_NAMESPACE_STORAGE_KEY = 'bitohelp.wallet.namespace'
@@ -1417,6 +1417,10 @@ const initWalletConnect = async () => {
       if (!sessionTopic || topic === sessionTopic) resetWalletState()
     })
 
+    signClient.on('session_expire', ({ topic }) => {
+      if (!sessionTopic || topic === sessionTopic) resetWalletState()
+    })
+
     signClient.on('session_event', ({ topic, params }) => {
       if (!sessionTopic || topic !== sessionTopic) return
       if (params?.event?.name === 'accountsChanged') {
@@ -1482,10 +1486,10 @@ const initWalletConnect = async () => {
       isConnected.value = true
       updateFromSession(session)
 
-      // Verify in the background. If unreachable, cleanly disconnect.
+      // Verify relay in the background. If unreachable, restart the transport
+      // but keep the session — only the wallet or user should trigger a disconnect.
       pingWalletConnectSession(restoredTopic).then((isReachable) => {
         if (!isReachable && sessionTopic === restoredTopic) {
-          resetWalletState()
           cleanupInactivePairings({ deletePairings: true })
           restartWalletConnectTransport()
         }
