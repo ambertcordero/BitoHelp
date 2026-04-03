@@ -2692,7 +2692,7 @@ onBeforeUnmount(() => {
   backdrop-filter: blur(24px) saturate(180%);
   -webkit-backdrop-filter: blur(24px) saturate(180%);
   border-left: 1px solid rgba(255, 255, 255, 0.7);
-  border-radius: 20px 0 0 20px;
+  border-radius: 5px 0 0 5px;
   box-shadow: -4px 0 12px rgba(0, 0, 0, 0.08), -16px 0 64px rgba(30, 40, 80, 0.35), -32px 0 80px rgba(30, 40, 80, 0.18);
   overflow: hidden;
 }
