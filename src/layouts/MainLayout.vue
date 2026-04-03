@@ -16,7 +16,7 @@
 
         <div class="nav-menu gt-md">
           <q-btn flat no-caps label="Home" class="nav-item" to="/" />
-          <q-btn flat no-caps label="Mission" class="nav-item" to="/donate" />
+          <q-btn flat no-caps label="Mission" class="nav-item" to="/mission" />
           <q-btn flat no-caps label="Charities" class="nav-item" to="/charities" />
 
           <q-btn flat no-caps class="nav-item">
@@ -29,11 +29,11 @@
                 <q-item clickable v-ripple to="/donate">
                   <q-item-section>Donate Now</q-item-section>
                 </q-item>
-                <q-item clickable v-ripple to="/donate">
-                  <q-item-section>Start Fundraiser</q-item-section>
+                <q-item clickable v-ripple to="/charities">
+                  <q-item-section>Browse Charities</q-item-section>
                 </q-item>
-                <q-item clickable v-ripple to="/donate">
-                  <q-item-section>Volunteer</q-item-section>
+                <q-item clickable v-ripple to="/contact">
+                  <q-item-section>Partner With Us</q-item-section>
                 </q-item>
               </q-list>
             </q-menu>
@@ -46,96 +46,161 @@
             </div>
             <q-menu anchor="bottom left" self="top left">
               <q-list style="min-width: 200px">
-                <q-item clickable v-ripple to="/donate">
+                <q-item clickable v-ripple :to="{ path: '/about', query: { tab: 'story' } }">
                   <q-item-section>Our Story</q-item-section>
                 </q-item>
-                <q-item clickable v-ripple to="/donate">
+                <q-item clickable v-ripple :to="{ path: '/about', query: { tab: 'team' } }">
                   <q-item-section>Team</q-item-section>
                 </q-item>
-                <q-item clickable v-ripple to="/donate">
+                <q-item clickable v-ripple :to="{ path: '/about', query: { tab: 'impact' } }">
                   <q-item-section>Impact Report</q-item-section>
                 </q-item>
               </q-list>
             </q-menu>
           </q-btn>
 
-          <q-btn flat no-caps label="Contact" class="nav-item" to="/donate" />
+          <q-btn flat no-caps label="Contact" class="nav-item" to="/contact" />
         </div>
 
         <q-space />
 
-        <!-- Notification Bell ini !!!-->
-        <q-btn
-          round
-          icon="notifications"
-          flat
-          color="blue"
-          class="q-mr-sm"
-          @click="toggleNotifications"
-        >
-          <q-badge v-if="unreadCount > 0" floating color="red" rounded>{{ unreadCount }}</q-badge>
-          <q-tooltip>Notifications</q-tooltip>
+        <!-- Header Action Buttons (notification, dark toggle, hamburger) -->
+        <div class="header-actions">
 
-          <q-menu>
-            <q-list style="min-width: 350px">
-              <q-item-label header class="text-weight-bold">
-                Notifications
+          <!-- Notification Bell -->
+          <button class="notif-btn" :class="{ 'notif-btn--active': unreadCount > 0 }" @click="onNotifClick" aria-label="Notifications">
+            <span class="notif-btn__badge" v-if="unreadCount > 0">{{ unreadCount > 9 ? '9+' : unreadCount }}</span>
+            <svg viewBox="0 0 24 24" fill="currentColor" class="notif-btn__icon">
+              <path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.63-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.64 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z"/>
+            </svg>
+            <!-- Desktop dropdown -->
+            <q-menu v-if="$q.screen.gt.xs" class="header-notif-menu">
+              <q-list style="min-width: 340px; max-width: 92vw">
+                <q-item-label header class="row items-center justify-between q-py-sm">
+                  <span class="text-weight-bold text-subtitle2">Notifications</span>
+                  <q-btn
+                    v-if="notifications.length > 0"
+                    flat dense size="xs" label="Clear all" color="primary"
+                    @click="clearAllNotifications"
+                  />
+                </q-item-label>
+                <q-separator />
+                <div v-if="notifications.length === 0" class="q-pa-xl text-center">
+                  <q-icon name="notifications_none" size="40px" color="grey-4" />
+                  <div class="text-caption text-grey-5 q-mt-sm">No notifications yet</div>
+                </div>
+                <q-item
+                  v-for="notification in notifications"
+                  :key="notification.id"
+                  clickable v-ripple
+                  @click="markAsRead(notification.id)"
+                  :class="{ 'bg-blue-1': !notification.read }"
+                >
+                  <q-item-section avatar>
+                    <q-avatar
+                      :icon="notification.isCharity ? 'volunteer_activism' : 'check_circle'"
+                      :color="notification.isCharity ? 'green' : 'positive'"
+                      text-color="white"
+                    />
+                  </q-item-section>
+                  <q-item-section>
+                    <q-item-label class="text-weight-medium">{{ notification.title }}</q-item-label>
+                    <q-item-label caption lines="2">{{ notification.message }}</q-item-label>
+                    <q-item-label caption class="text-grey-6">{{ notification.time }}</q-item-label>
+                  </q-item-section>
+                  <q-item-section side>
+                    <q-btn flat dense round icon="close" size="sm" @click.stop="removeNotification(notification.id)" />
+                  </q-item-section>
+                </q-item>
+              </q-list>
+            </q-menu>
+          </button>
+
+          <!-- Dark mode pill toggle switch -->
+          <button
+            class="dark-toggle"
+            :class="{ 'dark-toggle--dark': $q.dark.isActive }"
+            @click="$q.dark.toggle()"
+            :aria-label="$q.dark.isActive ? 'Switch to light mode' : 'Switch to dark mode'"
+            role="switch"
+            :aria-checked="String(!$q.dark.isActive)"
+          >
+            <span class="dark-toggle__knob">
+              <!-- Sun: shown when light mode is active (knob on right) -->
+              <svg v-if="!$q.dark.isActive" viewBox="0 0 24 24" fill="white" class="dark-toggle__icon">
+                <path d="M12 7c-2.76 0-5 2.24-5 5s2.24 5 5 5 5-2.24 5-5-2.24-5-5-5zM2 13h2c.55 0 1-.45 1-1s-.45-1-1-1H2c-.55 0-1 .45-1 1s.45 1 1 1zm18 0h2c.55 0 1-.45 1-1s-.45-1-1-1h-2c-.55 0-1 .45-1 1s.45 1 1 1zM11 2v2c0 .55.45 1 1 1s1-.45 1-1V2c0-.55-.45-1-1-1s-1 .45-1 1zm0 18v2c0 .55.45 1 1 1s1-.45 1-1v-2c0-.55-.45-1-1-1s-1 .45-1 1z"/>
+              </svg>
+              <!-- Moon: shown when dark mode is active (knob on left) -->
+              <svg v-else viewBox="0 0 24 24" fill="white" class="dark-toggle__icon">
+                <path d="M12 3c-4.97 0-9 4.03-9 9s4.03 9 9 9 9-4.03 9-9c0-.46-.04-.92-.1-1.36-.98 1.37-2.58 2.26-4.4 2.26-2.98 0-5.4-2.42-5.4-5.4 0-1.81.89-3.42 2.26-4.4-.44-.06-.9-.1-1.36-.1z"/>
+              </svg>
+            </span>
+          </button>
+
+          <!-- Mobile Menu button — visible on mobile only -->
+          <button class="menu-btn lt-md" @click="mobileMenuOpen = true" aria-label="Open menu">
+            <svg viewBox="0 0 24 24" fill="currentColor" class="menu-btn__icon">
+              <path d="M4 6h16v2H4zm0 5h16v2H4zm0 5h16v2H4z"/>
+            </svg>
+          </button>
+
+        </div>
+
+        <!-- Mobile Notification Bottom Sheet -->
+        <q-dialog v-model="notifSheetOpen" position="bottom" full-width>
+          <q-card class="notif-sheet">
+            <div class="notif-sheet__handle"></div>
+            <div class="notif-sheet__header row items-center justify-between q-px-md q-pt-sm q-pb-xs">
+              <span class="text-weight-bold text-subtitle1">Notifications</span>
+              <div class="row items-center gap-xs">
                 <q-btn
                   v-if="notifications.length > 0"
-                  flat
-                  dense
-                  size="sm"
-                  label="Clear all"
-                  class="float-right"
+                  flat dense size="xs" label="Clear all" color="primary"
                   @click="clearAllNotifications"
                 />
-              </q-item-label>
-
-              <q-separator />
-
-              <div v-if="notifications.length === 0" class="q-pa-md text-center text-grey-6">
-                No notifications yet
+                <q-btn flat dense round icon="close" size="sm" @click="notifSheetOpen = false" />
               </div>
-
-              <q-item
-                v-for="notification in notifications"
-                :key="notification.id"
-                clickable
-                v-ripple
-                @click="markAsRead(notification.id)"
-                :class="{ 'bg-blue-1': !notification.read }"
-              >
-                <q-item-section avatar>
-                  <q-avatar
-                    :icon="notification.isCharity ? 'volunteer_activism' : 'check_circle'"
-                    :color="notification.isCharity ? 'green' : 'positive'"
-                    text-color="white"
-                  />
-                </q-item-section>
-
-                <q-item-section>
-                  <q-item-label class="text-weight-medium">{{ notification.title }}</q-item-label>
-                  <q-item-label caption lines="2">{{ notification.message }}</q-item-label>
-                  <q-item-label caption class="text-grey-6">{{ notification.time }}</q-item-label>
-                </q-item-section>
-
-                <q-item-section side>
-                  <q-btn
-                    flat
-                    dense
-                    round
-                    icon="close"
-                    size="sm"
-                    @click.stop="removeNotification(notification.id)"
-                  />
-                </q-item-section>
-              </q-item>
-            </q-list>
-          </q-menu>
-        </q-btn>
+            </div>
+            <q-separator />
+            <div v-if="notifications.length === 0" class="q-pa-xl text-center">
+              <q-icon name="notifications_none" size="48px" color="grey-4" />
+              <div class="text-body2 text-grey-5 q-mt-sm">No notifications yet</div>
+            </div>
+            <q-scroll-area style="max-height: 60vh; min-height: 120px">
+              <q-list>
+                <q-item
+                  v-for="notification in notifications"
+                  :key="notification.id"
+                  clickable v-ripple
+                  @click="markAsRead(notification.id); notifSheetOpen = false"
+                  :class="{ 'bg-blue-1': !notification.read }"
+                >
+                  <q-item-section avatar>
+                    <q-avatar
+                      :icon="notification.isCharity ? 'volunteer_activism' : 'check_circle'"
+                      :color="notification.isCharity ? 'green' : 'positive'"
+                      text-color="white"
+                    />
+                  </q-item-section>
+                  <q-item-section>
+                    <q-item-label class="text-weight-medium">{{ notification.title }}</q-item-label>
+                    <q-item-label caption lines="3">{{ notification.message }}</q-item-label>
+                    <q-item-label caption class="text-grey-6">{{ notification.time }}</q-item-label>
+                  </q-item-section>
+                  <q-item-section side>
+                    <q-btn flat dense round icon="close" size="sm" @click.stop="removeNotification(notification.id)" />
+                  </q-item-section>
+                </q-item>
+              </q-list>
+            </q-scroll-area>
+            <!-- safe area for home indicator -->
+            <div style="height: env(safe-area-inset-bottom, 12px)"></div>
+          </q-card>
+        </q-dialog>
 
         <!-- Wallet Toggle Switch ini !!!-->
-        <div class="topbar__wallet">
+        <!-- Hidden on mobile — wallet is accessible via the center bottom-nav button -->
+        <div class="topbar__wallet gt-sm">
           <div class="topbar__actions">
             <button
               class="wallet-toggle"
@@ -189,30 +254,233 @@
           <p v-if="walletError" class="wallet-error">{{ walletError }}</p>
         </div>
 
-        <!-- Dark mode toggle -->
-        <q-btn
-          flat
-          round
-          :icon="$q.dark.isActive ? 'light_mode' : 'dark_mode'"
-          :color="$q.dark.isActive ? 'yellow' : 'grey-7'"
-          class="q-ml-sm"
-          @click="$q.dark.toggle()"
-        >
-          <q-tooltip>{{ $q.dark.isActive ? 'Light mode' : 'Dark mode' }}</q-tooltip>
-        </q-btn>
-
       </q-toolbar>
     </q-header>
 
-    <q-page-container>
+    <q-page-container class="has-mobile-nav">
       <router-view />
     </q-page-container>
+
+    <!-- Mobile Bottom Nav ini !!!-->
+    <!-- wrapper sits at bottom, provides the floating gap -->
+    <div class="mobile-bottom-nav-wrap lt-md">
+      <!-- the floating pill -->
+      <nav class="mobile-bottom-nav">
+        <router-link to="/" class="mobile-nav-item" active-class="mobile-nav-item--active" exact>
+          <svg class="mobile-nav-svg" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
+          </svg>
+          <span>Home</span>
+        </router-link>
+
+        <router-link to="/charities" class="mobile-nav-item" active-class="mobile-nav-item--active">
+          <svg class="mobile-nav-svg" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+          </svg>
+          <span>Charities</span>
+        </router-link>
+
+        <!-- Center Wallet Button — pops above the pill -->
+        <div class="mobile-nav-wallet">
+          <button
+            class="mobile-wallet-btn"
+            :class="{ 'mobile-wallet-btn--connected': isConnected, 'mobile-wallet-btn--connecting': isConnecting }"
+            @click="handleConnect"
+          >
+            <svg v-if="!isConnected && !isConnecting" viewBox="0 0 24 24" fill="white" width="26" height="26">
+              <path d="M21 18v1a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v1h-9a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h9zm-9-2h10V8H12v8zm4-2.5a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3z"/>
+            </svg>
+            <q-circular-progress v-else-if="isConnecting" indeterminate size="26px" color="white" />
+            <svg v-else viewBox="0 0 24 24" fill="white" width="26" height="26">
+              <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+            </svg>
+          </button>
+          <span class="mobile-nav-wallet-label">{{ isConnected ? 'Connected' : 'Wallet' }}</span>
+        </div>
+
+        <router-link to="/about" class="mobile-nav-item" active-class="mobile-nav-item--active">
+          <svg class="mobile-nav-svg" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/>
+          </svg>
+          <span>About</span>
+        </router-link>
+
+        <router-link to="/donor" class="mobile-nav-item" active-class="mobile-nav-item--active">
+          <svg class="mobile-nav-svg" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+          </svg>
+          <span>Account</span>
+        </router-link>
+      </nav>
+    </div>
+
+    <!-- Mobile Side Drawer ini !!!-->
+    <transition name="mobile-drawer-backdrop">
+      <div
+        v-if="mobileMenuOpen"
+        class="mobile-drawer-backdrop lt-md"
+        @click="mobileMenuOpen = false"
+      />
+    </transition>
+
+    <transition name="mobile-drawer">
+      <aside v-if="mobileMenuOpen" class="mobile-drawer lt-md">
+
+        <!-- Drawer Header -->
+        <div class="mobile-drawer-header">
+          <div class="row items-center no-wrap">
+            <q-avatar size="34px" class="q-mr-sm">
+              <img src="~assets/BitoHelp.png" />
+            </q-avatar>
+            <span class="mobile-drawer-brand">BitoHelp</span>
+          </div>
+          <button class="mobile-drawer-close" @click="mobileMenuOpen = false" aria-label="Close menu">
+            <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20">
+              <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+            </svg>
+          </button>
+        </div>
+
+        <!-- Wallet Hero Card -->
+        <div class="mobile-drawer-wallet-card" :class="{ 'mobile-drawer-wallet-card--connected': isConnected }">
+          <div class="mobile-drawer-wallet-card__inner">
+            <div class="mobile-drawer-wallet-card__left">
+              <div class="mobile-drawer-wallet-status-dot" :class="isConnected ? 'dot--on' : 'dot--off'" />
+              <div>
+                <div class="mobile-drawer-wallet-card__label">{{ isConnected ? 'Wallet Connected' : 'Not Connected' }}</div>
+                <div v-if="isConnected" class="mobile-drawer-wallet-card__balance">{{ formattedBalance }}</div>
+                <div v-if="isConnected" class="mobile-drawer-wallet-card__addr">{{ shortAddress }}</div>
+              </div>
+            </div>
+            <button class="mobile-drawer-wallet-card__btn" @click="handleConnect">
+              <svg v-if="!isConnected" viewBox="0 0 24 24" fill="currentColor" width="16" height="16">
+                <path d="M21 18v1a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v1h-9a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h9zm-9-2h10V8H12v8zm4-2.5a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3z"/>
+              </svg>
+              <svg v-else viewBox="0 0 24 24" fill="currentColor" width="16" height="16">
+                <path d="M13 3h-2v10h2V3zm4.83 2.17l-1.42 1.42C17.99 7.86 19 9.81 19 12c0 3.87-3.13 7-7 7s-7-3.13-7-7c0-2.19 1.01-4.14 2.58-5.42L6.17 5.17C4.23 6.82 3 9.26 3 12c0 4.97 4.03 9 9 9s9-4.03 9-9c0-2.74-1.23-5.18-3.17-6.83z"/>
+              </svg>
+              <span>{{ isConnected ? 'Disconnect' : 'Connect' }}</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Nav body -->
+        <div class="mobile-drawer-body">
+
+          <div class="mobile-drawer-section-label">Main</div>
+
+          <router-link to="/" class="mobile-drawer-item" active-class="mobile-drawer-item--active" exact @click="mobileMenuOpen = false">
+            <div class="mobile-drawer-icon mobile-drawer-icon--blue">
+              <svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+            </div>
+            <span>Home</span>
+            <svg class="mobile-drawer-chevron" viewBox="0 0 24 24" fill="currentColor"><path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6z"/></svg>
+          </router-link>
+
+          <router-link to="/mission" class="mobile-drawer-item" active-class="mobile-drawer-item--active" @click="mobileMenuOpen = false">
+            <div class="mobile-drawer-icon mobile-drawer-icon--amber">
+              <svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
+            </div>
+            <span>Mission</span>
+            <svg class="mobile-drawer-chevron" viewBox="0 0 24 24" fill="currentColor"><path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6z"/></svg>
+          </router-link>
+
+          <router-link to="/charities" class="mobile-drawer-item" active-class="mobile-drawer-item--active" @click="mobileMenuOpen = false">
+            <div class="mobile-drawer-icon mobile-drawer-icon--red">
+              <svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+            </div>
+            <span>Charities</span>
+            <svg class="mobile-drawer-chevron" viewBox="0 0 24 24" fill="currentColor"><path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6z"/></svg>
+          </router-link>
+
+          <div class="mobile-drawer-divider" />
+          <div class="mobile-drawer-section-label">Get Involved</div>
+
+          <router-link to="/donate" class="mobile-drawer-item" active-class="mobile-drawer-item--active" @click="mobileMenuOpen = false">
+            <div class="mobile-drawer-icon mobile-drawer-icon--green">
+              <svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18"><path d="M11.8 10.9c-2.27-.59-3-1.2-3-2.15 0-1.09 1.01-1.85 2.7-1.85 1.78 0 2.44.85 2.5 2.1h2.21c-.07-1.72-1.12-3.3-3.21-3.81V3h-3v2.16c-1.94.42-3.5 1.68-3.5 3.61 0 2.31 1.91 3.46 4.7 4.13 2.5.6 3 1.48 3 2.41 0 .69-.49 1.79-2.7 1.79-2.06 0-2.87-.92-2.98-2.1h-2.2c.12 2.19 1.76 3.42 3.68 3.83V21h3v-2.15c1.95-.37 3.5-1.5 3.5-3.55 0-2.84-2.43-3.81-4.7-4.4z"/></svg>
+            </div>
+            <span>Donate Now</span>
+            <svg class="mobile-drawer-chevron" viewBox="0 0 24 24" fill="currentColor"><path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6z"/></svg>
+          </router-link>
+
+          <router-link to="/projects" class="mobile-drawer-item" active-class="mobile-drawer-item--active" @click="mobileMenuOpen = false">
+            <div class="mobile-drawer-icon mobile-drawer-icon--purple">
+              <svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 3c1.93 0 3.5 1.57 3.5 3.5S13.93 13 12 13s-3.5-1.57-3.5-3.5S10.07 6 12 6zm7 13H5v-.23c0-.62.28-1.2.76-1.58C7.47 15.82 9.64 15 12 15s4.53.82 6.24 2.19c.48.38.76.97.76 1.58V19z"/></svg>
+            </div>
+            <span>Projects</span>
+            <svg class="mobile-drawer-chevron" viewBox="0 0 24 24" fill="currentColor"><path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6z"/></svg>
+          </router-link>
+
+          <div class="mobile-drawer-divider" />
+          <div class="mobile-drawer-section-label">Company</div>
+
+          <router-link to="/about" class="mobile-drawer-item" active-class="mobile-drawer-item--active" @click="mobileMenuOpen = false">
+            <div class="mobile-drawer-icon mobile-drawer-icon--teal">
+              <svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
+            </div>
+            <span>About Us</span>
+            <svg class="mobile-drawer-chevron" viewBox="0 0 24 24" fill="currentColor"><path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6z"/></svg>
+          </router-link>
+
+          <router-link to="/contact" class="mobile-drawer-item" active-class="mobile-drawer-item--active" @click="mobileMenuOpen = false">
+            <div class="mobile-drawer-icon mobile-drawer-icon--indigo">
+              <svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18"><path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>
+            </div>
+            <span>Contact</span>
+            <svg class="mobile-drawer-chevron" viewBox="0 0 24 24" fill="currentColor"><path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6z"/></svg>
+          </router-link>
+
+          <div class="mobile-drawer-divider" />
+          <div class="mobile-drawer-section-label">Account</div>
+
+          <router-link to="/donor" class="mobile-drawer-item" active-class="mobile-drawer-item--active" @click="mobileMenuOpen = false">
+            <div class="mobile-drawer-icon mobile-drawer-icon--blue">
+              <svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+            </div>
+            <span>My Account</span>
+            <svg class="mobile-drawer-chevron" viewBox="0 0 24 24" fill="currentColor"><path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6z"/></svg>
+          </router-link>
+
+        </div>
+
+        <!-- Drawer Footer -->
+        <div class="mobile-drawer-footer">
+          <!-- Pill dark-mode toggle -->
+          <div class="mobile-drawer-footer__toggle-row">
+            <span class="mobile-drawer-footer__toggle-label">{{ $q.dark.isActive ? 'Dark Mode' : 'Light Mode' }}</span>
+            <button
+              class="drawer-dark-toggle"
+              :class="{ 'drawer-dark-toggle--dark': $q.dark.isActive }"
+              @click="$q.dark.toggle()"
+              :aria-label="$q.dark.isActive ? 'Switch to light mode' : 'Switch to dark mode'"
+            >
+              <span class="drawer-dark-toggle__knob">
+                <svg v-if="!$q.dark.isActive" viewBox="0 0 24 24" fill="white" width="13" height="13">
+                  <path d="M12 7c-2.76 0-5 2.24-5 5s2.24 5 5 5 5-2.24 5-5-2.24-5-5-5zM2 13h2c.55 0 1-.45 1-1s-.45-1-1-1H2c-.55 0-1 .45-1 1s.45 1 1 1zm18 0h2c.55 0 1-.45 1-1s-.45-1-1-1h-2c-.55 0-1 .45-1 1s.45 1 1 1zM11 2v2c0 .55.45 1 1 1s1-.45 1-1V2c0-.55-.45-1-1-1s-1 .45-1 1zm0 18v2c0 .55.45 1 1 1s1-.45 1-1v-2c0-.55-.45-1-1-1s-1 .45-1 1z"/>
+                </svg>
+                <svg v-else viewBox="0 0 24 24" fill="white" width="13" height="13">
+                  <path d="M12 3c-4.97 0-9 4.03-9 9s4.03 9 9 9 9-4.03 9-9c0-.46-.04-.92-.1-1.36-.98 1.37-2.58 2.26-4.4 2.26-2.98 0-5.4-2.42-5.4-5.4 0-1.81.89-3.42 2.26-4.4-.44-.06-.9-.1-1.36-.1z"/>
+                </svg>
+              </span>
+            </button>
+          </div>
+          <!-- Brand strip -->
+          <div class="mobile-drawer-footer__brand">
+            <svg viewBox="0 0 24 24" fill="#f7931a" width="14" height="14"><path d="M23.638 14.904c-1.602 6.43-8.113 10.34-14.542 8.736C2.67 22.05-1.244 15.525.362 9.105 1.962 2.67 8.475-1.243 14.9.358c6.43 1.605 10.342 8.115 8.738 14.546z"/></svg>
+            <span>Powered by Bitcoin Cash</span>
+          </div>
+        </div>
+
+      </aside>
+    </transition>
+
   </q-layout>
 </template>
 
 <script setup>
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { Core as WalletConnectCore } from '@walletconnect/core'
 import SignClient from '@walletconnect/sign-client'
 import { WalletConnectModal } from '@walletconnect/modal'
@@ -234,18 +502,21 @@ import bitcoinLoaderJson from '../../lottie/Bitcoin Loader.json'
 
 const $q = useQuasar()
 const router = useRouter()
+const route = useRoute()
 const donationStore = useDonationStore()
+
+// Mobile side drawer
+const mobileMenuOpen = ref(false)
+watch(() => route.path, () => { mobileMenuOpen.value = false })
+
+// Notification sheet (mobile)
+const notifSheetOpen = ref(false)
 
 // ── WalletConnect constants ──
 const projectId = '1e52dff3b9c75d86cfc7b1190c02d3a0'
-const makeWalletConnectStoragePrefix = () => {
-  const uid =
-    typeof crypto !== 'undefined' && crypto.randomUUID
-      ? crypto.randomUUID()
-      : `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`
-  return `bitohelp-${uid}`
-}
-let walletConnectStoragePrefix = makeWalletConnectStoragePrefix()
+// Fixed prefix so the same WalletConnect namespace is used across page reloads,
+// allowing session restoration after refresh.
+const walletConnectStoragePrefix = 'bitohelp-wc'
 const walletConnectRelayUrl = 'wss://relay.walletconnect.com'
 const bchChains = ['bch:bchtest']
 const evmChains = ['eip155:1', 'eip155:5', 'eip155:11155111']
@@ -743,7 +1014,6 @@ const disposeWalletConnectClient = async () => {
   signClient = undefined
   walletConnectInitPromise = undefined
   purgeAllWalletConnectStorage()
-  walletConnectStoragePrefix = makeWalletConnectStoragePrefix()
 }
 
 const disconnectAllWalletConnectSessions = async () => {
@@ -1204,16 +1474,22 @@ const initWalletConnect = async () => {
     const existingSessions = signClient.session.getAll()
     const session = pickStoredSession(existingSessions)
     if (session) {
-      const isReachable = await pingWalletConnectSession(session.topic)
-      if (isReachable) {
-        sessionTopic = session.topic
-        isConnected.value = true
-        updateFromSession(session)
-      } else {
-        resetWalletState()
-        await cleanupInactivePairings({ deletePairings: true })
-        await restartWalletConnectTransport()
-      }
+      // Optimistic restore: set connected immediately so the UI shows the
+      // wallet on refresh without waiting for a relay ping (which can fail
+      // if the relay hasn't connected yet on cold load).
+      const restoredTopic = session.topic
+      sessionTopic = restoredTopic
+      isConnected.value = true
+      updateFromSession(session)
+
+      // Verify in the background. If unreachable, cleanly disconnect.
+      pingWalletConnectSession(restoredTopic).then((isReachable) => {
+        if (!isReachable && sessionTopic === restoredTopic) {
+          resetWalletState()
+          cleanupInactivePairings({ deletePairings: true })
+          restartWalletConnectTransport()
+        }
+      })
     }
   })()
 
@@ -1410,6 +1686,10 @@ function addCharityNotification(data) {
   })
 }
 
+function onNotifClick() {
+  toggleNotifications()
+  if ($q.screen.lt.sm) notifSheetOpen.value = true
+}
 function toggleNotifications() {
   notifications.value.forEach((n) => (n.read = true))
 }
@@ -1527,10 +1807,380 @@ onBeforeUnmount(() => {
 }
 
 .app-header {
-  background: rgba(255, 255, 255, 0.265);
-  backdrop-filter: blur(10px);
+  background: rgba(255, 255, 255, 0.55);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
   color: #333;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.7);
+  box-shadow: 0 4px 24px rgba(30, 40, 80, 0.08);
+}
+
+/* ── Header Action Buttons (notification / dark-toggle / hamburger) ─────── */
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.header-action-btn {
+  position: relative;
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  border: 1.5px solid transparent;
+  background: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: #555;
+  transition: background 0.18s ease, color 0.18s ease, border-color 0.18s ease, transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1);
+  -webkit-tap-highlight-color: transparent;
+  outline: none;
+}
+
+.header-action-btn:hover {
+  background: rgba(46, 88, 216, 0.08);
+  border-color: rgba(46, 88, 216, 0.18);
+  color: #2e58d8;
+  transform: translateY(-2px);
+}
+
+.header-action-btn:active {
+  transform: scale(0.88) translateY(0);
+  transition-duration: 0.08s;
+  background: rgba(46, 88, 216, 0.14);
+}
+
+.header-action-btn--active {
+  color: #2e58d8;
+  background: rgba(46, 88, 216, 0.06);
+}
+
+.header-action-icon {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  transition: transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.header-action-btn:hover .header-action-icon {
+  transform: scale(1.15);
+}
+
+.header-action-btn__badge {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  min-width: 16px;
+  height: 16px;
+  border-radius: 8px;
+  background: #ef5350;
+  color: #fff;
+  font-size: 9px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 3px;
+  line-height: 1;
+  pointer-events: none;
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.9);
+}
+
+.header-notif-menu {
+  border-radius: 16px !important;
+  overflow: hidden;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.14) !important;
+}
+
+/* ── Mobile Notification Bottom Sheet ─────────────────────────────────── */
+.notif-sheet {
+  border-radius: 20px 20px 0 0 !important;
+  overflow: hidden;
+}
+
+.notif-sheet__handle {
+  width: 36px;
+  height: 4px;
+  border-radius: 2px;
+  background: rgba(0, 0, 0, 0.15);
+  margin: 10px auto 6px;
+}
+
+.notif-sheet__header {
+  min-height: 48px;
+}
+
+.body--dark .notif-sheet {
+  background: #1a1d2e;
+}
+
+.body--dark .notif-sheet__handle {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+/* ── Pill Dark-Mode Toggle Switch ──────────────────────────────────────── */
+.dark-toggle {
+  position: relative;
+  width: 66px;
+  height: 36px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.55);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1.5px solid rgba(255, 255, 255, 0.75);
+  cursor: pointer;
+  padding: 0;
+  flex-shrink: 0;
+  outline: none;
+  -webkit-tap-highlight-color: transparent;
+  box-shadow: 0 2px 8px rgba(30, 40, 80, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  transition: background 0.28s ease, border-color 0.28s ease, box-shadow 0.18s ease;
+}
+
+.dark-toggle:hover {
+  background: rgba(255, 255, 255, 0.72);
+  box-shadow: 0 4px 16px rgba(46, 88, 216, 0.14), inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  border-color: rgba(255, 255, 255, 0.9);
+}
+
+.dark-toggle__knob {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: #00c59a;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 6px rgba(0, 197, 154, 0.45);
+  transition: transform 0.32s cubic-bezier(0.34, 1.56, 0.64, 1), background 0.28s ease, box-shadow 0.28s ease;
+}
+
+/* Light mode (dark is OFF) → knob slides to right, teal */
+.dark-toggle:not(.dark-toggle--dark) .dark-toggle__knob {
+  transform: translateX(30px);
+  background: #00c59a;
+  box-shadow: 0 2px 7px rgba(0, 197, 154, 0.5);
+}
+
+/* Dark mode (dark is ON) → knob stays left, indigo */
+.dark-toggle--dark .dark-toggle__knob {
+  transform: translateX(0);
+  background: #5c6bc0;
+  box-shadow: 0 2px 7px rgba(92, 107, 192, 0.5);
+}
+
+.dark-toggle__icon {
+  width: 15px;
+  height: 15px;
+  flex-shrink: 0;
+}
+
+/* ── Rounded Card Notification Button ─────────────────────────────────── */
+.notif-btn {
+  position: relative;
+  width: 44px;
+  height: 44px;
+  border-radius: 13px;
+  background: transparent;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: #3a3f4b;
+  box-shadow: none;
+  transition: background 0.18s ease, transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1), color 0.18s ease;
+  -webkit-tap-highlight-color: transparent;
+  outline: none;
+  flex-shrink: 0;
+}
+
+.notif-btn:hover {
+  background: rgba(46, 88, 216, 0.08);
+  color: #2e58d8;
+  transform: translateY(-1px);
+}
+
+.notif-btn:active {
+  transform: scale(0.9);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  transition-duration: 0.08s;
+}
+
+.notif-btn--active {
+  color: #2e58d8;
+}
+
+.notif-btn__icon {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+}
+
+.notif-btn__badge {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  min-width: 16px;
+  height: 16px;
+  border-radius: 8px;
+  background: #ef5350;
+  color: #fff;
+  font-size: 9px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 3px;
+  line-height: 1;
+  pointer-events: none;
+  box-shadow: none;
+}
+
+/* ── Rounded Card Menu Button ──────────────────────────────────────────── */
+.menu-btn {
+  width: 44px;
+  height: 44px;
+  border-radius: 13px;
+  background: rgba(255, 255, 255, 0.55);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1.5px solid rgba(255, 255, 255, 0.75);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: #3a3f4b;
+  box-shadow: 0 2px 8px rgba(30, 40, 80, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  transition: background 0.18s ease, box-shadow 0.18s ease, transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1), border-color 0.18s ease;
+  -webkit-tap-highlight-color: transparent;
+  outline: none;
+  flex-shrink: 0;
+}
+
+.menu-btn:hover {
+  background: rgba(255, 255, 255, 0.72);
+  border-color: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 4px 16px rgba(46, 88, 216, 0.14), inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  transform: translateY(-1px);
+}
+
+.menu-btn:active {
+  transform: scale(0.9);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  transition-duration: 0.08s;
+}
+
+.menu-btn__icon {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+}
+
+/* Dark mode overrides */
+.body--dark .app-header {
+  background: rgba(15, 17, 28, 0.65);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  color: #e0e0e0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.35);
+}
+
+.body--dark .app-title {
+  color: #e8eaf6;
+}
+
+.body--dark .nav-item {
+  color: rgba(220, 225, 245, 0.82) !important;
+}
+
+.body--dark .nav-item:hover {
+  color: #90caf9 !important;
+  background: rgba(130, 177, 255, 0.08) !important;
+}
+
+/* Quasar router-link active class on q-btn */
+.body--dark .nav-item.router-link-active,
+.body--dark .nav-item.router-link-exact-active {
+  color: #82b1ff !important;
+}
+
+.body--dark .header-action-btn {
+  color: rgba(200, 210, 240, 0.7);
+}
+
+.body--dark .header-action-btn:hover {
+  background: rgba(130, 177, 255, 0.1);
+  border-color: rgba(130, 177, 255, 0.2);
+  color: #82b1ff;
+}
+
+.body--dark .header-action-btn--active {
+  color: #82b1ff;
+  background: rgba(130, 177, 255, 0.08);
+}
+
+.body--dark .header-action-btn__badge {
+  box-shadow: 0 0 0 2px rgba(24, 26, 36, 0.9);
+}
+
+.body--dark .dark-toggle {
+  background: rgba(255, 255, 255, 0.07);
+  border-color: rgba(255, 255, 255, 0.12);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+.body--dark .dark-toggle:hover {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.22);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+.body--dark .dark-toggle:hover {
+  border-color: rgba(255, 255, 255, 0.2);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
+}
+
+.body--dark .menu-btn {
+  background: rgba(255, 255, 255, 0.07);
+  border-color: rgba(255, 255, 255, 0.12);
+  color: rgba(210, 218, 245, 0.85);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+.body--dark .menu-btn:hover {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.22);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+.body--dark .notif-btn {
+  background: transparent;
+  border: none;
+  color: rgba(210, 218, 245, 0.75);
+  box-shadow: none;
+}
+
+.body--dark .notif-btn:hover {
+  background: rgba(130, 177, 255, 0.1);
+  color: #82b1ff;
+}
+
+.body--dark .notif-btn--active {
+  border-color: rgba(239, 83, 80, 0.5);
+  box-shadow: 0 1px 6px rgba(239, 83, 80, 0.25);
+}
+
+.body--dark .notif-btn__badge {
+  box-shadow: 0 0 0 2px rgba(24, 26, 36, 0.9);
 }
 
 /* Wallet Toggle Switch */
@@ -1706,5 +2356,731 @@ onBeforeUnmount(() => {
   .wallet-toggle--pending .wallet-toggle__icon {
     left: calc(50% - 16px);
   }
+}
+
+/* ── Mobile Bottom Navigation ── */
+.has-mobile-nav {
+  padding-bottom: 0;
+}
+
+@media (max-width: 1023px) {
+  .has-mobile-nav {
+    /* pill height 64 + 12 bottom gap + 18 wallet overflow */
+    padding-bottom: 96px;
+  }
+}
+
+/* outer wrapper — full-width, sits fixed at bottom, transparent */
+.mobile-bottom-nav-wrap {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 2000;
+  /* extra top padding so the floating wallet button isn't clipped */
+  padding: 20px 16px 12px;
+  pointer-events: none;
+}
+
+/* the floating pill */
+.mobile-bottom-nav {
+  pointer-events: all;
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  height: 62px;
+  border-radius: 32px;
+  /* glassmorphism light */
+  background: rgba(255, 255, 255, 0.72);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12), 0 2px 8px rgba(0, 0, 0, 0.06);
+  padding: 0 12px;
+  overflow: visible;
+}
+
+.body--dark .mobile-bottom-nav {
+  /* glassmorphism dark */
+  background: rgba(20, 20, 34, 0.75);
+  backdrop-filter: blur(24px) saturate(160%);
+  -webkit-backdrop-filter: blur(24px) saturate(160%);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.45), 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.mobile-nav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  flex: 1;
+  text-decoration: none;
+  color: rgba(90, 90, 110, 0.65);
+  font-size: 10px;
+  font-weight: 500;
+  padding: 6px 0;
+  position: relative;
+  -webkit-tap-highlight-color: transparent;
+  transition: color 0.2s;
+}
+
+/* Pill highlight — springs in on hover, stays for active */
+.mobile-nav-item::before {
+  content: '';
+  position: absolute;
+  top: 5px;
+  left: 50%;
+  transform: translateX(-50%) scale(0.5);
+  opacity: 0;
+  width: 44px;
+  height: 30px;
+  border-radius: 14px;
+  background: rgba(21, 101, 192, 0.1);
+  transition:
+    transform 0.28s cubic-bezier(0.34, 1.56, 0.64, 1),
+    opacity 0.18s ease;
+  pointer-events: none;
+}
+
+.mobile-nav-item:hover::before {
+  transform: translateX(-50%) scale(1);
+  opacity: 1;
+}
+
+.mobile-nav-item--active::before {
+  transform: translateX(-50%) scale(1);
+  opacity: 1;
+  background: rgba(21, 101, 192, 0.14);
+}
+
+/* Active dot indicator at bottom of icon */
+.mobile-nav-item--active::after {
+  content: '';
+  position: absolute;
+  bottom: 4px;
+  left: 50%;
+  transform: translateX(-50%) scale(1);
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: #1565c0;
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.mobile-nav-svg {
+  width: 22px;
+  height: 22px;
+  flex-shrink: 0;
+  transition: transform 0.28s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* Icon lifts and pops on hover */
+.mobile-nav-item:hover .mobile-nav-svg {
+  transform: scale(1.22) translateY(-2px);
+}
+
+/* Press down feedback */
+.mobile-nav-item:active .mobile-nav-svg {
+  transform: scale(0.88) translateY(0);
+  transition-duration: 0.08s;
+}
+
+/* Label lifts subtly on hover */
+.mobile-nav-item span {
+  display: block;
+  transition: transform 0.2s ease, color 0.2s;
+}
+
+.mobile-nav-item:hover span {
+  transform: translateY(-1px);
+  color: rgba(90, 90, 110, 0.9);
+}
+
+.mobile-nav-item--active {
+  color: #1565c0;
+}
+
+.mobile-nav-item--active .q-icon {
+  color: #1565c0;
+}
+
+.body--dark .mobile-nav-item {
+  color: rgba(160, 160, 190, 0.5);
+}
+
+.body--dark .mobile-nav-item::before {
+  background: rgba(130, 177, 255, 0.1);
+}
+
+.body--dark .mobile-nav-item--active::before {
+  background: rgba(130, 177, 255, 0.15);
+}
+
+.body--dark .mobile-nav-item--active::after {
+  background: #82b1ff;
+}
+
+.body--dark .mobile-nav-item:hover span {
+  color: rgba(160, 160, 190, 0.9);
+}
+
+.body--dark .mobile-nav-item--active {
+  color: #82b1ff;
+}
+
+.body--dark .mobile-nav-item--active .q-icon {
+  color: #82b1ff;
+}
+
+/* Center wallet — floats above the pill */
+.mobile-nav-wallet {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  flex: 1;
+  position: relative;
+  /* shift up so the circle pops above the pill edge */
+  margin-top: -28px;
+}
+
+.mobile-wallet-btn {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: linear-gradient(145deg, #1976d2, #0d47a1);
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 6px 20px rgba(21, 101, 192, 0.55);
+  transition: background 0.2s, transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.22s ease;
+  /* white ring like the Paytaca style */
+  outline: 3px solid rgba(255, 255, 255, 0.8);
+  -webkit-tap-highlight-color: transparent;
+}
+
+.body--dark .mobile-wallet-btn {
+  outline: 3px solid rgba(30, 30, 50, 0.9);
+}
+
+.mobile-wallet-btn:hover {
+  transform: scale(1.1) translateY(-3px);
+  box-shadow: 0 14px 30px rgba(21, 101, 192, 0.72);
+}
+
+.mobile-wallet-btn:active {
+  transform: scale(0.92) translateY(0);
+  transition-duration: 0.08s;
+}
+
+.mobile-wallet-btn--connected {
+  background: linear-gradient(145deg, #43a047, #1b5e20);
+  box-shadow: 0 6px 20px rgba(46, 125, 50, 0.55);
+}
+
+.mobile-wallet-btn--connected:hover {
+  box-shadow: 0 14px 30px rgba(46, 125, 50, 0.72);
+}
+
+.mobile-wallet-btn--connecting {
+  background: linear-gradient(145deg, #fb8c00, #bf360c);
+  box-shadow: 0 6px 20px rgba(230, 81, 0, 0.55);
+}
+
+.mobile-nav-wallet-label {
+  font-size: 10px;
+  font-weight: 500;
+  color: rgba(90, 90, 110, 0.65);
+  margin-top: 2px;
+}
+
+.body--dark .mobile-nav-wallet-label {
+  color: rgba(160, 160, 190, 0.5);
+}
+
+/* ── Mobile Menu button (replaces Account) ───────────────────── */
+.mobile-nav-menu-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* ── Mobile Side Drawer ──────────────────────────────────────── */
+
+/* Backdrop */
+.mobile-drawer-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 3000;
+  background: rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
+}
+
+.mobile-drawer-backdrop-enter-active,
+.mobile-drawer-backdrop-leave-active {
+  transition: opacity 0.25s ease;
+}
+.mobile-drawer-backdrop-enter-from,
+.mobile-drawer-backdrop-leave-to {
+  opacity: 0;
+}
+
+/* Drawer panel */
+/* ═══════════════════════════════════════════════════════════════
+   MOBILE SIDE DRAWER
+═══════════════════════════════════════════════════════════════ */
+
+/* 1. Glassmorphism + rounded left edge */
+.mobile-drawer {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 3001;
+  width: min(310px, 86vw);
+  display: flex;
+  flex-direction: column;
+  background: rgba(255, 255, 255, 0.72);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  border-left: 1px solid rgba(255, 255, 255, 0.7);
+  border-radius: 20px 0 0 20px;
+  box-shadow: -12px 0 48px rgba(30, 40, 80, 0.16);
+  overflow: hidden;
+}
+
+/* 6. Spring slide animation */
+.mobile-drawer-enter-active {
+  transition: transform 0.38s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.mobile-drawer-leave-active {
+  transition: transform 0.26s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.mobile-drawer-enter-from,
+.mobile-drawer-leave-to {
+  transform: translateX(100%);
+}
+
+/* ── Header ─────────────────────────────────────────────────── */
+.mobile-drawer-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 16px 14px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+  flex-shrink: 0;
+}
+
+.mobile-drawer-brand {
+  font-size: 17px;
+  font-weight: 800;
+  color: #0d1738;
+  letter-spacing: -0.3px;
+}
+
+.mobile-drawer-close {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(0, 0, 0, 0.06);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: #555;
+  transition: background 0.18s, transform 0.28s cubic-bezier(0.34, 1.56, 0.64, 1);
+  -webkit-tap-highlight-color: transparent;
+}
+
+.mobile-drawer-close:hover {
+  background: rgba(0, 0, 0, 0.11);
+  transform: rotate(90deg) scale(1.1);
+}
+
+/* ── 2. Wallet Hero Card ─────────────────────────────────────── */
+.mobile-drawer-wallet-card {
+  margin: 10px 12px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, rgba(239, 83, 80, 0.12) 0%, rgba(239, 83, 80, 0.06) 100%);
+  border: 1px solid rgba(239, 83, 80, 0.18);
+  flex-shrink: 0;
+  overflow: hidden;
+  transition: background 0.3s, border-color 0.3s;
+}
+
+.mobile-drawer-wallet-card--connected {
+  background: linear-gradient(135deg, rgba(0, 197, 154, 0.14) 0%, rgba(46, 88, 216, 0.08) 100%);
+  border-color: rgba(0, 197, 154, 0.25);
+}
+
+.mobile-drawer-wallet-card__inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 14px;
+  gap: 10px;
+}
+
+.mobile-drawer-wallet-card__left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.mobile-drawer-wallet-status-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  transition: background 0.3s;
+}
+
+.dot--on {
+  background: #00c59a;
+  box-shadow: 0 0 0 3px rgba(0, 197, 154, 0.2);
+}
+
+.dot--off {
+  background: #ef5350;
+  box-shadow: 0 0 0 3px rgba(239, 83, 80, 0.2);
+}
+
+.mobile-drawer-wallet-card__label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #555;
+}
+
+.mobile-drawer-wallet-card__balance {
+  font-size: 15px;
+  font-weight: 800;
+  color: #0d1738;
+  letter-spacing: -0.4px;
+  line-height: 1.2;
+}
+
+.mobile-drawer-wallet-card__addr {
+  font-size: 10.5px;
+  color: #888;
+  font-family: monospace;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 120px;
+}
+
+.mobile-drawer-wallet-card__btn {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 7px 13px;
+  border-radius: 99px;
+  border: none;
+  background: rgba(46, 88, 216, 0.12);
+  color: #2e58d8;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: background 0.18s, transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1);
+  -webkit-tap-highlight-color: transparent;
+}
+
+.mobile-drawer-wallet-card__btn:hover {
+  background: rgba(46, 88, 216, 0.2);
+  transform: scale(1.04);
+}
+
+.mobile-drawer-wallet-card__btn:active {
+  transform: scale(0.96);
+}
+
+/* ── Nav Body ────────────────────────────────────────────────── */
+.mobile-drawer-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 6px 8px 8px;
+}
+
+.mobile-drawer-section-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.9px;
+  text-transform: uppercase;
+  color: #aaa;
+  padding: 8px 10px 3px;
+}
+
+.mobile-drawer-divider {
+  height: 1px;
+  background: rgba(0, 0, 0, 0.06);
+  margin: 5px 10px;
+}
+
+/* 4. Full-width active pill */
+.mobile-drawer-item {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 9px 10px;
+  text-decoration: none;
+  color: #444;
+  font-size: 14px;
+  font-weight: 500;
+  border-radius: 12px;
+  transition: background 0.15s, color 0.15s;
+  position: relative;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.mobile-drawer-item:hover {
+  background: rgba(46, 88, 216, 0.07);
+  color: #2e58d8;
+}
+
+.mobile-drawer-item:active {
+  background: rgba(46, 88, 216, 0.13);
+  transform: scale(0.98);
+}
+
+.mobile-drawer-item--active {
+  background: linear-gradient(90deg, rgba(46, 88, 216, 0.12) 0%, rgba(46, 88, 216, 0.04) 100%);
+  color: #2e58d8;
+  font-weight: 700;
+}
+
+/* Remove old thin-bar indicator — full pill is the indicator now */
+.mobile-drawer-item--active::before {
+  display: none;
+}
+
+/* 3. Colorful icon boxes */
+.mobile-drawer-icon {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.mobile-drawer-item:hover .mobile-drawer-icon,
+.mobile-drawer-item--active .mobile-drawer-icon {
+  transform: scale(1.1);
+}
+
+.mobile-drawer-icon--blue   { background: rgba(46, 88, 216, 0.12);  color: #2e58d8; }
+.mobile-drawer-icon--amber  { background: rgba(255, 160, 0, 0.13);  color: #e65100; }
+.mobile-drawer-icon--red    { background: rgba(239, 83, 80, 0.12);  color: #c62828; }
+.mobile-drawer-icon--green  { background: rgba(0, 197, 154, 0.13);  color: #00796b; }
+.mobile-drawer-icon--purple { background: rgba(123, 31, 162, 0.11); color: #7b1fa2; }
+.mobile-drawer-icon--teal   { background: rgba(0, 137, 123, 0.12);  color: #00897b; }
+.mobile-drawer-icon--indigo { background: rgba(57, 73, 171, 0.12);  color: #3949ab; }
+
+.mobile-drawer-chevron {
+  width: 16px;
+  height: 16px;
+  margin-left: auto;
+  color: #ccc;
+  flex-shrink: 0;
+  transition: transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1), color 0.15s;
+}
+
+.mobile-drawer-item:hover .mobile-drawer-chevron,
+.mobile-drawer-item--active .mobile-drawer-chevron {
+  transform: translateX(3px);
+  color: #2e58d8;
+}
+
+/* ── 7. Footer with pill toggle + brand strip ────────────────── */
+.mobile-drawer-footer {
+  padding: 10px 16px 20px;
+  border-top: 1px solid rgba(0, 0, 0, 0.06);
+  flex-shrink: 0;
+}
+
+.mobile-drawer-footer__toggle-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.mobile-drawer-footer__toggle-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #555;
+}
+
+/* Pill toggle (same style as header) */
+.drawer-dark-toggle {
+  position: relative;
+  width: 58px;
+  height: 32px;
+  border-radius: 999px;
+  background: #ffffff;
+  border: 1.5px solid #d0d7e3;
+  cursor: pointer;
+  padding: 0;
+  outline: none;
+  -webkit-tap-highlight-color: transparent;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.09);
+  transition: background 0.28s ease, border-color 0.28s ease;
+  flex-shrink: 0;
+}
+
+.drawer-dark-toggle__knob {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: #00c59a;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 6px rgba(0, 197, 154, 0.45);
+  transition: transform 0.32s cubic-bezier(0.34, 1.56, 0.64, 1), background 0.28s ease;
+}
+
+.drawer-dark-toggle:not(.drawer-dark-toggle--dark) .drawer-dark-toggle__knob {
+  transform: translateX(26px);
+  background: #00c59a;
+}
+
+.drawer-dark-toggle--dark .drawer-dark-toggle__knob {
+  transform: translateX(0);
+  background: #5c6bc0;
+  box-shadow: 0 2px 7px rgba(92, 107, 192, 0.5);
+}
+
+.mobile-drawer-footer__brand {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  font-size: 10.5px;
+  color: #bbb;
+  font-weight: 500;
+  letter-spacing: 0.2px;
+}
+
+/* ── Dark Mode ───────────────────────────────────────────────── */
+.body--dark .mobile-drawer {
+  background: rgba(15, 17, 28, 0.82);
+  border-left-color: rgba(255, 255, 255, 0.07);
+  box-shadow: -12px 0 48px rgba(0, 0, 0, 0.5);
+}
+
+.body--dark .mobile-drawer-header {
+  border-bottom-color: rgba(255, 255, 255, 0.07);
+}
+
+.body--dark .mobile-drawer-brand {
+  color: #e8eaf6;
+}
+
+.body--dark .mobile-drawer-close {
+  background: rgba(255, 255, 255, 0.08);
+  color: #bbb;
+}
+
+.body--dark .mobile-drawer-close:hover {
+  background: rgba(255, 255, 255, 0.14);
+}
+
+.body--dark .mobile-drawer-wallet-card {
+  background: linear-gradient(135deg, rgba(239, 83, 80, 0.15) 0%, rgba(239, 83, 80, 0.06) 100%);
+  border-color: rgba(239, 83, 80, 0.22);
+}
+
+.body--dark .mobile-drawer-wallet-card--connected {
+  background: linear-gradient(135deg, rgba(0, 197, 154, 0.18) 0%, rgba(46, 88, 216, 0.1) 100%);
+  border-color: rgba(0, 197, 154, 0.28);
+}
+
+.body--dark .mobile-drawer-wallet-card__label {
+  color: rgba(200, 210, 240, 0.6);
+}
+
+.body--dark .mobile-drawer-wallet-card__balance {
+  color: #e8eaf6;
+}
+
+.body--dark .mobile-drawer-wallet-card__addr {
+  color: rgba(200, 210, 240, 0.5);
+}
+
+.body--dark .mobile-drawer-wallet-card__btn {
+  background: rgba(130, 177, 255, 0.12);
+  color: #82b1ff;
+}
+
+.body--dark .mobile-drawer-wallet-card__btn:hover {
+  background: rgba(130, 177, 255, 0.22);
+}
+
+.body--dark .mobile-drawer-section-label {
+  color: #555;
+}
+
+.body--dark .mobile-drawer-divider {
+  background: rgba(255, 255, 255, 0.07);
+}
+
+.body--dark .mobile-drawer-item {
+  color: rgba(200, 210, 240, 0.78);
+}
+
+.body--dark .mobile-drawer-item:hover {
+  background: rgba(130, 177, 255, 0.08);
+  color: #82b1ff;
+}
+
+.body--dark .mobile-drawer-item--active {
+  background: linear-gradient(90deg, rgba(130, 177, 255, 0.14) 0%, rgba(130, 177, 255, 0.04) 100%);
+  color: #82b1ff;
+}
+
+.body--dark .mobile-drawer-item:hover .mobile-drawer-chevron,
+.body--dark .mobile-drawer-item--active .mobile-drawer-chevron {
+  color: #82b1ff;
+}
+
+.body--dark .mobile-drawer-icon--blue   { background: rgba(130, 177, 255, 0.12); color: #82b1ff; }
+.body--dark .mobile-drawer-icon--amber  { background: rgba(255, 183, 77, 0.12);  color: #ffb74d; }
+.body--dark .mobile-drawer-icon--red    { background: rgba(239, 154, 154, 0.12); color: #ef9a9a; }
+.body--dark .mobile-drawer-icon--green  { background: rgba(128, 222, 234, 0.10); color: #80deea; }
+.body--dark .mobile-drawer-icon--purple { background: rgba(206, 147, 216, 0.12); color: #ce93d8; }
+.body--dark .mobile-drawer-icon--teal   { background: rgba(128, 203, 196, 0.11); color: #80cbc4; }
+.body--dark .mobile-drawer-icon--indigo { background: rgba(159, 168, 218, 0.12); color: #9fa8da; }
+
+.body--dark .mobile-drawer-footer {
+  border-top-color: rgba(255, 255, 255, 0.07);
+}
+
+.body--dark .mobile-drawer-footer__toggle-label {
+  color: rgba(200, 210, 240, 0.7);
+}
+
+.body--dark .drawer-dark-toggle {
+  background: rgba(255, 255, 255, 0.07);
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+.body--dark .mobile-drawer-footer__brand {
+  color: rgba(255, 255, 255, 0.2);
 }
 </style>

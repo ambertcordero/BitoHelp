@@ -702,6 +702,7 @@ const copyWalletAddress = (address) => {
 .container {
   max-width: 1200px;
   margin: 0 auto;
+  padding: 0 16px;
 }
 
 .section-header {
@@ -906,6 +907,14 @@ const copyWalletAddress = (address) => {
 }
 
 @media (max-width: 768px) {
+  .hero-title {
+    font-size: 2.4rem;
+  }
+
+  .hero-subtitle {
+    font-size: 1rem;
+  }
+
   .featured-section {
     padding: 60px 20px 40px;
   }

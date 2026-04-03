@@ -584,6 +584,11 @@ body {
   color: #e8eeff;
 }
 
+/* ── WalletConnect modal — lift above mobile bottom nav (z-index 2000) ── */
+wcm-modal {
+  --wcm-z-index: 9999;
+}
+
 .body--dark .subtitle {
   color: #8fa8d0;
 }

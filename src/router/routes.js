@@ -10,6 +10,9 @@ const routes = [
       { path: 'dashboard', component: () => import('pages/DashboardPage.vue') },
       { path: 'charities', component: () => import('pages/ProjectPage.vue') },
       { path: 'user', component: () => import('pages/UserPage.vue') },
+      { path: 'mission', component: () => import('pages/MissionPage.vue') },
+      { path: 'about', component: () => import('pages/AboutPage.vue') },
+      { path: 'contact', component: () => import('pages/ContactPage.vue') },
     ],
   },
 

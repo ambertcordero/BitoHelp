@@ -45,7 +45,7 @@
           
           <div class="q-px-sm q-pb-sm">
             <div
-              v-for="wallet in wallets"
+              v-for="wallet in filteredWallets"
               :key="wallet.id"
               class="sidebar-account-card"
               :class="{ 'sidebar-account-card--active': selectedWallet?.id === wallet.id }"
@@ -138,6 +138,7 @@
             active-color="blue-5"
             indicator-color="blue-5"
             align="left"
+            mobile-arrows
           >
             <q-tab name="donations" label="Donations Made" />
             <q-tab name="details" label="Details" />
@@ -159,6 +160,7 @@
                 flat
                 :pagination="{ rowsPerPage: 10 }"
                 class="transactions-table"
+                :grid="$q.screen.lt.md"
               >
                 <template v-slot:body-cell-interval="props">
                   <q-td :props="props">
@@ -200,6 +202,59 @@
                       </q-menu>
                     </q-btn>
                   </q-td>
+                </template>
+
+                <!-- Mobile card layout (grid mode) -->
+                <template v-slot:item="props">
+                  <div class="donation-mobile-card">
+                    <div class="donation-mobile-card__header">
+                      <div class="donation-mobile-card__recipient">{{ props.row.recipient }}</div>
+                      <q-badge color="primary" :label="props.row.coin || 'BCH'" class="q-ml-xs" />
+                    </div>
+
+                    <div class="donation-mobile-card__body">
+                      <div class="donation-mobile-card__row">
+                        <span class="donation-mobile-card__label">Date</span>
+                        <span class="donation-mobile-card__value">{{ formatDate(props.row.timestamp) }}</span>
+                      </div>
+                      <div class="donation-mobile-card__row">
+                        <span class="donation-mobile-card__label">Donor</span>
+                        <span class="donation-mobile-card__value">{{ props.row.donor_name }}</span>
+                      </div>
+                      <div class="donation-mobile-card__row">
+                        <span class="donation-mobile-card__label">Amount</span>
+                        <span class="donation-mobile-card__value text-weight-bold text-positive">{{ formatCurrency(props.row.amount) }}</span>
+                      </div>
+                      <div class="donation-mobile-card__row">
+                        <span class="donation-mobile-card__label">Interval</span>
+                        <span class="donation-mobile-card__value">
+                          <q-badge v-if="props.row.interval" color="blue-7" :label="props.row.interval" />
+                          <span v-else class="text-grey-6">One-time</span>
+                        </span>
+                      </div>
+                    </div>
+
+                    <div class="donation-mobile-card__footer">
+                      <q-btn
+                        flat dense no-caps
+                        icon="receipt_long" label="Details"
+                        size="sm" color="primary"
+                        @click="viewDonationDetails(props.row)"
+                      />
+                      <q-btn
+                        flat dense no-caps
+                        icon="picture_as_pdf" label="Receipt"
+                        size="sm" color="blue-grey"
+                        @click="viewReceipt(props.row)"
+                      />
+                      <q-btn
+                        flat dense no-caps
+                        icon="download" label="Download"
+                        size="sm" color="blue-grey"
+                        @click="downloadReceipt(props.row)"
+                      />
+                    </div>
+                  </div>
                 </template>
               </q-table>
             </q-tab-panel>
@@ -561,9 +616,9 @@
 
        
         <div v-if="activeTab === 'activity'" class="activity-view">
-          <div class="row items-center justify-between q-mb-lg">
+          <div class="row items-center justify-between q-mb-lg activity-view__header">
             <h4 class="q-my-none activity-heading">Donation Activity</h4>
-            <div>
+            <div class="activity-view__actions">
               <q-btn flat icon="download" label="Export" />
               <q-btn flat icon="refresh" @click="refreshActivity" />
             </div>
@@ -648,6 +703,7 @@
                 flat
                 :pagination="{ rowsPerPage: 15 }"
                 class="transactions-table"
+                :grid="$q.screen.lt.md"
               >
                 <template v-slot:body-cell-interval="props">
                   <q-td :props="props">
@@ -677,6 +733,47 @@
                       <q-tooltip>View Details</q-tooltip>
                     </q-btn>
                   </q-td>
+                </template>
+
+                <!-- Mobile card layout (grid mode) -->
+                <template v-slot:item="props">
+                  <div class="donation-mobile-card">
+                    <div class="donation-mobile-card__header">
+                      <div class="donation-mobile-card__recipient">{{ props.row.recipient }}</div>
+                      <q-badge color="primary" :label="props.row.coin || 'BCH'" class="q-ml-xs" />
+                    </div>
+
+                    <div class="donation-mobile-card__body">
+                      <div class="donation-mobile-card__row">
+                        <span class="donation-mobile-card__label">Date</span>
+                        <span class="donation-mobile-card__value">{{ formatDate(props.row.timestamp) }}</span>
+                      </div>
+                      <div class="donation-mobile-card__row">
+                        <span class="donation-mobile-card__label">Donor</span>
+                        <span class="donation-mobile-card__value">{{ props.row.donor_name }}</span>
+                      </div>
+                      <div class="donation-mobile-card__row">
+                        <span class="donation-mobile-card__label">Amount</span>
+                        <span class="donation-mobile-card__value text-weight-bold text-positive">{{ formatCurrency(props.row.amount) }}</span>
+                      </div>
+                      <div class="donation-mobile-card__row">
+                        <span class="donation-mobile-card__label">Interval</span>
+                        <span class="donation-mobile-card__value">
+                          <q-badge v-if="props.row.interval" color="blue-7" :label="props.row.interval" />
+                          <span v-else class="text-grey-6">One-time</span>
+                        </span>
+                      </div>
+                    </div>
+
+                    <div class="donation-mobile-card__footer">
+                      <q-btn
+                        flat dense no-caps
+                        icon="receipt_long" label="Details"
+                        size="sm" color="primary"
+                        @click="viewDonationDetails(props.row)"
+                      />
+                    </div>
+                  </div>
                 </template>
               </q-table>
             </q-card-section>
@@ -1006,6 +1103,16 @@ const receiptDialog = ref({
 const activeTab = ref('donations')
 const detailTab = ref('donations')
 const searchQuery = ref('')
+const filteredWallets = computed(() => {
+  const q = searchQuery.value.trim().toLowerCase()
+  if (!q) return wallets.value
+  return wallets.value.filter(
+    (w) =>
+      w.name?.toLowerCase().includes(q) ||
+      w.address?.toLowerCase().includes(q) ||
+      w.type?.toLowerCase().includes(q),
+  )
+})
 const activitySearch = ref('')
 const statusFilter = ref('All')
 const categoryFilter = ref('All')
@@ -1857,10 +1964,8 @@ onMounted(async () => {
 .donor-page {
   overflow-x: hidden;
   background:
-    radial-gradient(ellipse at 0% 0%, rgba(173, 216, 255, 0.35) 0%, transparent 60%),
-    radial-gradient(ellipse at 100% 0%, rgba(200, 180, 255, 0.25) 0%, transparent 55%),
-    radial-gradient(ellipse at 50% 100%, rgba(144, 202, 249, 0.2) 0%, transparent 60%),
-    #f0f4f8;
+    linear-gradient(135deg, #f0f4ff 0%, #f7f4ff 50%, #f0f9ff 100%);
+  background-attachment: fixed;
   min-height: 100vh;
 }
 
@@ -2633,6 +2738,17 @@ onMounted(async () => {
   color: #d8e8ff;
 }
 
+.activity-view__header {
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.activity-view__actions {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
 .activity-section-card {
   border-radius: 12px;
   background: rgba(255, 255, 255, 0.9) !important;
@@ -3015,5 +3131,104 @@ onMounted(async () => {
 .body--dark .receipt-footer {
   border-color: rgba(255, 255, 255, 0.08);
   color: rgba(255, 255, 255, 0.45);
+}
+
+/* ── Donations Made — mobile card grid ─────────────────────────── */
+.transactions-table {
+  :deep(.q-table__grid-content) {
+    gap: 10px;
+    padding: 4px 0;
+  }
+}
+
+.donation-mobile-card {
+  width: 100%;
+  border-radius: 14px;
+  border: 1px solid rgba(144, 202, 249, 0.35);
+  background: rgba(255, 255, 255, 0.85);
+  overflow: hidden;
+  margin-bottom: 2px;
+}
+
+.donation-mobile-card__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 11px 14px 8px;
+  border-bottom: 1px solid rgba(144, 202, 249, 0.2);
+}
+
+.donation-mobile-card__recipient {
+  font-size: 14px;
+  font-weight: 700;
+  color: #1565c0;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.donation-mobile-card__body {
+  padding: 8px 14px 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.donation-mobile-card__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 13px;
+}
+
+.donation-mobile-card__label {
+  color: #78909c;
+  font-weight: 500;
+  flex-shrink: 0;
+  min-width: 64px;
+}
+
+.donation-mobile-card__value {
+  color: rgba(0, 0, 0, 0.82);
+  font-weight: 500;
+  text-align: right;
+}
+
+.donation-mobile-card__footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 2px;
+  padding: 4px 8px 6px;
+  border-top: 1px solid rgba(144, 202, 249, 0.15);
+}
+
+/* Dark mode for mobile cards */
+.body--dark .donation-mobile-card {
+  background: rgba(18, 26, 52, 0.82);
+  border-color: rgba(100, 160, 255, 0.18);
+}
+
+.body--dark .donation-mobile-card__header {
+  border-bottom-color: rgba(100, 160, 255, 0.12);
+}
+
+.body--dark .donation-mobile-card__recipient {
+  color: #90caf9;
+}
+
+.body--dark .donation-mobile-card__label {
+  color: rgba(255, 255, 255, 0.45);
+}
+
+.body--dark .donation-mobile-card__value {
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.body--dark .donation-mobile-card__footer {
+  border-top-color: rgba(255, 255, 255, 0.07);
 }
 </style>

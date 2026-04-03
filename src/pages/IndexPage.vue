@@ -1875,13 +1875,158 @@ const testimonials = [
 /* Responsive padding for header overlap fix */
 @media (max-width: 599px) {
   .hero-section {
-    padding-top: 56px; /* Smaller padding for mobile */
+    padding-top: 56px;
+  }
+
+  /* Hero text — scale down for phones */
+  .hero-title {
+    font-size: 2.4rem;
+    margin-left: 0;
+    line-height: 1.15;
+  }
+
+  .hero-subtitle {
+    font-size: 1rem;
+    margin-left: 0;
+  }
+
+  .hero-buttons {
+    margin-left: 0;
+    flex-wrap: wrap;
+  }
+
+  /* Hero row padding — q-pa-xl (48px) is too much on phones */
+  .hero-section .row {
+    padding: 20px 16px !important;
+  }
+
+  /* Container needs side breathing room */
+  .container {
+    padding: 0 16px;
+  }
+
+  /* Mission heading */
+  .mission-heading {
+    font-size: 2rem;
+  }
+
+  /* Remove excessive right padding on stacked mission column */
+  .mission-section .q-pr-xl {
+    padding-right: 0 !important;
+  }
+
+  /* Photo boxes — reduce height on mobile */
+  .mission-photo-box {
+    height: 140px;
+  }
+
+  .mission-large-photo {
+    height: 200px;
+  }
+
+  /* Mission section bottom stats — stack nicely */
+  .stat-card {
+    margin-bottom: 4px;
+  }
+
+  /* Crypto benefit cards — reduce padding */
+  .crypto-benefit-card {
+    padding: 20px 16px;
+  }
+
+  .benefit-number {
+    font-size: 1.5rem;
+    min-width: 36px;
+  }
+
+  /* Fee comparison — stack vertically on mobile */
+  .fee-comparison {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  /* Impact year badge — center on mobile */
+  .impact-year-badge {
+    display: inline-block;
+    margin-top: 16px;
+  }
+
+  /* Metric numbers scale down */
+  .metric-number {
+    font-size: 2.2rem;
+  }
+
+  /* Impact story cards — reduce padding */
+  .impact-story-card {
+    padding: 16px;
+  }
+
+  .story-image {
+    height: 90px;
+  }
+
+  /* CTA sections — center button on mobile */
+  .crypto-cta-section .col-12.text-right,
+  .impact-cta-section .col-12.text-right {
+    text-align: left !important;
+    margin-top: 12px;
+  }
+
+  /* Newsletter form — full width on mobile */
+  .newsletter-form {
+    margin-left: 0;
+    max-width: 100%;
+  }
+
+  /* Footer top padding */
+  .footer-top {
+    padding: 40px 0 24px;
+  }
+
+  /* Footer columns — remove excess padding */
+  .footer-brand-section {
+    padding-right: 0;
+  }
+
+  /* Section titles */
+  .section-title {
+    font-size: 1.8rem !important;
+  }
+
+  /* Testimonials min-height reduction */
+  .testimonial-text {
+    min-height: 60px;
   }
 }
 
 @media (min-width: 600px) and (max-width: 1023px) {
   .hero-section {
-    padding-top: 60px; /* Medium padding for tablets */
+    padding-top: 60px;
+  }
+
+  .hero-title {
+    font-size: 3rem;
+    margin-left: 4%;
+  }
+
+  .hero-subtitle {
+    margin-left: 4%;
+  }
+
+  .hero-buttons {
+    margin-left: 4%;
+  }
+
+  .container {
+    padding: 0 20px;
+  }
+
+  .mission-heading {
+    font-size: 2.6rem;
+  }
+
+  .newsletter-form {
+    margin-left: 0;
   }
 }
 
