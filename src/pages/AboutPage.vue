@@ -313,19 +313,32 @@
         <div class="impact-cta-section q-mt-xl">
           <div class="row items-center q-col-gutter-lg">
             <div class="col-12 col-md-7">
-              <h3 class="text-h4 text-weight-bold q-mb-sm">Join Us in Making a Difference</h3>
-              <p class="text-body1 text-grey-7">
+              <div class="cta-badge q-mb-sm">Ready to give?</div>
+              <h3 class="text-h4 text-weight-bold q-mb-sm cta-heading">Join Us in Making a Difference</h3>
+              <p class="text-body1 cta-subtext">
                 Start your donation journey and be part of a global community doing transparent, impactful giving.
               </p>
             </div>
-            <div class="col-12 col-md-5 text-right">
+            <div class="col-12 col-md-5 text-right cta-actions">
               <q-btn
+                class="cta-donate-btn"
                 label="Start Donating"
-                size="lg"
+                icon="volunteer_activism"
+                size="md"
                 unelevated
-                color="primary"
-                padding="12px 48px"
+                no-caps
+                padding="14px 36px"
                 to="/donate"
+              />
+              <q-btn
+                class="cta-learn-btn q-mt-sm"
+                label="View Charities"
+                icon="search"
+                size="md"
+                flat
+                no-caps
+                padding="12px 28px"
+                to="/charities"
               />
             </div>
           </div>
@@ -614,9 +627,108 @@ onMounted(() => {
 }
 
 .impact-cta-section {
-  background: #e3f2fd;
+  background: linear-gradient(135deg, #1565c0 0%, #1976d2 50%, #0d47a1 100%);
   border-radius: 20px;
-  padding: 32px 36px;
+  padding: 40px 40px;
+  position: relative;
+  overflow: hidden;
+}
+
+.impact-cta-section::before {
+  content: '';
+  position: absolute;
+  top: -60px;
+  right: -60px;
+  width: 240px;
+  height: 240px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.07);
+  pointer-events: none;
+}
+
+.impact-cta-section::after {
+  content: '';
+  position: absolute;
+  bottom: -80px;
+  left: 30%;
+  width: 180px;
+  height: 180px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.05);
+  pointer-events: none;
+}
+
+.cta-badge {
+  display: inline-flex;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.18);
+  color: #fff;
+  font-size: 11.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  padding: 4px 14px;
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+}
+
+.cta-heading {
+  color: #fff;
+  line-height: 1.2;
+}
+
+.cta-subtext {
+  color: rgba(255, 255, 255, 0.82);
+  max-width: 480px;
+}
+
+.cta-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+.cta-donate-btn {
+  background: #fff;
+  color: #1565c0;
+  font-weight: 700;
+  font-size: 15px;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.18);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  position: relative;
+  overflow: hidden;
+}
+.cta-donate-btn::after {
+  content: '';
+  position: absolute;
+  top: 0; left: -100%;
+  width: 60%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.45), transparent);
+  transform: skewX(-20deg);
+  animation: cta-shimmer 2.8s ease infinite;
+}
+@keyframes cta-shimmer {
+  0%   { left: -100%; }
+  60%  { left: 160%; }
+  100% { left: 160%; }
+}
+.cta-donate-btn:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.24);
+}
+
+.cta-learn-btn {
+  color: rgba(255, 255, 255, 0.88);
+  border: 1.5px solid rgba(255, 255, 255, 0.35);
+  border-radius: 12px;
+  font-weight: 600;
+  transition: background 0.2s ease, border-color 0.2s ease;
+}
+.cta-learn-btn:hover {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.6);
 }
 
 /* Active card blue border (shared) */
@@ -714,7 +826,7 @@ onMounted(() => {
 }
 
 .body--dark .impact-cta-section {
-  background: #1a3558;
+  background: linear-gradient(135deg, #0d2a52 0%, #1565c0 60%, #0a1e3d 100%);
 }
 
 /* ── Mobile Responsive ───────────────────────────────────────── */
@@ -764,12 +876,17 @@ onMounted(() => {
 
   /* CTA section */
   .impact-cta-section {
-    padding: 24px 20px;
+    padding: 28px 20px;
   }
 
-  .impact-cta-section .col-12.text-right {
-    text-align: left !important;
+  .cta-actions {
+    align-items: stretch;
     margin-top: 12px;
+  }
+
+  .cta-donate-btn,
+  .cta-learn-btn {
+    width: 100%;
   }
 }
 

@@ -2967,8 +2967,10 @@ const viewTransactionDetails = (transaction) => {
 
 .sidebar-stat-block {
   flex: 1;
+  min-width: 0;
   border-radius: 8px;
   padding: 8px 10px;
+  overflow: hidden;
 }
 .sidebar-stat-block--neutral {
   background: #f5f7fa;
@@ -3000,6 +3002,9 @@ const viewTransactionDetails = (transaction) => {
   font-weight: 800;
   color: #263238;
   line-height: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .sidebar-stat-value--positive {
   color: #2e7d32;

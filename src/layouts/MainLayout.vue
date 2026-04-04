@@ -369,7 +369,7 @@
 
           <div class="mobile-drawer-section-label">Main</div>
 
-          <router-link to="/" class="mobile-drawer-item" active-class="mobile-drawer-item--active" exact @click="mobileMenuOpen = false">
+          <router-link to="/" class="mobile-drawer-item" exact-active-class="mobile-drawer-item--active" @click="mobileMenuOpen = false">
             <div class="mobile-drawer-icon mobile-drawer-icon--blue">
               <svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
             </div>

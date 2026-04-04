@@ -437,9 +437,9 @@
           <q-btn 
             unelevated
             color="primary"
-            label="Close" 
-            size="lg"
-            style="max-width: 200px; padding: 12px; background: #0080ff; font-weight: 600;"
+            label="Close"
+            no-caps
+            style="min-width: 120px; border-radius: 8px; font-weight: 600;"
             v-close-popup
           />
         </q-card-actions>

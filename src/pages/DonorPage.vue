@@ -129,9 +129,9 @@
           <div v-if="activeTab === 'donations'" class="q-mt-md">
             <q-btn
               unelevated
-              color="primary"
               label="Make Donation"
               icon="volunteer_activism"
+              no-caps
               class="full-width make-donation-btn"
               @click="$router.push('/donate')"
             />
@@ -2276,6 +2276,9 @@ onMounted(async () => {
   font-weight: 800;
   color: #263238;
   line-height: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .body--dark .sidebar-stat-value {
@@ -2292,8 +2295,10 @@ onMounted(async () => {
 
 .sidebar-stat-block {
   flex: 1;
+  min-width: 0;
   border-radius: 8px;
   padding: 8px 10px;
+  overflow: hidden;
 }
 
 .sidebar-stat-block--blue {
@@ -2727,20 +2732,43 @@ onMounted(async () => {
   background: linear-gradient(135deg, #1565c0, #1976d2) !important;
   color: #fff !important;
   font-weight: 700;
+  font-size: 14px;
   letter-spacing: 0.4px;
-  border-radius: 10px;
-  transition: background 0.2s, box-shadow 0.2s;
+  border-radius: 12px;
+  box-shadow: 0 4px 16px rgba(21, 101, 192, 0.35);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  position: relative;
+  overflow: hidden;
+}
+.make-donation-btn::after {
+  content: '';
+  position: absolute;
+  top: 0; left: -100%;
+  width: 60%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.38), transparent);
+  transform: skewX(-20deg);
+  animation: donation-shimmer 2.8s ease infinite;
+}
+@keyframes donation-shimmer {
+  0%   { left: -100%; }
+  60%  { left: 160%; }
+  100% { left: 160%; }
+}
+.make-donation-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 28px rgba(21, 101, 192, 0.45) !important;
 }
 
 .body--dark .make-donation-btn {
   background: linear-gradient(135deg, #0d47a1, #1565c0) !important;
   color: #e3f2fd !important;
-  box-shadow: 0 2px 12px rgba(21, 101, 192, 0.45);
+  box-shadow: 0 4px 16px rgba(21, 101, 192, 0.45);
 }
 
 .body--dark .make-donation-btn:hover {
   background: linear-gradient(135deg, #1565c0, #1e88e5) !important;
-  box-shadow: 0 4px 16px rgba(30, 136, 229, 0.5);
+  box-shadow: 0 8px 28px rgba(30, 136, 229, 0.5) !important;
 }
 
 .body--dark .sidebar-toggle {
