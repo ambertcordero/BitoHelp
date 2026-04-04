@@ -1876,13 +1876,466 @@ const testimonials = [
 /* Responsive padding for header overlap fix */
 @media (max-width: 599px) {
   .hero-section {
-    padding-top: 56px; /* Smaller padding for mobile */
+    padding-top: 56px;
+  }
+
+  /* Hero text — scale down for phones */
+  .hero-title {
+    font-size: 2.4rem;
+    margin-left: 0;
+    line-height: 1.15;
+  }
+
+  .hero-subtitle {
+    font-size: 1rem;
+    margin-left: 0;
+  }
+
+  .hero-buttons {
+    margin-left: 0;
+    flex-wrap: wrap;
+  }
+
+  /* Hero row padding — q-pa-xl (48px) is too much on phones */
+  .hero-section .row {
+    padding: 20px 16px !important;
+  }
+
+  /* Container needs side breathing room */
+  .container {
+    padding: 0 16px;
+  }
+
+  /* Mission heading */
+  .mission-heading {
+    font-size: 2rem;
+  }
+
+  /* Remove excessive right padding on stacked mission column */
+  .mission-section .q-pr-xl {
+    padding-right: 0 !important;
+  }
+
+  /* Photo boxes — reduce height on mobile */
+  .mission-photo-box {
+    height: 140px;
+  }
+
+  .mission-large-photo {
+    height: 200px;
+  }
+
+  /* Mission section bottom stats — stack nicely */
+  .stat-card {
+    margin-bottom: 4px;
+  }
+
+  /* Crypto benefit cards — reduce padding */
+  .crypto-benefit-card {
+    padding: 20px 16px;
+  }
+
+  .benefit-number {
+    font-size: 1.5rem;
+    min-width: 36px;
+  }
+
+  /* Fee comparison — stack vertically on mobile */
+  .fee-comparison {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  /* Impact year badge — center on mobile */
+  .impact-year-badge {
+    display: inline-block;
+    margin-top: 16px;
+  }
+
+  /* Metric numbers scale down */
+  .metric-number {
+    font-size: 2.2rem;
+  }
+
+  /* Impact story cards — reduce padding */
+  .impact-story-card {
+    padding: 16px;
+  }
+
+  .story-image {
+    height: 90px;
+  }
+
+  /* CTA sections — center button on mobile */
+  .crypto-cta-section .col-12.text-right,
+  .impact-cta-section .col-12.text-right {
+    text-align: left !important;
+    margin-top: 12px;
+  }
+
+  /* Newsletter form — full width on mobile */
+  .newsletter-form {
+    margin-left: 0;
+    max-width: 100%;
+  }
+
+  /* Footer top padding */
+  .footer-top {
+    padding: 40px 0 24px;
+  }
+
+  /* Footer columns — remove excess padding */
+  .footer-brand-section {
+    padding-right: 0;
+  }
+
+  /* Section titles */
+  .section-title {
+    font-size: 1.8rem !important;
+  }
+
+  /* Testimonials min-height reduction */
+  .testimonial-text {
+    min-height: 60px;
   }
 }
 
 @media (min-width: 600px) and (max-width: 1023px) {
   .hero-section {
-    padding-top: 60px; /* Medium padding for tablets */
+    padding-top: 60px;
   }
+
+  .hero-title {
+    font-size: 3rem;
+    margin-left: 4%;
+  }
+
+  .hero-subtitle {
+    margin-left: 4%;
+  }
+
+  .hero-buttons {
+    margin-left: 4%;
+  }
+
+  .container {
+    padding: 0 20px;
+  }
+
+  .mission-heading {
+    font-size: 2.6rem;
+  }
+
+  .newsletter-form {
+    margin-left: 0;
+  }
+}
+
+/* ── Index Page Dark Mode ────────────────────────────────────── */
+
+/* Featured Projects */
+.body--dark .featured-projects-section {
+  background: linear-gradient(180deg, #0f1629 0%, #131d35 100%);
+}
+
+.body--dark .project-card {
+  background: #1a2240;
+  border-color: #2e3f6e;
+  color: #d0daf0;
+}
+
+.body--dark .project-card:hover {
+  border-color: #4d7cc7;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+}
+
+/* Mission Section */
+.body--dark .mission-section {
+  background: #111827;
+}
+
+.body--dark .mission-heading {
+  color: #e0eaff;
+}
+
+.body--dark .mission-description {
+  color: #8fa8cb;
+}
+
+.body--dark .stat-card {
+  background: #1a2240;
+  border-color: #2e3f6e;
+}
+
+/* Why Donate Section */
+.body--dark .why-donate-section {
+  background: #0f1629;
+}
+
+.body--dark .crypto-benefit-card {
+  background: #1a2240;
+  border-color: #2e3f6e;
+  color: #c8d8f0;
+}
+
+.body--dark .crypto-benefit-card:hover {
+  border-color: #4d7cc7;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+}
+
+.body--dark .benefit-number {
+  color: #5d9cf5;
+}
+
+.body--dark .fee-comparison {
+  background: #0f1629;
+}
+
+.body--dark .cause-area-card {
+  background: #1a2240;
+  border-color: #2e3f6e;
+  color: #c8d8f0;
+}
+
+.body--dark .cause-area-card:hover {
+  border-color: #4d7cc7;
+}
+
+.body--dark .crypto-cta-section {
+  border-color: #2e3f6e;
+}
+
+/* Donation Matters Section */
+.body--dark .donation-matters-section {
+  background: linear-gradient(180deg, #111827 0%, #0f1629 100%);
+}
+
+.body--dark .impact-year-badge {
+  background: linear-gradient(135deg, #1a2a4a 0%, #1a2240 100%);
+  border-color: #4d7cc7;
+}
+
+.body--dark .metric-card {
+  background: #1a2240;
+  border-color: #2e3f6e;
+}
+
+.body--dark .metric-card:hover {
+  border-color: #4d7cc7;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+}
+
+.body--dark .metric-label {
+  color: #c8d8f0;
+}
+
+.body--dark .metric-description {
+  color: #7a96b8;
+}
+
+.body--dark .metric-trend {
+  border-color: #2e3f6e;
+}
+
+.body--dark .impact-story-card {
+  background: #1a2240;
+  border-color: #2e3f6e;
+  color: #c8d8f0;
+}
+
+.body--dark .impact-story-card:hover {
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+}
+
+.body--dark .story-title {
+  color: #d8e8ff;
+}
+
+.body--dark .impact-cta-section {
+  border-color: #2e3f6e;
+}
+
+/* Testimonials Section */
+.body--dark .testimonials-section {
+  background: linear-gradient(180deg, #0f1629 0%, #111827 100%);
+}
+
+.body--dark .testimonial-card {
+  background: #1a2240;
+  border-color: #2e3f6e;
+}
+
+.body--dark .testimonial-card:hover {
+  border-color: #4d7cc7;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.45);
+}
+
+.body--dark .quote-icon-wrapper {
+  background: #1a2240;
+  border-color: #2e3f6e;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+
+.body--dark .testimonial-text {
+  color: #a0b8d8;
+}
+
+.body--dark .trust-section {
+  border-color: #2e3f6e;
+}
+
+.body--dark .trust-badge {
+  background: #1a2240;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  color: #c8d8f0;
+}
+
+.body--dark .trust-badge:hover {
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
+}
+
+/* About Section */
+.body--dark .about-impact-section {
+  background: #111827;
+}
+
+.body--dark .about-content-professional {
+  background: transparent;
+}
+
+.body--dark .about-badge {
+  background: #1a2a4a;
+  color: #5d9cf5;
+}
+
+.body--dark .feature-box {
+  background: #1a2240;
+  color: #c8d8f0;
+}
+
+.body--dark .feature-box:hover {
+  background: #1e3060;
+}
+
+/* ── Fix Quasar grey text classes on dark section backgrounds ─ */
+
+/* Featured Projects */
+.body--dark .featured-projects-section .text-grey-6,
+.body--dark .featured-projects-section .text-grey-7,
+.body--dark .featured-projects-section .text-grey-8 {
+  color: #8fa8cb !important;
+}
+.body--dark .project-card .text-h6 {
+  color: #d8e8ff !important;
+}
+.body--dark .project-card .text-grey-7 {
+  color: #8fa8cb !important;
+}
+.body--dark .project-card .text-caption {
+  color: #8fa8cb !important;
+}
+
+/* Mission */
+.body--dark .mission-section .text-h3,
+.body--dark .mission-section .text-h4,
+.body--dark .mission-section .text-h5 {
+  color: #e0eaff !important;
+}
+.body--dark .mission-section .text-grey-7,
+.body--dark .mission-section .text-grey-8 {
+  color: #8fa8cb !important;
+}
+.body--dark .stat-card .text-subtitle1 {
+  color: #8fa8cb !important;
+}
+
+/* Why Donate */
+.body--dark .why-donate-section .text-h3,
+.body--dark .why-donate-section .text-h5 {
+  color: #e0eaff !important;
+}
+.body--dark .why-donate-section .text-grey-7,
+.body--dark .why-donate-section .text-grey-8 {
+  color: #8fa8cb !important;
+}
+.body--dark .crypto-benefit-card h3 {
+  color: #d8e8ff !important;
+}
+.body--dark .crypto-cta-section h3 {
+  color: #e0eaff !important;
+}
+.body--dark .crypto-cta-section .text-grey-7 {
+  color: #8fa8cb !important;
+}
+.body--dark .cause-area-card .text-subtitle1 {
+  color: #d8e8ff !important;
+}
+.body--dark .cause-area-card .text-grey-7,
+.body--dark .cause-area-card .text-caption {
+  color: #8fa8cb !important;
+}
+
+/* Donation Matters */
+.body--dark .donation-matters-section .text-h3,
+.body--dark .donation-matters-section .text-h4,
+.body--dark .donation-matters-section .text-h5 {
+  color: #e0eaff !important;
+}
+.body--dark .donation-matters-section .text-grey-7,
+.body--dark .donation-matters-section .text-grey-8 {
+  color: #8fa8cb !important;
+}
+.body--dark .impact-story-card .text-subtitle1 {
+  color: #d8e8ff !important;
+}
+.body--dark .impact-story-card .text-body2,
+.body--dark .impact-story-card .text-grey-7 {
+  color: #8fa8cb !important;
+}
+.body--dark .impact-cta-section h3 {
+  color: #e0eaff !important;
+}
+.body--dark .impact-cta-section .text-grey-7 {
+  color: #8fa8cb !important;
+}
+
+/* Testimonials */
+.body--dark .testimonials-section .text-h3,
+.body--dark .testimonials-section .text-h5,
+.body--dark .testimonials-section .text-h6 {
+  color: #e0eaff !important;
+}
+.body--dark .testimonials-section .text-grey-7 {
+  color: #8fa8cb !important;
+}
+.body--dark .testimonial-card .text-subtitle1 {
+  color: #d8e8ff !important;
+}
+.body--dark .testimonial-card .text-caption {
+  color: #8fa8cb !important;
+}
+.body--dark .trust-section .text-h5 {
+  color: #e0eaff !important;
+}
+.body--dark .trust-section .text-grey-7,
+.body--dark .trust-section .text-grey-8 {
+  color: #8fa8cb !important;
+}
+
+/* About Section */
+.body--dark .about-impact-section .text-h3,
+.body--dark .about-impact-section .text-h4,
+.body--dark .about-impact-section .text-h5 {
+  color: #e0eaff !important;
+}
+.body--dark .about-impact-section .text-grey-7,
+.body--dark .about-impact-section .text-grey-8 {
+  color: #8fa8cb !important;
+}
+.body--dark .feature-box .text-subtitle1 {
+  color: #d8e8ff !important;
+}
+.body--dark .feature-box .text-caption {
+  color: #8fa8cb !important;
 }
 </style>

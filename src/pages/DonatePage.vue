@@ -59,13 +59,40 @@
             </template>
           </q-select>
 
-          <div class="floating-field" :class="{ 'is-filled': form.recipientAddress }">
-            <input :value="form.recipientAddress" type="text" placeholder=" " readonly />
-            <label>Recipient's Address</label>
+          <!-- Row 1: Recipient Address | Coin -->
+          <div class="compact-row q-mt-md">
+            <div
+              class="floating-field compact-field"
+              :class="{ 'is-filled': form.recipientAddress }"
+            >
+              <input
+                :value="truncatedRecipientAddress"
+                type="text"
+                placeholder=" "
+                readonly
+                :title="form.recipientAddress"
+              />
+              <label>Recipient's Address</label>
+            </div>
+
+            <q-select
+              v-model="form.coin"
+              :options="coinOptions"
+              outlined
+              emit-value
+              map-options
+              label="Coin"
+              class="donation-select compact-select"
+              dense
+            />
           </div>
 
-          <div class="mini-grid q-mt-md">
-            <div class="floating-field mini-field" :class="{ 'is-filled': form.deposit !== '' }">
+          <!-- Row 2: Deposit | Interval | Withdrawal -->
+          <div class="compact-row-3 q-mt-md">
+            <div
+              class="floating-field compact-field mini-field"
+              :class="{ 'is-filled': form.deposit !== '' }"
+            >
               <input
                 :value="form.deposit"
                 type="text"
@@ -73,11 +100,25 @@
                 placeholder=" "
                 @input="onDecimalInput('deposit', $event)"
               />
-              <label>Deposit (total)</label>
+              <label>Deposit</label>
               <span class="php-conversion">{{ depositPhp }}</span>
             </div>
 
-            <div class="floating-field mini-field" :class="{ 'is-filled': form.withdrawal !== '' }">
+            <q-select
+              v-model="form.interval"
+              :options="intervalOptions"
+              outlined
+              emit-value
+              map-options
+              label="Interval"
+              class="donation-select compact-select"
+              dense
+            />
+
+            <div
+              class="floating-field compact-field mini-field"
+              :class="{ 'is-filled': form.withdrawal !== '' }"
+            >
               <input
                 :value="form.withdrawal"
                 type="text"
@@ -85,33 +126,57 @@
                 placeholder=" "
                 @input="onDecimalInput('withdrawal', $event)"
               />
-              <label>Withdrawal (per cycle)</label>
+              <label>Withdrawal</label>
               <span class="php-conversion">{{ withdrawalPhp }}</span>
             </div>
           </div>
-
-          <q-select
-            v-model="form.interval"
-            :options="intervalOptions"
-            outlined
-            emit-value
-            map-options
-            label="Interval"
-            class="donation-select q-mt-md"
-          />
           <p v-if="intervalWarning" class="interval-warning q-mt-xs q-mb-none">
             {{ intervalWarning }}
           </p>
 
-          <q-select
-            v-model="form.coin"
-            :options="coinOptions"
-            outlined
-            emit-value
-            map-options
-            label="Coin"
-            class="donation-select q-mt-md"
-          />
+          <!-- Payout Options -->
+          <div class="payout-options q-mt-md">
+            <label class="payout-checkbox">
+              <input
+                type="checkbox"
+                :checked="form.smartPayout"
+                @change="selectPayoutMode('smart')"
+              />
+              <span class="payout-checkbox__label">Smart Payout</span>
+              <q-icon name="info" class="payout-info-icon" size="14px">
+                <q-tooltip
+                  anchor="top middle"
+                  self="bottom middle"
+                  :offset="[0, 6]"
+                  max-width="260px"
+                >
+                  Automatically executes scheduled withdrawals once the interval is reached and
+                  instantly notifies the donor via email with transaction details.
+                </q-tooltip>
+              </q-icon>
+            </label>
+
+            <label class="payout-checkbox">
+              <input
+                type="checkbox"
+                :checked="form.payoutApproval"
+                @change="selectPayoutMode('inbox_approval')"
+              />
+              <span class="payout-checkbox__label">Payout Approval</span>
+              <q-icon name="info" class="payout-info-icon" size="14px">
+                <q-tooltip
+                  anchor="top middle"
+                  self="bottom middle"
+                  :offset="[0, 6]"
+                  max-width="260px"
+                >
+                  Notifies the donor when a withdrawal is ready and requires their confirmation
+                  before releasing funds to the recipient, ensuring full control over each
+                  transaction.
+                </q-tooltip>
+              </q-icon>
+            </label>
+          </div>
 
           <div class="donor-title">DONOR CONTACT INFO</div>
 
@@ -265,7 +330,7 @@ const WALLET_BALANCE_ADJUST_EVENT = 'bitohelp:wallet-balance-adjust'
 const WALLET_BALANCE_REFRESH_EVENT = 'bitohelp:wallet-balance-refresh'
 const DONATION_SENT_EVENT = 'bitohelp:donation-sent'
 const WALLET_CLIENT_GLOBAL_KEY = '__bitohelpWalletClient__'
-const WALLET_REQUEST_TIMEOUT_MS = 90000
+const WALLET_REQUEST_TIMEOUT_MS = 30000
 const PAYTACA_BCH_CHIPNET_WC_LIMITATION_MESSAGE =
   'Paytaca approved the request but did not return a signed BCH chipnet transaction over WalletConnect. No funds were sent. This appears to be a wallet-side issue.'
 
@@ -375,11 +440,29 @@ const form = ref({
   deposit: '',
   withdrawal: '',
   interval: '10min',
+  smartPayout: true,
+  payoutApproval: false,
   name: '',
   email: '',
   contact: '',
   message: '',
 })
+
+const selectPayoutMode = (mode) => {
+  if (mode === 'smart') {
+    form.value.smartPayout = !form.value.smartPayout
+    if (form.value.smartPayout) form.value.payoutApproval = false
+  } else {
+    form.value.payoutApproval = !form.value.payoutApproval
+    if (form.value.payoutApproval) form.value.smartPayout = false
+  }
+  // Ensure at least one is selected
+  if (!form.value.smartPayout && !form.value.payoutApproval) {
+    form.value.smartPayout = true
+  }
+}
+
+const payoutMode = computed(() => (form.value.payoutApproval ? 'inbox_approval' : 'smart'))
 
 const conversionRates = ref({ BCH: 0, ETH: 0 })
 const isSubmittingDonation = ref(false)
@@ -404,6 +487,13 @@ const selectedOrganizationName = computed(() => {
 const selectedOrganizationIcon = computed(() => {
   const selected = organizationCatalog.find((o) => o.value === form.value.organization)
   return selected?.icon || ''
+})
+
+const truncatedRecipientAddress = computed(() => {
+  const addr = form.value.recipientAddress || ''
+  if (addr.length <= 16) return addr
+  const clean = addr.includes(':') ? addr.split(':')[1] : addr
+  return `${clean.slice(0, 6)}...${clean.slice(-4)}`
 })
 
 const summaryDeposit = computed(() => {
@@ -644,21 +734,6 @@ const summarizeBchSigningCompatibility = (payload, walletClient) => {
   }
 }
 
-const ensureWalletSessionReachable = async (walletClient, timeoutMs = 10000) => {
-  if (typeof walletClient?.ping !== 'function') return true
-  await Promise.race([
-    walletClient.ping(),
-    new Promise((_, reject) => {
-      window.setTimeout(() => {
-        reject(
-          new Error('WalletConnect session is not responding. Reconnect wallet and try again.'),
-        )
-      }, timeoutMs)
-    }),
-  ])
-  return true
-}
-
 const validateBchWalletSession = (walletClient, chainId) => {
   const summary = getWalletSessionSummary(walletClient)
   const normalizedAddress = normalizeChipnetAddress(summary.address)
@@ -693,22 +768,72 @@ const executeWalletRequest = async (walletClient, chainId, method, candidatePara
       if (import.meta.env.DEV) {
         console.info('[BitoHelp][donation-request:start]', { method, chainId, params })
       }
-      const response = await Promise.race([
-        walletClient.request({ chainId, request: { method, params } }),
-        new Promise((_, reject) => {
-          window.setTimeout(
-            () => reject(new Error('Wallet approval request timed out.')),
-            WALLET_REQUEST_TIMEOUT_MS,
+
+      // Capture request ID in parallel (not blocking) — needed for history fallback.
+      let capturedRequestId = null
+      if (typeof walletClient?.waitForRequestSent === 'function') {
+        walletClient.waitForRequestSent(method, 8000).then((rec) => {
+          capturedRequestId = rec?.id ?? null
+        })
+      }
+
+      // Fire the request immediately — relay timeout races from this point.
+      const requestPromise = walletClient.request({ chainId, request: { method, params } })
+
+      let response
+      try {
+        response = await Promise.race([
+          requestPromise,
+          new Promise((_, reject) =>
+            window.setTimeout(() => reject(new Error('RELAY_TIMEOUT')), WALLET_REQUEST_TIMEOUT_MS),
+          ),
+        ])
+      } catch (relayError) {
+        if (relayError?.message !== 'RELAY_TIMEOUT') throw relayError
+
+        // Relay timed out delivering the response. The WalletConnect SDK stores
+        // responses in its local history even when relay delivery fails — poll it.
+        if (capturedRequestId !== null && typeof walletClient?.getHistoryRecord === 'function') {
+          if (import.meta.env.DEV) {
+            console.warn(
+              '[BitoHelp][donation-request:relay-drop] Polling history for id:',
+              capturedRequestId,
+            )
+          }
+          const deadline = Date.now() + 20000
+          while (Date.now() < deadline) {
+            await new Promise((r) => window.setTimeout(r, 1500))
+            const record = await walletClient.getHistoryRecord(capturedRequestId)
+            if (record?.response?.result !== undefined) {
+              if (import.meta.env.DEV) {
+                console.info('[BitoHelp][donation-request:history-recovered]', record.response.result)
+              }
+              response = record.response.result
+              break
+            }
+            if (record?.response?.error) {
+              throw new Error(
+                record.response.error?.message ||
+                  record.response.error?.reason ||
+                  'Wallet rejected the request.',
+              )
+            }
+          }
+        }
+
+        if (response === undefined) {
+          throw new Error(
+            'Wallet accepted but the relay did not deliver the response. Please try again.',
           )
-        }),
-      ])
+        }
+      }
+
       if (import.meta.env.DEV) {
         console.info('[BitoHelp][donation-request:success]', { method, response })
       }
       return response
     } catch (error) {
       lastError = error
-      if (/timed out/i.test(String(error?.message || ''))) break
     }
   }
   throw lastError || new Error(`Wallet did not accept ${method} request.`)
@@ -807,8 +932,6 @@ const signBchTransactionWithWalletConnect = async ({ walletClient, chainId, sign
     validateBchWalletSession(walletClient, resolvedChainId)
   }
 
-  await ensureWalletSessionReachable(walletClient)
-
   try {
     return await executeWalletRequest(walletClient, resolvedChainId, 'bch_signTransaction', [
       signingPayload,
@@ -846,6 +969,10 @@ const runChipnetBchDonationFlow = async ({
   withdrawalCoin,
   intervalBlocks,
   intervalLabel,
+  totalCycles,
+  mode,
+  donorEmail,
+  donorName,
 }) => {
   // 1. Instantiate the vault contract and derive the P2SH20 address
   submissionStatus.value = { type: '', message: 'Creating vault contract...' }
@@ -900,7 +1027,7 @@ const runChipnetBchDonationFlow = async ({
 
   submissionStatus.value = {
     type: '',
-    message: 'Waiting for wallet signature... confirm in Paytaca.',
+    message: 'Waiting for wallet signature... confirm in Paytaca. (May take a moment after accepting)',
   }
 
   const signedResult = await signBchTransactionWithWalletConnect({
@@ -909,9 +1036,9 @@ const runChipnetBchDonationFlow = async ({
     signingPayload,
   })
 
-  const { rawTxHex, signedTxid } = extractWalletSignedTransaction(signedResult)
+  submissionStatus.value = { type: '', message: 'Signature received. Broadcasting to Chipnet...' }
 
-  submissionStatus.value = { type: '', message: 'Broadcasting signed transaction to Chipnet...' }
+  const { rawTxHex, signedTxid } = extractWalletSignedTransaction(signedResult)
 
   const broadcast = await broadcastRawTransaction({ rawTxHex })
 
@@ -932,9 +1059,13 @@ const runChipnetBchDonationFlow = async ({
     withdrawalCoin,
     intervalBlocks,
     intervalLabel,
+    totalCycles: totalCycles || 0,
     recipientAddress: charityAddress,
     funderAddress: senderAddress,
     contractParams: vault.params,
+    payoutMode: mode || 'smart',
+    donorEmail: donorEmail || '',
+    donorName: donorName || '',
     status: 'funded',
   }
   saveVaultRecord(vaultRecord)
@@ -975,6 +1106,8 @@ const resetForm = () => {
     coin: 'BCH',
     recipientAddress: '',
     deposit: '',
+    smartPayout: true,
+    payoutApproval: false,
     withdrawal: '',
     interval: '10min',
     name: '',
@@ -1106,6 +1239,16 @@ const submitDonation = async () => {
     }
   }
 
+  // Require email when inbox_approval is selected
+  if (payoutMode.value === 'inbox_approval' && !form.value.email) {
+    submissionStatus.value = {
+      type: 'negative',
+      message: 'Donor email is required for Payout Approval mode.',
+    }
+    notify({ type: 'warning', message: 'Please enter your email for Payout Approval.' })
+    return
+  }
+
   if (selectedCoin === 'BCH' && !isValidChipnetAddress(typedRecipientAddress)) {
     submissionStatus.value = {
       type: 'negative',
@@ -1201,6 +1344,10 @@ const submitDonation = async () => {
         withdrawalCoin,
         intervalBlocks,
         intervalLabel: selectedInterval,
+        totalCycles: Number(cycles),
+        mode: payoutMode.value,
+        donorEmail: form.value.email,
+        donorName: form.value.name,
       })
       txReference = bchResult.txid
       vaultAddr = bchResult.vaultAddress || ''
@@ -1220,7 +1367,7 @@ const submitDonation = async () => {
     try {
       const matchedNp = nonprofits.value.find((np) => np.name === form.value.organization)
       const explorerUrl = txReference ? `https://chipnet.chaingraph.cash/tx/${txReference}` : ''
-      await api.post('donations/', {
+      const donationRes = await api.post('donations/', {
         txid: txReference,
         recipient: form.value.recipientAddress,
         amount: depositCoin,
@@ -1234,7 +1381,39 @@ const submitDonation = async () => {
         nonprofit: matchedNp?.id,
         contract: vaultAddr,
         interval: form.value.interval,
+        interval_blocks: intervalBlocks,
+        payout_mode: payoutMode.value,
       })
+
+      // Schedule all payout cycles in the backend so the dashboard
+      // can display them in Pending Withdrawals and show the Withdraw button.
+      if (selectedCoin === 'BCH' && withdrawalSatoshis && intervalBlocks) {
+        const savedDonationId = donationRes?.data?.id
+        const feeSats = BigInt(VAULT_MINER_FEE_SATS)
+        const costPerCycle = withdrawalSatoshis + feeSats
+        const totalCycles = costPerCycle > 0n ? Number(depositSatoshis / costPerCycle) : 0
+        const intervalMs = Number(intervalBlocks) * 10 * 60 * 1000
+
+        for (let cycle = 1; cycle <= totalCycles; cycle++) {
+          const dueAt = new Date(Date.now() + cycle * intervalMs).toISOString()
+          // best-effort — don't block on failures
+          api.post('payouts/request/', {
+            donation_id: savedDonationId ?? donationId,
+            donor_email: form.value.email || '',
+            donor_name: form.value.name || 'Anonymous',
+            recipient_address: form.value.recipientAddress,
+            vault_address: vaultAddr,
+            payout_amount_satoshis: Number(withdrawalSatoshis),
+            coin: form.value.coin,
+            interval_label: form.value.interval,
+            interval_blocks: intervalBlocks,
+            cycle_number: cycle,
+            total_cycles: totalCycles,
+            due_at: dueAt,
+            payout_mode: payoutMode.value,
+          }).catch(() => { /* best-effort */ })
+        }
+      }
     } catch {
       /* backend save is best-effort */
     }
@@ -1292,6 +1471,70 @@ const submitDonation = async () => {
 </script>
 
 <style scoped>
+/* ── Glassmorphism panels ────────────────────────────────────── */
+.donation-form-panel {
+  background: rgba(255, 255, 255, 0.60);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border: 2px solid #1565c0;
+  border-radius: 20px;
+  box-shadow:
+    0 2px 0 rgba(21, 101, 192, 0.12),
+    0 8px 32px rgba(30, 40, 80, 0.14),
+    0 16px 48px rgba(30, 40, 80, 0.08);
+  padding: 28px;
+  transition: box-shadow 0.25s ease, transform 0.25s ease;
+}
+.donation-form-panel:hover {
+  box-shadow:
+    0 2px 0 rgba(21, 101, 192, 0.18),
+    0 12px 40px rgba(30, 40, 80, 0.18),
+    0 24px 60px rgba(30, 40, 80, 0.10);
+  transform: translateY(-3px);
+}
+
+.donation-summary-panel {
+  background: rgba(255, 255, 255, 0.60);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border: 2px solid #1565c0;
+  border-radius: 20px;
+  box-shadow:
+    0 2px 0 rgba(21, 101, 192, 0.12),
+    0 8px 32px rgba(30, 40, 80, 0.14),
+    0 16px 48px rgba(30, 40, 80, 0.08);
+  padding: 28px;
+  transition: box-shadow 0.25s ease, transform 0.25s ease;
+}
+.donation-summary-panel:hover {
+  box-shadow:
+    0 2px 0 rgba(21, 101, 192, 0.18),
+    0 12px 40px rgba(30, 40, 80, 0.18),
+    0 24px 60px rgba(30, 40, 80, 0.10);
+  transform: translateY(-3px);
+}
+
+/* Dark mode */
+.body--dark .donation-form-panel,
+.body--dark .donation-summary-panel {
+  background: rgba(20, 24, 40, 0.65);
+  backdrop-filter: blur(20px) saturate(160%);
+  -webkit-backdrop-filter: blur(20px) saturate(160%);
+  border: 2px solid #42a5f5;
+  box-shadow:
+    0 2px 0 rgba(66, 165, 245, 0.12),
+    0 8px 32px rgba(0, 0, 0, 0.4),
+    0 16px 48px rgba(0, 0, 0, 0.22);
+}
+.body--dark .donation-form-panel:hover,
+.body--dark .donation-summary-panel:hover {
+  box-shadow:
+    0 2px 0 rgba(66, 165, 245, 0.2),
+    0 12px 40px rgba(0, 0, 0, 0.5),
+    0 24px 60px rgba(0, 0, 0, 0.28);
+  transform: translateY(-3px);
+}
+
 .donation-status {
   font-size: 0.86rem;
   color: #1f7a1f;

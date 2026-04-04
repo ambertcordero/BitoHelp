@@ -201,8 +201,8 @@
     </section>
 
 
-    <q-dialog v-model="showRegisterDialog">
-      <q-card style="min-width: 500px; max-width: 600px; border-radius: 5px;">
+    <q-dialog v-model="showRegisterDialog" :maximized="$q.screen.lt.sm">
+      <q-card class="register-dialog-card">
         <q-card-section class="text-center" style="padding: 24px 24px 16px;">
           <div style="margin-bottom: 16px;">
             <q-icon name="currency_bitcoin" size="48px" color="orange" />
@@ -233,7 +233,7 @@
           </div>
 
           <div class="row q-col-gutter-md form-field">
-            <div class="col-6">
+            <div class="col-12 col-sm-6">
               <label class="field-label">Contact Email</label>
               <q-input
                 v-model="charityForm.email"
@@ -243,10 +243,9 @@
                 placeholder="Enter email address"
               />
             </div>
-            <div class="col-6">
+            <div class="col-12 col-sm-6">
               <label class="field-label">Phone Number</label>
               <q-input
-                v-model="charityForm.phone"
                 outlined
                 dense
                 placeholder="Enter phone number"
@@ -702,6 +701,7 @@ const copyWalletAddress = (address) => {
 .container {
   max-width: 1200px;
   margin: 0 auto;
+  padding: 0 16px;
 }
 
 .section-header {
@@ -906,6 +906,14 @@ const copyWalletAddress = (address) => {
 }
 
 @media (max-width: 768px) {
+  .hero-title {
+    font-size: 2.4rem;
+  }
+
+  .hero-subtitle {
+    font-size: 1rem;
+  }
+
   .featured-section {
     padding: 60px 20px 40px;
   }
@@ -955,6 +963,23 @@ const copyWalletAddress = (address) => {
   }
 }
 
+
+.register-dialog-card {
+  width: 100%;
+  max-width: 600px;
+  border-radius: 12px;
+  overflow-y: auto;
+  max-height: 90vh;
+}
+
+@media (max-width: 599px) {
+  .register-dialog-card {
+    border-radius: 0;
+    max-height: 100dvh;
+    min-height: 100dvh;
+    max-width: 100vw;
+  }
+}
 
 .dialog-title {
   font-size: 24px;
@@ -1226,5 +1251,119 @@ const copyWalletAddress = (address) => {
   font-size: 14px;
   color: #333;
   word-break: break-all;
+}
+
+/* ── ProjectPage Dark Mode ───────────────────────────────────── */
+.body--dark .project-page {
+  background: #0f1629;
+}
+
+/* Featured section */
+.body--dark .featured-section {
+  background: #0f1629;
+}
+
+.body--dark .section-header::before,
+.body--dark .section-header::after {
+  background: #2e3f6e;
+}
+
+.body--dark .section-title {
+  color: #e0eaff;
+}
+
+/* Project cards */
+.body--dark .project-card {
+  background: #1a2240;
+  border-color: #2e3f6e;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.body--dark .project-card:hover {
+  box-shadow: 0 10px 28px rgba(9, 111, 212, 0.45);
+}
+
+.body--dark .project-title {
+  color: #d8e8ff;
+}
+
+.body--dark .project-description {
+  color: #8fa8cb;
+}
+
+.body--dark .details-btn {
+  color: #5d9cf5;
+}
+
+.body--dark .details-btn:hover {
+  background: rgba(93, 156, 245, 0.1);
+}
+
+/* Register section */
+.body--dark .charity-register-section {
+  background: #0f1629;
+}
+
+.body--dark .charity-register-section::before {
+  background: #2e3f6e;
+}
+
+.body--dark .register-title {
+  color: #e0eaff;
+}
+
+.body--dark .register-subtitle {
+  color: #8fa8cb;
+}
+
+/* Register dialog */
+.body--dark .glass-dialog-card {
+  background: #1a2240 !important;
+}
+
+.body--dark .dialog-title {
+  color: #e0eaff;
+}
+
+.body--dark .dialog-subtitle {
+  color: #8fa8cb;
+}
+
+.body--dark .field-label {
+  color: #c0d4f0;
+}
+
+/* Details dialog */
+.body--dark .section-label {
+  color: #c0d4f0;
+}
+
+.body--dark .details-text {
+  color: #8fa8cb;
+}
+
+.body--dark .impact-card {
+  background: linear-gradient(135deg, #1a2a4a 0%, #1a2240 100%);
+}
+
+.body--dark .contact-item {
+  background: #111827;
+}
+
+.body--dark .contact-label {
+  color: #6a88aa;
+}
+
+.body--dark .contact-value {
+  color: #c0d4f0;
+}
+
+.body--dark .wallet-container {
+  background: #111827;
+  border-color: #2e3f6e;
+}
+
+.body--dark .wallet-address {
+  color: #7ecbff;
 }
 </style>
