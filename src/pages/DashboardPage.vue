@@ -1038,8 +1038,8 @@
       </div>
     </div>
 
-    <q-dialog v-model="withdrawDialog" persistent>
-      <q-card style="min-width: 400px; max-width: 500px">
+    <q-dialog v-model="withdrawDialog" persistent :position="$q.screen.lt.sm ? 'bottom' : 'standard'">
+      <q-card :style="$q.screen.lt.sm ? 'width: 100vw; max-width: 100vw; border-radius: 16px 16px 0 0;' : 'min-width: 400px; max-width: 500px;'">
         <q-card-section class="row items-center q-pb-none">
           <div class="text-h6">Withdraw Funds</div>
           <q-space />
@@ -1204,8 +1204,8 @@
     <!-- ═══════════════════════════════════════════════════════════
          Professional Withdraw Confirm Dialog
          ═══════════════════════════════════════════════════════════ -->
-    <q-dialog v-model="withdrawConfirmDialog.open" persistent>
-      <q-card class="withdraw-confirm-card">
+    <q-dialog v-model="withdrawConfirmDialog.open" persistent :position="$q.screen.lt.sm ? 'bottom' : 'standard'">
+      <q-card class="withdraw-confirm-card" :style="$q.screen.lt.sm ? 'width:100vw;max-width:100vw;min-width:unset;border-radius:16px 16px 0 0;' : ''">
 
         <!-- ── Gradient Header ──────────────────────────────────── -->
         <div
@@ -1246,7 +1246,7 @@
         </div>
 
         <!-- ── Summary Stats Row ────────────────────────────────── -->
-        <div class="q-px-lg q-pt-lg q-pb-sm">
+        <div :class="$q.screen.lt.sm ? 'q-px-sm q-pt-md q-pb-sm' : 'q-px-lg q-pt-lg q-pb-sm'">
           <div class="row q-col-gutter-sm">
 
             <!-- Total BCH -->
@@ -1289,60 +1289,103 @@
         </div>
 
         <!-- ── Payout Details Table ──────────────────────────────── -->
-        <div class="q-px-lg q-pb-sm">
+        <div :class="$q.screen.lt.sm ? 'q-px-sm q-pb-sm' : 'q-px-lg q-pb-sm'">
           <div class="wcd-table-heading">Payout Details</div>
           <div class="wcd-table-wrapper">
 
-            <!-- Table Header -->
-            <div class="row wcd-table-header">
+            <!-- Desktop: table header -->
+            <div v-if="!$q.screen.lt.sm" class="row wcd-table-header">
               <div class="col-5 wcd-col-label">Donor</div>
               <div class="col-3 text-right wcd-col-label">Amount</div>
               <div class="col-2 text-center wcd-col-label">Cycle</div>
               <div class="col text-right wcd-col-label">Scheduled</div>
             </div>
 
-            <!-- Table Rows -->
-            <div
-              v-for="(payout, idx) in withdrawConfirmDialog.payouts"
-              :key="payout.id"
-              class="row items-center wcd-table-row"
-              :style="{
-                borderBottom: idx < withdrawConfirmDialog.payouts.length - 1
-                  ? ($q.dark.isActive ? '1px solid #1e2d50' : '1px solid #f0f4f8')
-                  : 'none',
-                background: idx % 2 === 0
-                  ? ($q.dark.isActive ? '#0f1629' : '#ffffff')
-                  : ($q.dark.isActive ? '#111d3a' : '#fafbfc'),
-              }"
-            >
-              <div class="col-5" style="min-width: 0;">
-                <div class="ellipsis wcd-donor-name">{{ payout.donorName }}</div>
-                <div class="ellipsis wcd-donor-email">{{ payout.donorEmail || '—' }}</div>
+            <!-- Desktop: table rows -->
+            <template v-if="!$q.screen.lt.sm">
+              <div
+                v-for="(payout, idx) in withdrawConfirmDialog.payouts"
+                :key="payout.id"
+                class="row items-center wcd-table-row"
+                :style="{
+                  borderBottom: idx < withdrawConfirmDialog.payouts.length - 1
+                    ? ($q.dark.isActive ? '1px solid #1e2d50' : '1px solid #f0f4f8')
+                    : 'none',
+                  background: idx % 2 === 0
+                    ? ($q.dark.isActive ? '#0f1629' : '#ffffff')
+                    : ($q.dark.isActive ? '#111d3a' : '#fafbfc'),
+                }"
+              >
+                <div class="col-5" style="min-width: 0;">
+                  <div class="ellipsis wcd-donor-name">{{ payout.donorName }}</div>
+                  <div class="ellipsis wcd-donor-email">{{ payout.donorEmail || '—' }}</div>
+                </div>
+                <div class="col-3 text-right">
+                  <div class="wcd-payout-amount">{{ payout.amountBch }}</div>
+                  <div class="wcd-payout-bch">BCH</div>
+                </div>
+                <div class="col-2 text-center">
+                  <q-chip
+                    dense
+                    :label="`${payout.cycleNumber} / ${payout.totalCycles}`"
+                    color="blue-2"
+                    text-color="blue-9"
+                    style="font-size: 10px; font-weight: 700; border-radius: 6px; height: 20px;"
+                  />
+                </div>
+                <div class="col text-right">
+                  <div class="wcd-due-date">{{ fmtDialogDateShort(new Date(payout.dueAt)) }}</div>
+                  <div class="wcd-due-time">{{ fmtDialogTime(new Date(payout.dueAt)) }}</div>
+                </div>
               </div>
-              <div class="col-3 text-right">
-                <div class="wcd-payout-amount">{{ payout.amountBch }}</div>
-                <div class="wcd-payout-bch">BCH</div>
+            </template>
+
+            <!-- Mobile: card rows -->
+            <template v-else>
+              <div
+                v-for="(payout, idx) in withdrawConfirmDialog.payouts"
+                :key="payout.id"
+                class="wcd-mobile-row"
+                :style="{
+                  borderBottom: idx < withdrawConfirmDialog.payouts.length - 1
+                    ? ($q.dark.isActive ? '1px solid #1e2d50' : '1px solid #f0f4f8')
+                    : 'none',
+                  background: idx % 2 === 0
+                    ? ($q.dark.isActive ? '#0f1629' : '#ffffff')
+                    : ($q.dark.isActive ? '#111d3a' : '#fafbfc'),
+                }"
+              >
+                <div class="row items-start justify-between no-wrap">
+                  <div style="min-width: 0; flex: 1;">
+                    <div class="ellipsis wcd-donor-name">{{ payout.donorName }}</div>
+                    <div class="ellipsis wcd-donor-email">{{ payout.donorEmail || '—' }}</div>
+                  </div>
+                  <div class="text-right" style="flex-shrink: 0; margin-left: 10px;">
+                    <div class="wcd-payout-amount">{{ payout.amountBch }}</div>
+                    <div class="wcd-payout-bch">BCH</div>
+                  </div>
+                </div>
+                <div class="row items-center justify-between q-mt-xs">
+                  <q-chip
+                    dense
+                    :label="`Cycle ${payout.cycleNumber} / ${payout.totalCycles}`"
+                    color="blue-2"
+                    text-color="blue-9"
+                    style="font-size: 10px; font-weight: 700; border-radius: 6px; height: 20px; margin: 0;"
+                  />
+                  <div class="text-right">
+                    <div class="wcd-due-date">{{ fmtDialogDateShort(new Date(payout.dueAt)) }}</div>
+                    <div class="wcd-due-time">{{ fmtDialogTime(new Date(payout.dueAt)) }}</div>
+                  </div>
+                </div>
               </div>
-              <div class="col-2 text-center">
-                <q-chip
-                  dense
-                  :label="`${payout.cycleNumber} / ${payout.totalCycles}`"
-                  color="blue-2"
-                  text-color="blue-9"
-                  style="font-size: 10px; font-weight: 700; border-radius: 6px; height: 20px;"
-                />
-              </div>
-              <div class="col text-right">
-                <div class="wcd-due-date">{{ fmtDialogDateShort(new Date(payout.dueAt)) }}</div>
-                <div class="wcd-due-time">{{ fmtDialogTime(new Date(payout.dueAt)) }}</div>
-              </div>
-            </div>
+            </template>
 
           </div>
         </div>
 
         <!-- ── Mode Notice ───────────────────────────────────────── -->
-        <div class="q-px-lg q-pb-md">
+        <div :class="$q.screen.lt.sm ? 'q-px-sm q-pb-md' : 'q-px-lg q-pb-md'">
           <!-- inbox_approval notice -->
           <div
             v-if="withdrawConfirmDialog.mode === 'inbox_approval'"
@@ -1368,12 +1411,17 @@
         <q-separator />
 
         <!-- ── Action Buttons ────────────────────────────────────── -->
-        <q-card-actions align="right" class="q-pa-md" style="gap: 8px;">
+        <q-card-actions
+          :align="$q.screen.lt.sm ? 'stretch' : 'right'"
+          :class="$q.screen.lt.sm ? 'column-reverse q-pa-md' : 'q-pa-md'"
+          style="gap: 8px;"
+        >
           <q-btn
             flat
             label="Cancel"
             color="grey-7"
             no-caps
+            :class="$q.screen.lt.sm ? 'full-width' : ''"
             :disable="withdrawConfirmDialog.loading"
             @click="withdrawConfirmDialog.open = false"
           />
@@ -1382,7 +1430,8 @@
             :label="withdrawConfirmDialog.mode === 'inbox_approval' ? 'Send Approval Emails' : 'Confirm Withdrawal'"
             :color="withdrawConfirmDialog.mode === 'inbox_approval' ? 'deep-orange' : 'positive'"
             no-caps
-            style="min-width: 168px; font-weight: 600; letter-spacing: 0.3px;"
+            :class="$q.screen.lt.sm ? 'full-width' : ''"
+            :style="$q.screen.lt.sm ? 'font-weight: 600; letter-spacing: 0.3px;' : 'min-width: 168px; font-weight: 600; letter-spacing: 0.3px;'"
             :loading="withdrawConfirmDialog.loading"
             :icon="withdrawConfirmDialog.mode === 'inbox_approval' ? 'send' : 'check_circle'"
             @click="executeWithdrawConfirm"
@@ -3827,9 +3876,19 @@ const viewTransactionDetails = (transaction) => {
 .withdraw-confirm-card {
   min-width: 480px;
   max-width: 560px;
+  width: 100%;
   border-radius: 16px;
   overflow: hidden;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.18);
+}
+
+@media (max-width: 599px) {
+  .withdraw-confirm-card {
+    min-width: unset !important;
+    max-width: 100vw !important;
+    width: 100vw !important;
+    border-radius: 16px 16px 0 0 !important;
+  }
 }
 
 .body--dark .withdraw-confirm-card {
@@ -3973,6 +4032,11 @@ const viewTransactionDetails = (transaction) => {
 /* Table rows */
 .wcd-table-row {
   padding: 10px 14px;
+}
+
+/* Mobile payout card row */
+.wcd-mobile-row {
+  padding: 12px 14px;
 }
 
 /* Donor name / email */
