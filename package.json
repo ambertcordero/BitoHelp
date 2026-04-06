@@ -18,9 +18,9 @@
   },
   "dependencies": {
     "@quasar/extras": "^1.16.4",
-    "@walletconnect/core": "^2.23.8",
+    "@walletconnect/core": "^2.19.0",
     "@walletconnect/modal": "^2.7.0",
-    "@walletconnect/sign-client": "^2.23.8",
+    "@walletconnect/sign-client": "^2.19.0",
     "axios": "^1.2.1",
     "cashaddrjs": "^0.4.4",
     "cashscript": "^0.12.1",
