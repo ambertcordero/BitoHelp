@@ -513,7 +513,8 @@ watch(() => route.path, () => { mobileMenuOpen.value = false })
 const notifSheetOpen = ref(false)
 
 // ── WalletConnect constants ──
-const projectId = '1e52dff3b9c75d86cfc7b1190c02d3a0'
+const projectId = "1e52dff3b9c75d86cfc7b1190c02d3a0"
+  //(import.meta.env.VITE_WALLETCONNECT_PROJECT_ID || '1e52dff3b9c75d86cfc7b1190c02d3a0').trim()
 // Fixed prefix so the same WalletConnect namespace is used across page reloads,
 // allowing session restoration after refresh.
 const walletConnectStoragePrefix = 'bitohelp-wc'
@@ -1089,6 +1090,30 @@ const waitForRelayConnected = async (timeoutMs = 5000) => {
   })
 }
 
+const getWalletConnectFriendlyError = (error) => {
+  const rawMessage = String(error?.message || error || '').trim()
+  const normalized = rawMessage.toLowerCase()
+  if (
+    normalized.includes('projectid') ||
+    normalized.includes('project id') ||
+    normalized.includes('unauthorized') ||
+    normalized.includes('forbidden') ||
+    normalized.includes('401')
+  ) {
+    return 'WalletConnect project ID was rejected by the relay. Check VITE_WALLETCONNECT_PROJECT_ID and allowed origins in WalletConnect Cloud.'
+  }
+  if (
+    normalized.includes('websocket') ||
+    normalized.includes('relay') ||
+    normalized.includes('network') ||
+    normalized.includes('transport') ||
+    normalized.includes('timeout')
+  ) {
+    return 'WalletConnect relay is currently unreachable. Check internet/firewall and try again.'
+  }
+  return rawMessage || 'Wallet connection failed. Please try again.'
+}
+
 const prepareFreshWalletConnectConnection = async () => {
   if (!signClient) return
   await disconnectAllWalletConnectSessions()
@@ -1614,12 +1639,15 @@ const handleConnect = async () => {
     isConnected.value = true
     updateFromSession(session)
     startSessionWatchdog(session.topic)
-  } catch {
+  } catch (error) {
     const wasDismissed = qrDismissed
     qrDismissed = false
     isConnecting.value = false
     destroyBitcoinLoader()
-    if (!wasDismissed) walletError.value = 'Wallet connection failed. Please try again.'
+    if (import.meta.env.DEV) {
+      console.error('[BitoHelp][walletconnect] connection failed', error)
+    }
+    if (!wasDismissed) walletError.value = getWalletConnectFriendlyError(error)
     wcModal?.closeModal()
   }
 }
@@ -1752,7 +1780,12 @@ function clearAllNotifications() {
 // ── Lifecycle ──
 onMounted(() => {
   initWalletLottie()
-  initWalletConnect()
+  initWalletConnect().catch((error) => {
+    if (import.meta.env.DEV) {
+      console.error('[BitoHelp][walletconnect] init failed', error)
+    }
+    walletError.value = getWalletConnectFriendlyError(error)
+  })
   window.addEventListener(WALLET_BALANCE_ADJUST_EVENT, handleWalletBalanceAdjust)
   window.addEventListener(WALLET_BALANCE_REFRESH_EVENT, handleWalletBalanceRefresh)
   pollInterval = setInterval(checkForNewDonations, 30000)

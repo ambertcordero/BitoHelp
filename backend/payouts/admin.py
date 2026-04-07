@@ -11,7 +11,7 @@ class PayoutAuditLogInline(admin.TabularInline):
 @admin.register(PayoutApproval)
 class PayoutApprovalAdmin(admin.ModelAdmin):
     list_display = ('id', 'donation_ref', 'cycle_number', 'total_cycles', 'status',
-                    'donor_email', 'payout_amount_satoshis', 'coin', 'created_at')
+                    'txid', 'donor_email', 'payout_amount_satoshis', 'coin', 'created_at')
     list_filter = ('status', 'coin')
     search_fields = ('donation_ref', 'donor_email', 'recipient_address', 'txid')
     readonly_fields = ('approval_token_hash', 'created_at', 'updated_at')

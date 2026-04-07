@@ -13,8 +13,8 @@
     "dev": "quasar dev",
     "build": "quasar build",
     "postinstall": "quasar prepare",
-    "backend": "cd backend && .\\venv\\Scripts\\activate && python manage.py runserver",
-    "start:all": "concurrently \"npm run backend\" \"npm run dev\" --names \"BACKEND,FRONTEND\" --prefix-colors \"blue,green\""
+    "backend": "cd backend && .\\venv\\Scripts\\python manage.py runserver",
+    "start:all": "concurrently \"pnpm run backend\" \"pnpm run dev\" --names \"BACKEND,FRONTEND\" --prefix-colors \"blue,green\""
   },
   "dependencies": {
     "@quasar/extras": "^1.16.4",
@@ -39,6 +39,7 @@
     "@quasar/app-vite": "^2.1.0",
     "@vue/eslint-config-prettier": "^10.1.0",
     "autoprefixer": "^10.4.2",
+    "concurrently": "^9.1.2",
     "eslint": "^9.14.0",
     "eslint-plugin-vue": "^10.4.0",
     "globals": "^16.4.0",
