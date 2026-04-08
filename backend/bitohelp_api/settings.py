@@ -49,6 +49,7 @@ INSTALLED_APPS = [
     'nonprofits',
     'users',
     'payouts',
+    'chatbot',
 ]
 
 MIDDLEWARE = [

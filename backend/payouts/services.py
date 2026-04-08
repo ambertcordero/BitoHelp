@@ -136,7 +136,7 @@ def send_approval_email(approval, raw_token):
     sats = approval.payout_amount_satoshis
     bch_amount = f'{sats / 1e8:.8f}'
 
-    subject = f'[BitoHelp] Approve payout of {bch_amount} {approval.coin} (cycle {approval.cycle_number}/{approval.total_cycles})'
+    subject = f'[CrypToCare] Approve payout of {bch_amount} {approval.coin} (cycle {approval.cycle_number}/{approval.total_cycles})'
 
     # Gmail ConfirmAction JSON-LD
     json_ld = {
@@ -177,7 +177,7 @@ def send_approval_email(approval, raw_token):
         with open(logo_path, 'rb') as f:
             logo_data = f.read()
         logo_img = MIMEImage(logo_data, _subtype='png')
-        logo_img.add_header('Content-ID', '<bitohelp_logo>')
+        logo_img.add_header('Content-ID', '<cryptocare_logo>')
         logo_img.add_header('Content-Disposition', 'inline', filename='logo.png')
         msg.attach(logo_img)
 
@@ -196,7 +196,7 @@ def send_approval_email(approval, raw_token):
 
 
 def _build_fallback_html(approval, bch_amount, action_url, json_ld, vault_balance_sats=None):
-    """Inline HTML email with BitoHelp branding, PHT timezone, and cycle format."""
+    """Inline HTML email with CrypToCare branding, PHT timezone, and cycle format."""
     import json
     ld_script = json.dumps(json_ld, indent=2)
     truncated_addr = (
@@ -219,7 +219,7 @@ def _build_fallback_html(approval, bch_amount, action_url, json_ld, vault_balanc
 
 <!-- Logo Header -->
 <tr><td align="center" style="padding:28px 24px 12px;">
-  <img src="cid:bitohelp_logo" alt="BitoHelp" width="180" style="max-width:180px;height:auto;" />
+  <img src="cid:cryptocare_logo" alt="CrypToCare" width="180" style="max-width:180px;height:auto;" />
 </td></tr>
 
 <!-- Title -->
@@ -268,7 +268,7 @@ def _build_fallback_html(approval, bch_amount, action_url, json_ld, vault_balanc
 <tr><td style="background:#fafafa;padding:16px 24px;border-top:1px solid #eee;">
   <p style="margin:0;font-size:11px;color:#999;text-align:center;">
     This approval link expires in 24 hours. Do not share it with anyone.<br/>
-    &copy; BitoHelp &mdash; Empowering transparent giving on Bitcoin Cash.
+    &copy; CrypToCare &mdash; Empowering transparent giving on Bitcoin Cash.
   </p>
 </td></tr>
 

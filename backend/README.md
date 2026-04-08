@@ -1,10 +1,11 @@
-# BiToHelp Backend (Django API)
+# CrypToCare Backend (Django API)
 
-Django REST API backend for BiToHelp cryptocurrency donation platform.
+Django REST API backend for CrypToCare cryptocurrency donation platform.
 
 ## Setup
 
 ### 1. Create Virtual Environment (if not exists)
+
 ```bash
 cd backend
 python -m venv venv
@@ -13,31 +14,37 @@ python -m venv venv
 ### 2. Activate Virtual Environment
 
 **Windows PowerShell:**
+
 ```powershell
 .\venv\Scripts\Activate.ps1
 ```
 
 **Windows CMD:**
+
 ```cmd
 .\venv\Scripts\activate.bat
 ```
 
 ### 3. Install Dependencies
+
 ```bash
 pip install -r requirements.txt
 ```
 
 ### 4. Run Migrations
+
 ```bash
 python manage.py migrate
 ```
 
 ### 5. Create Superuser (Optional)
+
 ```bash
 python manage.py createsuperuser
 ```
 
 ### 6. Run Development Server
+
 ```bash
 python manage.py runserver
 ```
@@ -74,15 +81,18 @@ backend/
 ## Development
 
 ### View API in Browser
+
 Visit `http://localhost:8000/api/donations/` with Django REST Framework's browsable API.
 
 ### Make Migrations After Model Changes
+
 ```bash
 python manage.py makemigrations
 python manage.py migrate
 ```
 
 ### Access Admin Panel
+
 1. Create superuser: `python manage.py createsuperuser`
 2. Visit: `http://localhost:8000/admin/`
 
@@ -91,5 +101,6 @@ python manage.py migrate
 The frontend (Quasar app) connects to this backend via Axios at `http://localhost:8000/api/`.
 
 Make sure both servers are running:
+
 - **Backend**: `http://localhost:8000`
 - **Frontend**: `http://localhost:9000`

@@ -1,4 +1,4 @@
-# BiToHelp Frontend-Backend Connection Guide
+# CrypToCare Frontend-Backend Connection Guide
 
 Complete guide for connecting your Quasar/Vue frontend with Django REST Framework backend for your Bitcoin Cash donation platform.
 
@@ -70,7 +70,7 @@ Complete guide for connecting your Quasar/Vue frontend with Django REST Framewor
 
 ## Overview
 
-**BiToHelp** is a blockchain-powered donation platform that enables:
+**CrypToCare** is a blockchain-powered donation platform that enables:
 - Cryptocurrency donations (Bitcoin Cash)
 - Smart contract-based recurring donations
 - Nonprofit organization management
@@ -158,7 +158,7 @@ npm install
 ### Step 2: Verify Configuration
 
 #### Check Backend CORS Settings
-File: `backend/bitohelp_api/settings.py`
+File: `backend/CrypToCare_api/settings.py`
 
 ```python
 # Should already have:
@@ -237,7 +237,7 @@ Expected response:
 ```json
 {
   "status": "healthy",
-  "message": "BiToHelp API is running"
+  "message": "CrypToCare API is running"
 }
 ```
 
@@ -476,7 +476,7 @@ VITE_MAX_DONATION=1000
 
 # App Configuration
 VITE_APP_MODE=development
-VITE_APP_NAME=BiToHelp
+VITE_APP_NAME=CrypToCare
 ```
 
 **Backend `.env` File:**
@@ -935,7 +935,7 @@ urlpatterns = [
 
 #### 5. Update Main URLs
 
-File: `backend/bitohelp_api/urls.py`
+File: `backend/CrypToCare_api/urls.py`
 ```python
 from django.contrib import admin
 from django.urls import path, include
@@ -1018,7 +1018,7 @@ File: `backend/seed_nonprofits.py`
 import os
 import django
 
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'bitohelp_api.settings')
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'CrypToCare_api.settings')
 django.setup()
 
 from nonprofits.models import Nonprofit
@@ -1090,7 +1090,7 @@ Response:
 ```json
 {
   "status": "healthy",
-  "message": "BiToHelp API is running"
+  "message": "CrypToCare API is running"
 }
 ```
 
@@ -1194,7 +1194,7 @@ GET /api/nonprofits/{id}/donations/
 
 **Solutions:**
 ```python
-# Check backend/bitohelp_api/settings.py
+# Check backend/CrypToCare_api/settings.py
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:9000",  # Add your frontend port
 ]
@@ -1427,4 +1427,4 @@ Choose a phase to start:
 
 **Last Updated:** March 15, 2026  
 **Version:** 1.0  
-**Author:** BiToHelp Development Team
+**Author:** CrypToCare Development Team

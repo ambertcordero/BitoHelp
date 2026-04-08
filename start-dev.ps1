@@ -1,6 +1,6 @@
 # Run both Frontend and Backend servers
 
-Write-Host "🚀 Starting BiToHelp Development Servers..." -ForegroundColor Green
+Write-Host "🚀 Starting CrypToCare Development Servers..." -ForegroundColor Green
 Write-Host ""
 
 # Start Django Backend

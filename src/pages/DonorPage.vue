@@ -1,11 +1,33 @@
 <template>
   <q-page class="donor-page">
-    <div class="row" style="min-height: 100vh;">
+    <!-- Wallet not connected overlay -->
+    <div
+      v-if="!connectedWalletSnapshot.connected"
+      class="column items-center justify-center"
+      style="min-height: 80vh"
+    >
+      <q-icon name="account_balance_wallet" size="80px" color="grey-5" class="q-mb-md" />
+      <h5 class="text-h5 q-mb-sm" style="font-weight: 700">Connect Your Wallet</h5>
+      <p class="text-body1 text-grey-7 q-mb-lg text-center" style="max-width: 400px">
+        Connect your wallet to view your donor dashboard. Your donations, transactions, and
+        analytics will be loaded based on your wallet address.
+      </p>
+      <q-btn
+        color="primary"
+        label="Connect Wallet"
+        icon="account_balance_wallet"
+        size="lg"
+        rounded
+        unelevated
+        @click="$router.push('/')"
+      />
+    </div>
+
+    <div v-else class="row" style="min-height: 100vh">
       <div class="col-12 col-md-4 col-lg-3 q-pa-md sidebar-container">
         <div class="accounts-sidebar">
-          <h5 class="q-mt-none q-mb-md">Donor<br><strong>Dashboard</strong></h5>
-          
-        
+          <h5 class="q-mt-none q-mb-md">Donor<br /><strong>Dashboard</strong></h5>
+
           <div class="q-mb-md">
             <div class="sidebar-toggle">
               <div
@@ -42,22 +64,25 @@
             </template>
           </q-input>
 
-          
           <!-- Sidebar skeleton while loading -->
           <div v-if="loadingDonations" class="q-px-sm q-pb-sm">
-            <div v-for="n in 3" :key="n" class="sidebar-account-card" style="pointer-events: none;">
-              <div class="row items-center no-wrap q-mb-sm" style="gap: 10px;">
+            <div v-for="n in 3" :key="n" class="sidebar-account-card" style="pointer-events: none">
+              <div class="row items-center no-wrap q-mb-sm" style="gap: 10px">
                 <q-skeleton type="QAvatar" size="32px" />
-                <div style="flex: 1;">
-                  <q-skeleton type="text" width="60%" style="margin-bottom: 4px;" />
+                <div style="flex: 1">
+                  <q-skeleton type="text" width="60%" style="margin-bottom: 4px" />
                   <q-skeleton type="text" width="40%" />
                 </div>
               </div>
-              <q-skeleton type="text" width="85%" style="margin-bottom: 10px; border-radius: 20px;" />
+              <q-skeleton
+                type="text"
+                width="85%"
+                style="margin-bottom: 10px; border-radius: 20px"
+              />
               <div class="sidebar-card-divider" />
-              <div class="row q-mt-xs" style="gap: 8px;">
-                <q-skeleton style="flex: 1; height: 38px; border-radius: 8px;" />
-                <q-skeleton style="flex: 1; height: 38px; border-radius: 8px;" />
+              <div class="row q-mt-xs" style="gap: 8px">
+                <q-skeleton style="flex: 1; height: 38px; border-radius: 8px" />
+                <q-skeleton style="flex: 1; height: 38px; border-radius: 8px" />
               </div>
             </div>
           </div>
@@ -76,25 +101,53 @@
               <!-- Top row: avatar + name + address -->
               <div class="row items-start no-wrap q-mb-xs">
                 <div class="sidebar-avatar">
-                  <img src="~assets/paytaca.png" alt="wallet" style="width: 24px; height: 24px; object-fit: contain;" />
+                  <img
+                    src="~assets/paytaca.png"
+                    alt="wallet"
+                    style="width: 24px; height: 24px; object-fit: contain"
+                  />
                 </div>
-                <div style="flex: 1; min-width: 0; margin-left: 10px;">
+                <div style="flex: 1; min-width: 0; margin-left: 10px">
                   <div class="sidebar-account-name ellipsis">{{ wallet.name }}</div>
                   <div class="sidebar-account-sub">{{ wallet.type || 'Paytaca' }}</div>
                 </div>
-                <q-btn flat round dense icon="more_vert" size="xs" class="sidebar-menu-btn" @click.stop />
+                <q-btn
+                  flat
+                  round
+                  dense
+                  icon="more_vert"
+                  size="xs"
+                  class="sidebar-menu-btn"
+                  @click.stop
+                />
               </div>
 
               <!-- Address copy pill -->
               <div class="q-mt-xs">
                 <div
                   class="sidebar-address-pill ellipsis"
-                  @click.stop="$q.copyToClipboard(wallet.address).then(() => $q.notify({ type: 'positive', message: 'Donor address copied', position: 'top', timeout: 1500 }))"
+                  @click.stop="
+                    $q
+                      .copyToClipboard(wallet.address)
+                      .then(() =>
+                        $q.notify({
+                          type: 'positive',
+                          message: 'Donor address copied',
+                          position: 'top',
+                          timeout: 1500,
+                        }),
+                      )
+                  "
                 >
-                  <q-icon name="person" size="10px" class="q-mr-xs" style="flex-shrink:0;" />
+                  <q-icon name="person" size="10px" class="q-mr-xs" style="flex-shrink: 0" />
                   <span class="sidebar-address-pill-label">Donor:</span>
                   <span class="q-ml-xs">{{ wallet.address }}</span>
-                  <q-icon name="content_copy" size="10px" class="q-ml-xs sidebar-address-copy-icon" style="flex-shrink:0;" />
+                  <q-icon
+                    name="content_copy"
+                    size="10px"
+                    class="q-ml-xs sidebar-address-copy-icon"
+                    style="flex-shrink: 0"
+                  />
                 </div>
               </div>
 
@@ -102,30 +155,38 @@
               <div class="sidebar-card-divider" />
 
               <!-- BCH stat blocks -->
-              <div class="row q-mt-xs" style="gap: 8px;">
+              <div class="row q-mt-xs" style="gap: 8px">
                 <div class="sidebar-stat-block sidebar-stat-block--blue">
-                  <div class="row items-center no-wrap" style="gap: 4px; margin-bottom: 2px;">
+                  <div class="row items-center no-wrap" style="gap: 4px; margin-bottom: 2px">
                     <q-icon name="currency_bitcoin" size="11px" color="blue-7" />
                     <div class="sidebar-stat-label">Total Donated</div>
                   </div>
-                  <div class="sidebar-stat-value">{{ formatCurrency(wallet.totalDonated) }} BCH</div>
+                  <div class="sidebar-stat-value">
+                    {{ formatCurrency(wallet.totalDonated) }} BCH
+                  </div>
                 </div>
                 <div class="sidebar-stat-block sidebar-stat-block--green">
-                  <div class="row items-center no-wrap" style="gap: 4px; margin-bottom: 2px;">
+                  <div class="row items-center no-wrap" style="gap: 4px; margin-bottom: 2px">
                     <q-icon name="volunteer_activism" size="11px" color="green-7" />
                     <div class="sidebar-stat-label">Donations</div>
                   </div>
-                  <div class="sidebar-stat-value sidebar-stat-value--green">{{ wallet.donationCount }}</div>
+                  <div class="sidebar-stat-value sidebar-stat-value--green">
+                    {{ wallet.donationCount }}
+                  </div>
                 </div>
               </div>
             </div>
           </div>
 
           <div class="text-center q-mt-md">
-            <a href="#" class="view-all-link text-blue-7 text-weight-medium" style="text-decoration: none;">View all</a>
+            <a
+              href="#"
+              class="view-all-link text-blue-7 text-weight-medium"
+              style="text-decoration: none"
+              >View all</a
+            >
           </div>
 
-         
           <div v-if="activeTab === 'donations'" class="q-mt-md">
             <q-btn
               unelevated
@@ -140,33 +201,35 @@
       </div>
 
       <div class="col-12 col-md-8 col-lg-9 q-pa-md q-pa-lg-lg main-content">
-
         <!-- Main content skeleton while loading -->
         <div v-if="loadingDonations">
           <!-- Header skeleton -->
           <div class="row items-center justify-between q-mb-lg">
-            <q-skeleton type="text" width="180px" style="height: 28px;" />
+            <q-skeleton type="text" width="180px" style="height: 28px" />
             <div class="row q-gutter-sm">
-              <q-skeleton type="QBtn" width="36px" height="36px" style="border-radius: 50%;" />
-              <q-skeleton type="QBtn" width="80px" height="36px" style="border-radius: 8px;" />
+              <q-skeleton type="QBtn" width="36px" height="36px" style="border-radius: 50%" />
+              <q-skeleton type="QBtn" width="80px" height="36px" style="border-radius: 8px" />
             </div>
           </div>
           <!-- Tabs skeleton -->
           <div class="row q-gutter-md q-mb-md">
-            <q-skeleton v-for="t in 4" :key="t" type="text" width="100px" style="height: 20px;" />
+            <q-skeleton v-for="t in 4" :key="t" type="text" width="100px" style="height: 20px" />
           </div>
           <q-separator class="q-mb-lg" />
           <!-- Stat cards -->
           <div class="row q-col-gutter-md q-mb-lg">
             <div v-for="s in 4" :key="s" class="col-6 col-md-3">
-              <q-skeleton style="height: 80px; border-radius: 12px;" />
+              <q-skeleton style="height: 80px; border-radius: 12px" />
             </div>
           </div>
           <!-- Table skeleton -->
-          <q-skeleton style="height: 320px; border-radius: 12px;" />
+          <q-skeleton style="height: 320px; border-radius: 12px" />
         </div>
 
-        <div v-if="activeTab === 'donations' && selectedWallet && !loadingDonations" class="wallet-details">
+        <div
+          v-if="activeTab === 'donations' && selectedWallet && !loadingDonations"
+          class="wallet-details"
+        >
           <div class="row items-center justify-between q-mb-lg flex-wrap">
             <h4 class="q-my-none col-12 col-sm-auto">{{ selectedWallet.name }}</h4>
             <div class="col-12 col-sm-auto q-mt-sm q-mt-sm-none">
@@ -175,7 +238,6 @@
             </div>
           </div>
 
-       
           <q-tabs
             v-model="detailTab"
             dense
@@ -194,10 +256,9 @@
           <q-separator class="q-mb-lg" />
 
           <q-tab-panels v-model="detailTab" animated>
-         
             <q-tab-panel name="donations">
               <div class="text-h6 q-mb-md">Donation History</div>
-              
+
               <q-table
                 :rows="donationHistory"
                 :columns="donationColumns"
@@ -209,11 +270,7 @@
               >
                 <template v-slot:body-cell-interval="props">
                   <q-td :props="props">
-                    <q-badge
-                      v-if="props.row.interval"
-                      color="blue-7"
-                      :label="props.row.interval"
-                    />
+                    <q-badge v-if="props.row.interval" color="blue-7" :label="props.row.interval" />
                     <span v-else class="text-grey-6">One-time</span>
                   </q-td>
                 </template>
@@ -260,7 +317,9 @@
                     <div class="donation-mobile-card__body">
                       <div class="donation-mobile-card__row">
                         <span class="donation-mobile-card__label">Date</span>
-                        <span class="donation-mobile-card__value">{{ formatDate(props.row.timestamp) }}</span>
+                        <span class="donation-mobile-card__value">{{
+                          formatDate(props.row.timestamp)
+                        }}</span>
                       </div>
                       <div class="donation-mobile-card__row">
                         <span class="donation-mobile-card__label">Donor</span>
@@ -268,12 +327,18 @@
                       </div>
                       <div class="donation-mobile-card__row">
                         <span class="donation-mobile-card__label">Amount</span>
-                        <span class="donation-mobile-card__value text-weight-bold text-positive">{{ formatCurrency(props.row.amount) }}</span>
+                        <span class="donation-mobile-card__value text-weight-bold text-positive">{{
+                          formatCurrency(props.row.amount)
+                        }}</span>
                       </div>
                       <div class="donation-mobile-card__row">
                         <span class="donation-mobile-card__label">Interval</span>
                         <span class="donation-mobile-card__value">
-                          <q-badge v-if="props.row.interval" color="blue-7" :label="props.row.interval" />
+                          <q-badge
+                            v-if="props.row.interval"
+                            color="blue-7"
+                            :label="props.row.interval"
+                          />
                           <span v-else class="text-grey-6">One-time</span>
                         </span>
                       </div>
@@ -281,21 +346,33 @@
 
                     <div class="donation-mobile-card__footer">
                       <q-btn
-                        flat dense no-caps
-                        icon="receipt_long" label="Details"
-                        size="sm" color="primary"
+                        flat
+                        dense
+                        no-caps
+                        icon="receipt_long"
+                        label="Details"
+                        size="sm"
+                        color="primary"
                         @click="viewDonationDetails(props.row)"
                       />
                       <q-btn
-                        flat dense no-caps
-                        icon="picture_as_pdf" label="Receipt"
-                        size="sm" color="blue-grey"
+                        flat
+                        dense
+                        no-caps
+                        icon="picture_as_pdf"
+                        label="Receipt"
+                        size="sm"
+                        color="blue-grey"
                         @click="viewReceipt(props.row)"
                       />
                       <q-btn
-                        flat dense no-caps
-                        icon="download" label="Download"
-                        size="sm" color="blue-grey"
+                        flat
+                        dense
+                        no-caps
+                        icon="download"
+                        label="Download"
+                        size="sm"
+                        color="blue-grey"
                         @click="downloadReceipt(props.row)"
                       />
                     </div>
@@ -304,25 +381,23 @@
               </q-table>
             </q-tab-panel>
 
-          
             <q-tab-panel name="details" class="details-panel q-pa-none">
-
               <!-- ── Two column cards ──────────────────────────────────── -->
               <div class="row q-col-gutter-md">
-
                 <!-- Wallet Information -->
                 <div class="col-12 col-md-6">
-                  <q-card flat class="detail-info-card" style="border-radius: 14px; height: 100%;">
+                  <q-card flat class="detail-info-card" style="border-radius: 14px; height: 100%">
                     <q-card-section class="q-pb-xs">
                       <div class="row items-center justify-between">
-                        <div style="font-size: 14px; font-weight: 700; color: #37474f;">Wallet Information</div>
+                        <div style="font-size: 14px; font-weight: 700; color: #37474f">
+                          Wallet Information
+                        </div>
                         <q-icon name="account_balance_wallet" color="blue-4" size="20px" />
                       </div>
                     </q-card-section>
                     <q-separator />
                     <q-card-section class="q-pt-md">
                       <div class="row q-col-gutter-md">
-
                         <div class="col-6">
                           <div class="detail-field-label">Account Name</div>
                           <div class="detail-field-value">{{ selectedWallet.accountName }}</div>
@@ -337,7 +412,18 @@
                           <div class="detail-field-label">Contract Address</div>
                           <div
                             class="detail-address-field"
-                            @click="$q.copyToClipboard(selectedWallet.fullNumber).then(() => $q.notify({ type: 'positive', message: 'Address copied', position: 'top', timeout: 1500 }))"
+                            @click="
+                              $q
+                                .copyToClipboard(selectedWallet.fullNumber)
+                                .then(() =>
+                                  $q.notify({
+                                    type: 'positive',
+                                    message: 'Address copied',
+                                    position: 'top',
+                                    timeout: 1500,
+                                  }),
+                                )
+                            "
                           >
                             {{ selectedWallet.fullNumber }}
                             <q-icon name="content_copy" size="13px" class="q-ml-xs text-blue-8" />
@@ -348,13 +434,23 @@
                           <div class="detail-field-label">Donor Address</div>
                           <div
                             class="detail-address-field"
-                            @click="$q.copyToClipboard(selectedWallet.iban).then(() => $q.notify({ type: 'positive', message: 'Address copied', position: 'top', timeout: 1500 }))"
+                            @click="
+                              $q
+                                .copyToClipboard(selectedWallet.iban)
+                                .then(() =>
+                                  $q.notify({
+                                    type: 'positive',
+                                    message: 'Address copied',
+                                    position: 'top',
+                                    timeout: 1500,
+                                  }),
+                                )
+                            "
                           >
                             {{ selectedWallet.iban }}
                             <q-icon name="content_copy" size="13px" class="q-ml-xs text-blue-8" />
                           </div>
                         </div>
-
                       </div>
                     </q-card-section>
                   </q-card>
@@ -362,17 +458,18 @@
 
                 <!-- Donation Overview -->
                 <div class="col-12 col-md-6">
-                  <q-card flat class="detail-info-card" style="border-radius: 14px; height: 100%;">
+                  <q-card flat class="detail-info-card" style="border-radius: 14px; height: 100%">
                     <q-card-section class="q-pb-xs">
                       <div class="row items-center justify-between">
-                        <div style="font-size: 14px; font-weight: 700; color: #37474f;">Donation Overview</div>
+                        <div style="font-size: 14px; font-weight: 700; color: #37474f">
+                          Donation Overview
+                        </div>
                         <q-icon name="bar_chart" color="purple-4" size="20px" />
                       </div>
                     </q-card-section>
                     <q-separator />
                     <q-card-section class="q-pt-md">
                       <div class="row q-col-gutter-md">
-
                         <div class="col-6">
                           <div class="detail-field-label">Donor Name</div>
                           <div class="detail-field-value">{{ selectedWallet.branch }}</div>
@@ -385,17 +482,21 @@
 
                         <div class="col-6">
                           <div class="detail-field-label">Amount Balance</div>
-                          <div style="font-size: 18px; font-weight: 800; color: #1565c0;">
+                          <div style="font-size: 18px; font-weight: 800; color: #1565c0">
                             {{ selectedWallet.debitRate }}
-                            <span style="font-size: 12px; font-weight: 600; color: #90a4ae;">BCH</span>
+                            <span style="font-size: 12px; font-weight: 600; color: #90a4ae"
+                              >BCH</span
+                            >
                           </div>
                         </div>
 
                         <div class="col-6">
                           <div class="detail-field-label">Total Contract</div>
-                          <div style="font-size: 18px; font-weight: 800; color: #2e7d32;">
+                          <div style="font-size: 18px; font-weight: 800; color: #2e7d32">
                             {{ selectedWallet.overdraftLimit }}
-                            <span style="font-size: 12px; font-weight: 600; color: #90a4ae;">BCH</span>
+                            <span style="font-size: 12px; font-weight: 600; color: #90a4ae"
+                              >BCH</span
+                            >
                           </div>
                         </div>
 
@@ -411,29 +512,35 @@
 
                         <div class="col-6">
                           <div class="detail-field-label">First Donation</div>
-                          <div class="detail-field-value">{{ selectedWallet.firstDonation || '—' }}</div>
+                          <div class="detail-field-value">
+                            {{ selectedWallet.firstDonation || '—' }}
+                          </div>
                         </div>
 
                         <div class="col-6">
                           <div class="detail-field-label">Last Donation</div>
-                          <div class="detail-field-value">{{ selectedWallet.lastDonation || '—' }}</div>
+                          <div class="detail-field-value">
+                            {{ selectedWallet.lastDonation || '—' }}
+                          </div>
                         </div>
-
                       </div>
                     </q-card-section>
                   </q-card>
                 </div>
-
               </div>
 
               <!-- ── Analytics Charts ───────────────────────────────────── -->
               <div class="q-mt-md">
                 <div class="row items-center q-mb-md">
-                  <div style="font-size: 14px; font-weight: 700; color: #37474f;" class="chart-section-title">Donation Analytics</div>
+                  <div
+                    style="font-size: 14px; font-weight: 700; color: #37474f"
+                    class="chart-section-title"
+                  >
+                    Donation Analytics
+                  </div>
                 </div>
 
                 <div class="row q-col-gutter-md">
-
                   <!-- Line Chart: Donation Trend -->
                   <div class="col-12 col-md-6">
                     <q-card flat class="detail-info-card chart-card">
@@ -491,7 +598,10 @@
                       <q-separator />
                       <q-card-section class="q-pa-md">
                         <div class="chart-canvas-wrapper chart-canvas-wrapper--pie">
-                          <DoughnutChart :data="doughnutChartData" :options="doughnutChartOptions" />
+                          <DoughnutChart
+                            :data="doughnutChartData"
+                            :options="doughnutChartOptions"
+                          />
                         </div>
                       </q-card-section>
                     </q-card>
@@ -525,28 +635,35 @@
                         <div class="row items-center justify-between">
                           <div>
                             <div class="chart-card-title">3D Donation Scatter</div>
-                            <div class="chart-card-sub">Date · BCH Amount · Recipient — drag to rotate</div>
+                            <div class="chart-card-sub">
+                              Date · BCH Amount · Recipient — drag to rotate
+                            </div>
                           </div>
                           <q-icon name="scatter_plot" color="deep-orange-4" size="20px" />
                         </div>
                       </q-card-section>
                       <q-separator />
                       <q-card-section class="q-pa-md">
-                        <div ref="scatter3dContainer" class="chart-canvas-wrapper chart-canvas-wrapper--scatter3d" />
+                        <div
+                          ref="scatter3dContainer"
+                          class="chart-canvas-wrapper chart-canvas-wrapper--scatter3d"
+                        />
                       </q-card-section>
                     </q-card>
                   </div>
-
                 </div>
               </div>
             </q-tab-panel>
 
-            
             <q-tab-panel name="projects">
               <div class="text-h6 q-mb-md">Projects You've Supported</div>
-              
+
               <div class="row q-col-gutter-md">
-                <div v-for="project in supportedProjects" :key="project.id" class="col-12 col-md-6 col-lg-4">
+                <div
+                  v-for="project in supportedProjects"
+                  :key="project.id"
+                  class="col-12 col-md-6 col-lg-4"
+                >
                   <q-card flat bordered class="project-card-detail">
                     <q-img :src="project.image" height="150px" />
                     <q-card-section>
@@ -554,7 +671,9 @@
                       <div class="text-caption text-grey-6">{{ project.category }}</div>
                       <div class="q-mt-sm">
                         <div class="text-caption">Your contribution:</div>
-                        <div class="text-h6 text-primary">{{ formatCurrency(project.donated) }} BCH</div>
+                        <div class="text-h6 text-primary">
+                          {{ formatCurrency(project.donated) }} BCH
+                        </div>
                       </div>
                       <div class="q-mt-xs">
                         <div class="text-caption">Number of donations:</div>
@@ -571,60 +690,72 @@
               </div>
             </q-tab-panel>
 
-            
             <q-tab-panel name="recipients">
               <div class="text-h6 q-mb-md">Donations Received by Recipients</div>
-              
+
               <div class="row q-col-gutter-md">
-                <div v-for="recipient in recipientSummary" :key="recipient.name" class="col-12 col-md-6 col-lg-4">
+                <div
+                  v-for="recipient in recipientSummary"
+                  :key="recipient.name"
+                  class="col-12 col-md-6 col-lg-4"
+                >
                   <q-card flat bordered class="recipient-card">
                     <q-card-section>
                       <div class="flex items-center q-mb-md">
                         <q-avatar size="48px" color="primary" text-color="white">
                           <q-icon name="account_balance" size="28px" />
                         </q-avatar>
-                        <div class="q-ml-md flex-1" style="min-width: 0;">
-                          <div class="text-subtitle1 text-weight-bold ellipsis">{{ recipient.cause }}</div>
+                        <div class="q-ml-md flex-1" style="min-width: 0">
+                          <div class="text-subtitle1 text-weight-bold ellipsis">
+                            {{ recipient.cause }}
+                          </div>
                           <div class="text-caption text-grey-6">{{ recipient.name }}</div>
                         </div>
                       </div>
-                      
+
                       <q-separator class="q-mb-md" />
-                      
+
                       <div class="row q-col-gutter-sm">
                         <div class="col-6">
                           <div class="text-caption text-grey-6">Total Received</div>
-                          <div class="text-h6 text-positive">{{ formatCurrency(recipient.totalAmount) }} BCH</div>
+                          <div class="text-h6 text-positive">
+                            {{ formatCurrency(recipient.totalAmount) }} BCH
+                          </div>
                         </div>
                         <div class="col-6">
                           <div class="text-caption text-grey-6">Donations</div>
                           <div class="text-h6">{{ recipient.count }}</div>
                         </div>
                       </div>
-                      
+
                       <div class="q-mt-md">
                         <div class="text-caption text-grey-6 q-mb-xs">Last Donation</div>
                         <div class="text-body2">{{ recipient.lastDate }}</div>
                       </div>
-                      
+
                       <div class="q-mt-sm">
                         <div class="text-caption text-grey-6 q-mb-xs">Status</div>
-                        <q-badge 
+                        <q-badge
                           :color="recipient.hasCompleted ? 'positive' : 'warning'"
                           :label="recipient.hasCompleted ? 'All Received' : 'Pending'"
                         />
                       </div>
                     </q-card-section>
-                    
+
                     <q-card-actions>
-                      <q-btn flat color="primary" label="View Details" @click="viewRecipientDetails(recipient)" />
+                      <q-btn
+                        flat
+                        color="primary"
+                        label="View Details"
+                        @click="viewRecipientDetails(recipient)"
+                      />
                       <q-space />
                       <q-btn flat color="primary" icon="volunteer_activism" label="Donate Again" />
                     </q-card-actions>
                   </q-card>
                 </div>
               </div>
-             
+
               <div class="q-mt-xl">
                 <div class="text-h6 q-mb-md">Recipient Statistics</div>
                 <q-card flat bordered>
@@ -641,14 +772,18 @@
                         <div class="stat-box">
                           <q-icon name="payments" size="32px" color="positive" />
                           <div class="text-caption text-grey-6 q-mt-sm">Total Distributed</div>
-                          <div class="text-h5 text-weight-bold text-positive">{{ totalDistributed }} BCH</div>
+                          <div class="text-h5 text-weight-bold text-positive">
+                            {{ totalDistributed }} BCH
+                          </div>
                         </div>
                       </div>
                       <div class="col-12 col-sm-4">
                         <div class="stat-box">
                           <q-icon name="trending_up" size="32px" color="blue" />
                           <div class="text-caption text-grey-6 q-mt-sm">Average per Recipient</div>
-                          <div class="text-h5 text-weight-bold text-blue">{{ averagePerRecipient }} BCH</div>
+                          <div class="text-h5 text-weight-bold text-blue">
+                            {{ averagePerRecipient }} BCH
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -659,7 +794,6 @@
           </q-tab-panels>
         </div>
 
-       
         <div v-if="activeTab === 'activity' && !loadingDonations" class="activity-view">
           <div class="row items-center justify-between q-mb-lg activity-view__header">
             <h4 class="q-my-none activity-heading">Donation Activity</h4>
@@ -669,7 +803,6 @@
             </div>
           </div>
 
-       
           <div class="row q-mb-md q-col-gutter-md">
             <div class="col-12 col-sm-6 col-md-3">
               <q-card flat class="stats-card">
@@ -705,7 +838,6 @@
             </div>
           </div>
 
-         
           <q-card flat class="q-mt-md activity-section-card">
             <q-card-section>
               <div class="row q-col-gutter-md q-mb-md">
@@ -752,11 +884,7 @@
               >
                 <template v-slot:body-cell-interval="props">
                   <q-td :props="props">
-                    <q-badge
-                      v-if="props.row.interval"
-                      color="blue-7"
-                      :label="props.row.interval"
-                    />
+                    <q-badge v-if="props.row.interval" color="blue-7" :label="props.row.interval" />
                     <span v-else class="text-grey-6">One-time</span>
                   </q-td>
                 </template>
@@ -774,7 +902,14 @@
                 </template>
                 <template v-slot:body-cell-actions="props">
                   <q-td :props="props">
-                    <q-btn flat round dense icon="visibility" size="sm" @click="viewDonationDetails(props.row)">
+                    <q-btn
+                      flat
+                      round
+                      dense
+                      icon="visibility"
+                      size="sm"
+                      @click="viewDonationDetails(props.row)"
+                    >
                       <q-tooltip>View Details</q-tooltip>
                     </q-btn>
                   </q-td>
@@ -791,7 +926,9 @@
                     <div class="donation-mobile-card__body">
                       <div class="donation-mobile-card__row">
                         <span class="donation-mobile-card__label">Date</span>
-                        <span class="donation-mobile-card__value">{{ formatDate(props.row.timestamp) }}</span>
+                        <span class="donation-mobile-card__value">{{
+                          formatDate(props.row.timestamp)
+                        }}</span>
                       </div>
                       <div class="donation-mobile-card__row">
                         <span class="donation-mobile-card__label">Donor</span>
@@ -799,12 +936,18 @@
                       </div>
                       <div class="donation-mobile-card__row">
                         <span class="donation-mobile-card__label">Amount</span>
-                        <span class="donation-mobile-card__value text-weight-bold text-positive">{{ formatCurrency(props.row.amount) }}</span>
+                        <span class="donation-mobile-card__value text-weight-bold text-positive">{{
+                          formatCurrency(props.row.amount)
+                        }}</span>
                       </div>
                       <div class="donation-mobile-card__row">
                         <span class="donation-mobile-card__label">Interval</span>
                         <span class="donation-mobile-card__value">
-                          <q-badge v-if="props.row.interval" color="blue-7" :label="props.row.interval" />
+                          <q-badge
+                            v-if="props.row.interval"
+                            color="blue-7"
+                            :label="props.row.interval"
+                          />
                           <span v-else class="text-grey-6">One-time</span>
                         </span>
                       </div>
@@ -812,9 +955,13 @@
 
                     <div class="donation-mobile-card__footer">
                       <q-btn
-                        flat dense no-caps
-                        icon="receipt_long" label="Details"
-                        size="sm" color="primary"
+                        flat
+                        dense
+                        no-caps
+                        icon="receipt_long"
+                        label="Details"
+                        size="sm"
+                        color="primary"
                         @click="viewDonationDetails(props.row)"
                       />
                     </div>
@@ -830,15 +977,27 @@
     <!-- Recipient Detail Dialog -->
     <q-dialog v-model="recipientDetailDialog.open">
       <q-card class="tx-detail-dialog">
-
         <!-- Header -->
         <div class="tx-detail-header">
           <div class="row items-center justify-between no-wrap">
-            <div style="min-width: 0; flex: 1; overflow: hidden;">
-              <div class="tx-detail-title" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ recipientDetailDialog.name }}</div>
+            <div style="min-width: 0; flex: 1; overflow: hidden">
+              <div
+                class="tx-detail-title"
+                style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis"
+              >
+                {{ recipientDetailDialog.name }}
+              </div>
               <div class="tx-detail-sub">Received by Recipient</div>
             </div>
-            <q-btn flat round dense icon="close" @click="recipientDetailDialog.open = false" class="tx-close-btn q-ml-sm" style="flex-shrink: 0;" />
+            <q-btn
+              flat
+              round
+              dense
+              icon="close"
+              @click="recipientDetailDialog.open = false"
+              class="tx-close-btn q-ml-sm"
+              style="flex-shrink: 0"
+            />
           </div>
         </div>
 
@@ -847,20 +1006,29 @@
           <q-badge
             :color="recipientDetailDialog.hasCompleted ? 'positive' : 'warning'"
             :label="recipientDetailDialog.hasCompleted ? 'ALL RECEIVED' : 'PENDING'"
-            style="font-size: 12px; font-weight: 700; padding: 5px 14px; border-radius: 6px; letter-spacing: 0.5px;"
+            style="
+              font-size: 12px;
+              font-weight: 700;
+              padding: 5px 14px;
+              border-radius: 6px;
+              letter-spacing: 0.5px;
+            "
           />
         </q-card-section>
 
         <!-- Details rows -->
-        <q-card-section class="q-pt-xs q-pb-md" style="max-height: 65vh; overflow-y: auto;">
+        <q-card-section class="q-pt-xs q-pb-md" style="max-height: 65vh; overflow-y: auto">
           <div class="tx-detail-table">
             <div class="tx-detail-row" v-for="row in recipientDetailDialog.rows" :key="row.label">
               <div class="tx-detail-label">{{ row.label }}</div>
               <div class="tx-detail-value" :style="row.style">{{ row.value }}</div>
             </div>
             <div class="tx-detail-row tx-detail-row--amount">
-              <div class="tx-detail-label" style="font-weight: 700;">Total Received</div>
-              <div class="tx-detail-value" style="font-size: 18px; font-weight: 800; color: #4caf50;">
+              <div class="tx-detail-label" style="font-weight: 700">Total Received</div>
+              <div
+                class="tx-detail-value"
+                style="font-size: 18px; font-weight: 800; color: #4caf50"
+              >
                 {{ recipientDetailDialog.totalAmount }} BCH
               </div>
             </div>
@@ -868,7 +1036,18 @@
 
           <!-- Donation history -->
           <div v-if="recipientDetailDialog.donations.length > 0" class="q-mt-md">
-            <div style="font-size: 12px; font-weight: 700; color: #78909c; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px;">Donation History</div>
+            <div
+              style="
+                font-size: 12px;
+                font-weight: 700;
+                color: #78909c;
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+                margin-bottom: 8px;
+              "
+            >
+              Donation History
+            </div>
             <div class="tx-detail-table recipient-history-table">
               <div
                 v-for="(d, i) in recipientDetailDialog.donations"
@@ -876,23 +1055,38 @@
                 class="tx-detail-row recipient-history-row"
               >
                 <div class="tx-detail-label recipient-history-label">
-                  <div style="font-weight: 700;">{{ d.cycleLabel || 'Cycle' }}</div>
-                  <div style="font-size: 11px; color: #78909c; margin-top: 2px;">{{ d.date || d.timestamp || '—' }}</div>
+                  <div style="font-weight: 700">{{ d.cycleLabel || 'Cycle' }}</div>
+                  <div style="font-size: 11px; color: #78909c; margin-top: 2px">
+                    {{ d.date || d.timestamp || '—' }}
+                  </div>
                   <div
                     v-if="d.txid"
                     class="recipient-history-txid"
-                    @click="$q.copyToClipboard(d.txid).then(() => $q.notify({ type: 'positive', message: 'TxID copied', position: 'top', timeout: 1200 }))"
+                    @click="
+                      $q
+                        .copyToClipboard(d.txid)
+                        .then(() =>
+                          $q.notify({
+                            type: 'positive',
+                            message: 'TxID copied',
+                            position: 'top',
+                            timeout: 1200,
+                          }),
+                        )
+                    "
                   >
                     TXID: {{ d.txid }}
                   </div>
                 </div>
                 <div class="tx-detail-value recipient-history-value">
-                  <span style="font-weight: 700;">{{ d.amount }} BCH</span>
+                  <span style="font-weight: 700">{{ d.amount }} BCH</span>
                   <q-badge
-                    :color="d.status === 'withdrawn' || d.status === 'completed' ? 'positive' : 'warning'"
+                    :color="
+                      d.status === 'withdrawn' || d.status === 'completed' ? 'positive' : 'warning'
+                    "
                     :label="d.status || 'pending'"
                     class="q-ml-sm recipient-history-badge"
-                    style="font-size: 10px;"
+                    style="font-size: 10px"
                   />
                 </div>
               </div>
@@ -907,7 +1101,14 @@
         </q-card-section>
 
         <q-card-actions align="right" class="q-px-md q-pb-md">
-          <q-btn unelevated color="primary" label="Close" no-caps style="border-radius: 8px; min-width: 90px;" @click="recipientDetailDialog.open = false" />
+          <q-btn
+            unelevated
+            color="primary"
+            label="Close"
+            no-caps
+            style="border-radius: 8px; min-width: 90px"
+            @click="recipientDetailDialog.open = false"
+          />
         </q-card-actions>
       </q-card>
     </q-dialog>
@@ -917,11 +1118,19 @@
       <q-card class="tx-detail-dialog">
         <div class="tx-detail-header">
           <div class="row items-center justify-between no-wrap">
-            <div style="min-width: 0; flex: 1; overflow: hidden;">
+            <div style="min-width: 0; flex: 1; overflow: hidden">
               <div class="tx-detail-title">Donation Details</div>
-              <div class="tx-detail-sub">BiToHelp Blockchain Donation Platform</div>
+              <div class="tx-detail-sub">CrypToCare Blockchain Donation Platform</div>
             </div>
-            <q-btn flat round dense icon="close" @click="donationDetailDialog.open = false" class="tx-close-btn q-ml-sm" style="flex-shrink: 0;" />
+            <q-btn
+              flat
+              round
+              dense
+              icon="close"
+              @click="donationDetailDialog.open = false"
+              class="tx-close-btn q-ml-sm"
+              style="flex-shrink: 0"
+            />
           </div>
         </div>
 
@@ -929,25 +1138,37 @@
           <q-badge
             :color="donationDetailDialog.statusColor"
             :label="donationDetailDialog.statusLabel"
-            style="font-size: 12px; font-weight: 700; padding: 5px 14px; border-radius: 6px; letter-spacing: 0.5px;"
+            style="
+              font-size: 12px;
+              font-weight: 700;
+              padding: 5px 14px;
+              border-radius: 6px;
+              letter-spacing: 0.5px;
+            "
           />
         </q-card-section>
 
-        <q-card-section class="q-pt-xs q-pb-md" style="max-height: 65vh; overflow-y: auto;">
+        <q-card-section class="q-pt-xs q-pb-md" style="max-height: 65vh; overflow-y: auto">
           <div class="tx-detail-table">
             <div class="tx-detail-row" v-for="row in donationDetailDialog.rows" :key="row.label">
               <div class="tx-detail-label">{{ row.label }}</div>
               <div class="tx-detail-value" :style="row.style">{{ row.value }}</div>
             </div>
             <div class="tx-detail-row tx-detail-row--amount">
-              <div class="tx-detail-label" style="font-weight: 700;">Donation Amount</div>
-              <div class="tx-detail-value" style="font-size: 18px; font-weight: 800; color: #1976d2;">
+              <div class="tx-detail-label" style="font-weight: 700">Donation Amount</div>
+              <div
+                class="tx-detail-value"
+                style="font-size: 18px; font-weight: 800; color: #1976d2"
+              >
                 {{ donationDetailDialog.formattedAmount }} {{ donationDetailDialog.coin }}
               </div>
             </div>
             <div class="tx-detail-row" v-if="donationDetailDialog.txid">
               <div class="tx-detail-label">Transaction ID</div>
-              <div class="tx-detail-value" style="font-family: monospace; font-size: 11px; word-break: break-all;">
+              <div
+                class="tx-detail-value"
+                style="font-family: monospace; font-size: 11px; word-break: break-all"
+              >
                 {{ donationDetailDialog.txid }}
               </div>
             </div>
@@ -955,13 +1176,29 @@
 
           <div class="tx-detail-note q-mt-md">
             <q-icon name="info_outline" size="14px" class="q-mr-xs" />
-            <span>This transaction is recorded on the Bitcoin Cash blockchain. For receipt or tax purposes, use View Receipt.</span>
+            <span
+              >This transaction is recorded on the Bitcoin Cash blockchain. For receipt or tax
+              purposes, use View Receipt.</span
+            >
           </div>
         </q-card-section>
 
-        <q-card-actions align="right" class="q-px-md q-pb-md" style="gap: 8px;">
-          <q-btn flat color="primary" label="View Receipt" no-caps @click="openReceiptFromDetail()" />
-          <q-btn unelevated color="primary" label="Close" no-caps style="border-radius: 8px; min-width: 90px;" @click="donationDetailDialog.open = false" />
+        <q-card-actions align="right" class="q-px-md q-pb-md" style="gap: 8px">
+          <q-btn
+            flat
+            color="primary"
+            label="View Receipt"
+            no-caps
+            @click="openReceiptFromDetail()"
+          />
+          <q-btn
+            unelevated
+            color="primary"
+            label="Close"
+            no-caps
+            style="border-radius: 8px; min-width: 90px"
+            @click="donationDetailDialog.open = false"
+          />
         </q-card-actions>
       </q-card>
     </q-dialog>
@@ -972,26 +1209,36 @@
         <!-- Letterhead header -->
         <div class="receipt-header">
           <div class="row items-center justify-between no-wrap">
-            <div style="min-width: 0; flex: 1; overflow: hidden;">
-              <div class="receipt-brand">BiToHelp</div>
+            <div style="min-width: 0; flex: 1; overflow: hidden">
+              <div class="receipt-brand">CrypToCare</div>
               <div class="receipt-brand-sub">Blockchain-Powered Charitable Giving</div>
             </div>
-            <q-btn flat round dense icon="close" @click="receiptDialog.open = false" class="tx-close-btn q-ml-sm" style="flex-shrink: 0;" />
+            <q-btn
+              flat
+              round
+              dense
+              icon="close"
+              @click="receiptDialog.open = false"
+              class="tx-close-btn q-ml-sm"
+              style="flex-shrink: 0"
+            />
           </div>
         </div>
 
-        <q-card-section class="q-pa-none" style="max-height: 70vh; overflow-y: auto;">
+        <q-card-section class="q-pa-none" style="max-height: 70vh; overflow-y: auto">
           <!-- Receipt title bar -->
           <div class="receipt-title-bar">
             <div class="row items-center justify-between no-wrap">
               <div>
-                <div style="font-size: 16px; font-weight: 700;">Official Donation Receipt</div>
-                <div style="font-size: 12px; margin-top: 2px; opacity: 0.65;">Tax-Deductible Donation Record</div>
+                <div style="font-size: 16px; font-weight: 700">Official Donation Receipt</div>
+                <div style="font-size: 12px; margin-top: 2px; opacity: 0.65">
+                  Tax-Deductible Donation Record
+                </div>
               </div>
               <q-badge
                 :color="receiptDialog.statusColor"
                 :label="receiptDialog.statusLabel"
-                style="font-size: 11px; font-weight: 700; padding: 4px 12px; border-radius: 6px;"
+                style="font-size: 11px; font-weight: 700; padding: 4px 12px; border-radius: 6px"
               />
             </div>
           </div>
@@ -1024,7 +1271,12 @@
               </div>
               <div class="tx-detail-row">
                 <div class="tx-detail-label">BCH Wallet</div>
-                <div class="tx-detail-value" style="font-family: monospace; font-size: 11px; word-break: break-all;">{{ receiptDialog.walletAddress }}</div>
+                <div
+                  class="tx-detail-value"
+                  style="font-family: monospace; font-size: 11px; word-break: break-all"
+                >
+                  {{ receiptDialog.walletAddress }}
+                </div>
               </div>
             </div>
 
@@ -1048,8 +1300,11 @@
                 <div class="tx-detail-value">Bitcoin Cash (BCH)</div>
               </div>
               <div class="tx-detail-row tx-detail-row--amount">
-                <div class="tx-detail-label" style="font-weight: 700;">Total Amount</div>
-                <div class="tx-detail-value" style="font-size: 20px; font-weight: 800; color: #1976d2;">
+                <div class="tx-detail-label" style="font-weight: 700">Total Amount</div>
+                <div
+                  class="tx-detail-value"
+                  style="font-size: 20px; font-weight: 800; color: #1976d2"
+                >
                   {{ receiptDialog.formattedAmount }} BCH
                 </div>
               </div>
@@ -1058,30 +1313,51 @@
             <!-- Tax notice -->
             <div class="tx-detail-note q-mb-md">
               <q-icon name="gavel" size="14px" class="q-mr-xs" />
-              <span><strong>Tax Deduction Notice:</strong> This receipt serves as official documentation for tax purposes. Please consult your tax advisor regarding deductibility in your jurisdiction.</span>
+              <span
+                ><strong>Tax Deduction Notice:</strong> This receipt serves as official
+                documentation for tax purposes. Please consult your tax advisor regarding
+                deductibility in your jurisdiction.</span
+              >
             </div>
 
             <!-- Footer -->
             <div class="receipt-footer">
-              <div style="font-size: 14px; font-weight: 700; margin-bottom: 6px;">Thank You for Your Generosity!</div>
-              <div style="font-size: 12px; opacity: 0.65; line-height: 1.6;">BiToHelp • Cryptocurrency Donation Platform<br>This is a computer-generated receipt valid without signature.<br>For inquiries: support@bitohelp.org</div>
+              <div style="font-size: 14px; font-weight: 700; margin-bottom: 6px">
+                Thank You for Your Generosity!
+              </div>
+              <div style="font-size: 12px; opacity: 0.65; line-height: 1.6">
+                CrypToCare • Cryptocurrency Donation Platform<br />This is a computer-generated
+                receipt valid without signature.<br />For inquiries: support@CrypToCare.org
+              </div>
             </div>
           </div>
         </q-card-section>
 
-        <q-card-actions align="right" class="q-px-md q-pb-md" style="gap: 8px;">
+        <q-card-actions align="right" class="q-px-md q-pb-md" style="gap: 8px">
           <q-btn flat color="grey-7" label="Close" no-caps @click="receiptDialog.open = false" />
-          <q-btn unelevated color="primary" label="Download Receipt" icon="download" no-caps style="border-radius: 8px;" @click="downloadReceipt(receiptDialog.donation)" />
+          <q-btn
+            unelevated
+            color="primary"
+            label="Download Receipt"
+            icon="download"
+            no-caps
+            style="border-radius: 8px"
+            @click="downloadReceipt(receiptDialog.donation)"
+          />
         </q-card-actions>
       </q-card>
     </q-dialog>
-
   </q-page>
 </template>
 
 <script setup>
 import { ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue'
-import { Line as LineChart, Bar as BarChart, Doughnut as DoughnutChart, Radar as RadarChart } from 'vue-chartjs'
+import {
+  Line as LineChart,
+  Bar as BarChart,
+  Doughnut as DoughnutChart,
+  Radar as RadarChart,
+} from 'vue-chartjs'
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -1094,7 +1370,7 @@ import {
   Title,
   Tooltip,
   Legend,
-  Filler
+  Filler,
 } from 'chart.js'
 
 ChartJS.register(
@@ -1108,7 +1384,7 @@ ChartJS.register(
   Title,
   Tooltip,
   Legend,
-  Filler
+  Filler,
 )
 import { useDonationStore } from '../stores/donation-store'
 import { useQuasar } from 'quasar'
@@ -1119,8 +1395,8 @@ import transactionImg from 'src/assets/transaction.png'
 
 const $q = useQuasar()
 const donationStore = useDonationStore()
-const WALLET_SNAPSHOT_STORAGE_KEY = 'bitohelp.wallet.snapshot'
-const WALLET_CONNECTED_EVENT = 'bitohelp:wallet-connection-changed'
+const WALLET_SNAPSHOT_STORAGE_KEY = 'cryptocare.wallet.snapshot'
+const WALLET_CONNECTED_EVENT = 'cryptocare:wallet-connection-changed'
 
 const connectedWalletSnapshot = ref({
   connected: false,
@@ -1158,7 +1434,7 @@ const recipientDetailDialog = ref({
   hasCompleted: true,
   totalAmount: '0.00',
   rows: [],
-  donations: []
+  donations: [],
 })
 
 const donationDetailDialog = ref({
@@ -1168,7 +1444,7 @@ const donationDetailDialog = ref({
   formattedAmount: '0.00',
   coin: 'BCH',
   txid: '',
-  rows: []
+  rows: [],
 })
 
 const receiptDialog = ref({
@@ -1184,9 +1460,8 @@ const receiptDialog = ref({
   walletAddress: '',
   recipient: '',
   cause: '',
-  formattedAmount: '0.00'
+  formattedAmount: '0.00',
 })
-
 
 const activeTab = ref('donations')
 const detailTab = ref('donations')
@@ -1205,7 +1480,6 @@ const activitySearch = ref('')
 const statusFilter = ref('All')
 const categoryFilter = ref('All')
 
-
 const wallets = ref([])
 
 const selectedWallet = ref(null)
@@ -1218,7 +1492,10 @@ const buildWalletsFromDonations = () => {
   }
 
   const donations = donationHistory.value || []
-  const totalDonated = donations.reduce((sum, donation) => sum + parseFloat(donation.amount || 0), 0)
+  const totalDonated = donations.reduce(
+    (sum, donation) => sum + parseFloat(donation.amount || 0),
+    0,
+  )
   const donationCount = donations.length
   const timestamps = donations
     .map((d) => new Date(d.timestamp || d.date || Date.now()).getTime())
@@ -1229,9 +1506,9 @@ const buildWalletsFromDonations = () => {
   const lastDonationTs = timestamps[timestamps.length - 1] || Date.now()
 
   const profileConfigs = [
-    { name: 'Guest Wallet', email: 'guest@bitohelp.local', product: 'Paytaca Guest' },
-    { name: 'Business Account', email: 'business@bitohelp.local', product: 'Paytaca Business' },
-    { name: 'Family Account', email: 'family@bitohelp.local', product: 'Paytaca Family' },
+    { name: 'Guest Wallet', email: 'guest@CrypToCare.local', product: 'Paytaca Guest' },
+    { name: 'Business Account', email: 'business@CrypToCare.local', product: 'Paytaca Business' },
+    { name: 'Family Account', email: 'family@CrypToCare.local', product: 'Paytaca Family' },
   ]
   const connectedAddress = connectedWalletSnapshot.value.address || ''
 
@@ -1292,21 +1569,25 @@ const buildWalletsFromDonations = () => {
 }
 
 const donationColumns = [
-  { name: 'date', label: 'Date', field: row => formatDate(row.timestamp), align: 'left', sortable: true },
+  {
+    name: 'date',
+    label: 'Date',
+    field: (row) => formatDate(row.timestamp),
+    align: 'left',
+    sortable: true,
+  },
   { name: 'recipient', label: 'Recipient', field: 'recipient', align: 'left' },
   { name: 'donor', label: 'Donor Name', field: 'donor_name', align: 'left' },
   { name: 'amount', label: 'Amount', field: 'amount', align: 'right', sortable: true },
   { name: 'interval', label: 'Interval', field: 'interval', align: 'center' },
   { name: 'coin', label: 'Coin', field: 'coin', align: 'center' },
-  { name: 'actions', label: 'Actions', field: 'actions', align: 'center' }
+  { name: 'actions', label: 'Actions', field: 'actions', align: 'center' },
 ]
-
 
 const donationHistory = computed(() => {
   const realDonations = donationStore.donationHistory || []
   return realDonations
 })
-
 
 const allDonations = computed(() => {
   const realDonations = donationStore.donationHistory || []
@@ -1314,8 +1595,10 @@ const allDonations = computed(() => {
 })
 
 // ── Chart helpers ─────────────────────────────────────────────────────────────
-const chartTextColor = computed(() => $q.dark.isActive ? 'rgba(255,255,255,0.65)' : '#546e7a')
-const chartGridColor  = computed(() => $q.dark.isActive ? 'rgba(255,255,255,0.10)' : 'rgba(0,0,0,0.18)')
+const chartTextColor = computed(() => ($q.dark.isActive ? 'rgba(255,255,255,0.65)' : '#546e7a'))
+const chartGridColor = computed(() =>
+  $q.dark.isActive ? 'rgba(255,255,255,0.10)' : 'rgba(0,0,0,0.18)',
+)
 
 // Line chart: BCH donated over time (last 15 donations sorted by date)
 const lineChartData = computed(() => {
@@ -1323,21 +1606,23 @@ const lineChartData = computed(() => {
     .sort((a, b) => new Date(a.timestamp || a.date || 0) - new Date(b.timestamp || b.date || 0))
     .slice(-15)
   return {
-    labels: sorted.map(d => {
+    labels: sorted.map((d) => {
       const dt = new Date(d.timestamp || d.date)
       return isNaN(dt) ? '—' : dt.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
     }),
-    datasets: [{
-      label: 'BCH Donated',
-      data: sorted.map(d => parseFloat(d.amount || 0)),
-      borderColor: '#1976d2',
-      backgroundColor: $q.dark.isActive ? 'rgba(25,118,210,0.18)' : 'rgba(25,118,210,0.1)',
-      borderWidth: 2,
-      pointBackgroundColor: '#1976d2',
-      pointRadius: 4,
-      fill: true,
-      tension: 0.4
-    }]
+    datasets: [
+      {
+        label: 'BCH Donated',
+        data: sorted.map((d) => parseFloat(d.amount || 0)),
+        borderColor: '#1976d2',
+        backgroundColor: $q.dark.isActive ? 'rgba(25,118,210,0.18)' : 'rgba(25,118,210,0.1)',
+        borderWidth: 2,
+        pointBackgroundColor: '#1976d2',
+        pointRadius: 4,
+        fill: true,
+        tension: 0.4,
+      },
+    ],
   }
 })
 const lineChartOptions = computed(() => ({
@@ -1345,26 +1630,26 @@ const lineChartOptions = computed(() => ({
   maintainAspectRatio: false,
   plugins: {
     legend: { display: false },
-    tooltip: { callbacks: { label: ctx => ` ${ctx.parsed.y.toFixed(4)} BCH` } }
+    tooltip: { callbacks: { label: (ctx) => ` ${ctx.parsed.y.toFixed(4)} BCH` } },
   },
   scales: {
     x: {
       grid: { color: chartGridColor.value },
-      ticks: { color: chartTextColor.value, font: { size: 10 } }
+      ticks: { color: chartTextColor.value, font: { size: 10 } },
     },
     y: {
       grid: { color: chartGridColor.value },
-      ticks: { color: chartTextColor.value, font: { size: 10 }, callback: v => v + ' BCH' },
-      beginAtZero: true
-    }
-  }
+      ticks: { color: chartTextColor.value, font: { size: 10 }, callback: (v) => v + ' BCH' },
+      beginAtZero: true,
+    },
+  },
 }))
 
 // Bar chart: total BCH per cause category
-const CHART_COLORS = ['#1976d2','#7b1fa2','#2e7d32','#e65100','#c62828','#00838f','#37474f']
+const CHART_COLORS = ['#1976d2', '#7b1fa2', '#2e7d32', '#e65100', '#c62828', '#00838f', '#37474f']
 const causeChartMap = computed(() => {
   const map = {}
-  donationHistory.value.forEach(d => {
+  donationHistory.value.forEach((d) => {
     const c = d.cause || 'General'
     map[c] = (map[c] || 0) + parseFloat(d.amount || 0)
   })
@@ -1374,14 +1659,16 @@ const barChartData = computed(() => {
   const causes = Object.keys(causeChartMap.value)
   return {
     labels: causes,
-    datasets: [{
-      label: 'Total BCH',
-      data: causes.map(c => parseFloat(causeChartMap.value[c].toFixed(4))),
-      backgroundColor: causes.map((_, i) => CHART_COLORS[i % CHART_COLORS.length] + 'cc'),
-      borderColor:      causes.map((_, i) => CHART_COLORS[i % CHART_COLORS.length]),
-      borderWidth: 1.5,
-      borderRadius: 6
-    }]
+    datasets: [
+      {
+        label: 'Total BCH',
+        data: causes.map((c) => parseFloat(causeChartMap.value[c].toFixed(4))),
+        backgroundColor: causes.map((_, i) => CHART_COLORS[i % CHART_COLORS.length] + 'cc'),
+        borderColor: causes.map((_, i) => CHART_COLORS[i % CHART_COLORS.length]),
+        borderWidth: 1.5,
+        borderRadius: 6,
+      },
+    ],
   }
 })
 const barChartOptions = computed(() => ({
@@ -1389,36 +1676,43 @@ const barChartOptions = computed(() => ({
   maintainAspectRatio: false,
   plugins: {
     legend: { display: false },
-    tooltip: { callbacks: { label: ctx => ` ${ctx.parsed.y.toFixed(4)} BCH` } }
+    tooltip: { callbacks: { label: (ctx) => ` ${ctx.parsed.y.toFixed(4)} BCH` } },
   },
   scales: {
     x: {
       grid: { display: false },
-      ticks: { color: chartTextColor.value, font: { size: 10 } }
+      ticks: { color: chartTextColor.value, font: { size: 10 } },
     },
     y: {
       grid: { color: chartGridColor.value },
-      ticks: { color: chartTextColor.value, font: { size: 10 }, callback: v => v + ' BCH' },
-      beginAtZero: true
-    }
-  }
+      ticks: { color: chartTextColor.value, font: { size: 10 }, callback: (v) => v + ' BCH' },
+      beginAtZero: true,
+    },
+  },
 }))
 
 // Doughnut chart: BCH distribution by cause
 const doughnutChartData = computed(() => {
   const causes = Object.keys(causeChartMap.value)
   const PIE_BG = [
-    'rgba(25,118,210,0.85)','rgba(123,31,162,0.85)','rgba(46,125,50,0.85)',
-    'rgba(230,81,0,0.85)','rgba(198,40,40,0.85)','rgba(0,131,143,0.85)','rgba(55,71,79,0.85)'
+    'rgba(25,118,210,0.85)',
+    'rgba(123,31,162,0.85)',
+    'rgba(46,125,50,0.85)',
+    'rgba(230,81,0,0.85)',
+    'rgba(198,40,40,0.85)',
+    'rgba(0,131,143,0.85)',
+    'rgba(55,71,79,0.85)',
   ]
   return {
     labels: causes,
-    datasets: [{
-      data: causes.map(c => parseFloat(causeChartMap.value[c].toFixed(4))),
-      backgroundColor: PIE_BG.slice(0, causes.length),
-      borderColor: $q.dark.isActive ? 'rgba(18,24,46,0.8)' : 'rgba(255,255,255,0.8)',
-      borderWidth: 2
-    }]
+    datasets: [
+      {
+        data: causes.map((c) => parseFloat(causeChartMap.value[c].toFixed(4))),
+        backgroundColor: PIE_BG.slice(0, causes.length),
+        borderColor: $q.dark.isActive ? 'rgba(18,24,46,0.8)' : 'rgba(255,255,255,0.8)',
+        borderWidth: 2,
+      },
+    ],
   }
 })
 const doughnutChartOptions = computed(() => ({
@@ -1427,17 +1721,17 @@ const doughnutChartOptions = computed(() => ({
   plugins: {
     legend: {
       position: 'bottom',
-      labels: { color: chartTextColor.value, font: { size: 11 }, padding: 12, boxWidth: 12 }
+      labels: { color: chartTextColor.value, font: { size: 11 }, padding: 12, boxWidth: 12 },
     },
-    tooltip: { callbacks: { label: ctx => ` ${ctx.label}: ${ctx.parsed.toFixed(4)} BCH` } }
-  }
+    tooltip: { callbacks: { label: (ctx) => ` ${ctx.label}: ${ctx.parsed.toFixed(4)} BCH` } },
+  },
 }))
 
 // Radar chart: donation count + total BCH per cause
 const radarChartData = computed(() => {
   const causes = Object.keys(causeChartMap.value)
   const countMap = {}
-  donationHistory.value.forEach(d => {
+  donationHistory.value.forEach((d) => {
     const c = d.cause || 'General'
     countMap[c] = (countMap[c] || 0) + 1
   })
@@ -1447,23 +1741,23 @@ const radarChartData = computed(() => {
     datasets: [
       {
         label: 'Total BCH',
-        data: causes.map(c => parseFloat(causeChartMap.value[c].toFixed(4))),
+        data: causes.map((c) => parseFloat(causeChartMap.value[c].toFixed(4))),
         borderColor: '#1976d2',
         backgroundColor: isDark ? 'rgba(25,118,210,0.25)' : 'rgba(25,118,210,0.15)',
         borderWidth: 2,
         pointBackgroundColor: '#1976d2',
-        pointRadius: 4
+        pointRadius: 4,
       },
       {
         label: 'No. of Donations',
-        data: causes.map(c => countMap[c] || 0),
+        data: causes.map((c) => countMap[c] || 0),
         borderColor: '#7b1fa2',
         backgroundColor: isDark ? 'rgba(123,31,162,0.25)' : 'rgba(123,31,162,0.12)',
         borderWidth: 2,
         pointBackgroundColor: '#7b1fa2',
-        pointRadius: 4
-      }
-    ]
+        pointRadius: 4,
+      },
+    ],
   }
 })
 
@@ -1473,23 +1767,23 @@ const radarChartOptions = computed(() => ({
   plugins: {
     legend: {
       position: 'bottom',
-      labels: { color: chartTextColor.value, font: { size: 11 }, padding: 12, boxWidth: 12 }
+      labels: { color: chartTextColor.value, font: { size: 11 }, padding: 12, boxWidth: 12 },
     },
     tooltip: {
       callbacks: {
-        label: ctx => ` ${ctx.dataset.label}: ${ctx.parsed.r}`
-      }
-    }
+        label: (ctx) => ` ${ctx.dataset.label}: ${ctx.parsed.r}`,
+      },
+    },
   },
   scales: {
     r: {
-      grid:      { color: chartGridColor.value },
+      grid: { color: chartGridColor.value },
       angleLines: { color: chartGridColor.value },
       pointLabels: { color: chartTextColor.value, font: { size: 10 } },
       ticks: { color: chartTextColor.value, font: { size: 9 }, backdropColor: 'transparent' },
-      beginAtZero: true
-    }
-  }
+      beginAtZero: true,
+    },
+  },
 }))
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -1497,15 +1791,22 @@ const updateWalletStats = () => {
   buildWalletsFromDonations()
 }
 
+watch(
+  () => donationStore.donationHistory,
+  () => {
+    updateWalletStats()
+  },
+  { immediate: true, deep: true },
+)
 
-watch(() => donationStore.donationHistory, () => {
-  updateWalletStats()
-}, { immediate: true, deep: true })
-
-watch(connectedWalletSnapshot, () => {
-  updateWalletStats()
-}, { deep: true })
-
+watch(
+  connectedWalletSnapshot,
+  () => {
+    updateWalletStats()
+    loadWalletData()
+  },
+  { deep: true },
+)
 
 const supportedProjects = ref([
   {
@@ -1513,8 +1814,8 @@ const supportedProjects = ref([
     name: 'Medical Fund',
     category: 'Healthcare',
     image: new URL('../assets/medical.jpg', import.meta.url).href,
-    donated: 3.10,
-    count: 5
+    donated: 3.1,
+    count: 5,
   },
   {
     id: 2,
@@ -1522,7 +1823,7 @@ const supportedProjects = ref([
     category: 'Education',
     image: new URL('../assets/typhoon.jpeg', import.meta.url).href,
     donated: 2.75,
-    count: 3
+    count: 3,
   },
   {
     id: 3,
@@ -1530,10 +1831,9 @@ const supportedProjects = ref([
     category: 'Disaster Relief',
     image: new URL('../assets/typhoon.jpeg', import.meta.url).href,
     donated: 0.95,
-    count: 2
-  }
+    count: 2,
+  },
 ])
-
 
 const completedCount = computed(() => allDonations.value.length)
 
@@ -1544,10 +1844,9 @@ const totalDonatedAmount = computed(() => {
   return total.toFixed(4)
 })
 
-
 const recipientSummary = computed(() => {
   const recipientMap = {}
-  donationHistory.value.forEach(donation => {
+  donationHistory.value.forEach((donation) => {
     const recipientName = donation.recipient || 'Unknown'
     if (!recipientMap[recipientName]) {
       recipientMap[recipientName] = {
@@ -1557,25 +1856,24 @@ const recipientSummary = computed(() => {
         count: 0,
         lastDate: donation.timestamp || donation.date,
         hasCompleted: true,
-        donations: []
+        donations: [],
       }
     }
-    
+
     recipientMap[recipientName].totalAmount += parseFloat(donation.amount || 0)
     recipientMap[recipientName].count++
     recipientMap[recipientName].donations.push(donation)
-    
-    
+
     if (donation.status === 'pending') {
       recipientMap[recipientName].hasCompleted = false
     }
-    
+
     const donationDate = donation.timestamp || donation.date
     if (donationDate > recipientMap[recipientName].lastDate) {
       recipientMap[recipientName].lastDate = donationDate
     }
   })
-  
+
   return Object.values(recipientMap).sort((a, b) => b.totalAmount - a.totalAmount)
 })
 
@@ -1592,29 +1890,27 @@ const averagePerRecipient = computed(() => {
 
 const filteredActivity = computed(() => {
   let filtered = [...allDonations.value]
-  
-  
+
   if (categoryFilter.value !== 'All') {
-    filtered = filtered.filter(d => 
-      d.cause && d.cause.toLowerCase().includes(categoryFilter.value.toLowerCase())
+    filtered = filtered.filter(
+      (d) => d.cause && d.cause.toLowerCase().includes(categoryFilter.value.toLowerCase()),
     )
   }
-  
- 
+
   if (activitySearch.value) {
     const search = activitySearch.value.toLowerCase()
-    filtered = filtered.filter(d => 
-      (d.cause && d.cause.toLowerCase().includes(search)) ||
-      (d.donor_name && d.donor_name.toLowerCase().includes(search)) ||
-      (d.donor_email && d.donor_email.toLowerCase().includes(search)) ||
-      (d.txid && d.txid.toLowerCase().includes(search)) ||
-      (d.interval && d.interval.toLowerCase().includes(search))
+    filtered = filtered.filter(
+      (d) =>
+        (d.cause && d.cause.toLowerCase().includes(search)) ||
+        (d.donor_name && d.donor_name.toLowerCase().includes(search)) ||
+        (d.donor_email && d.donor_email.toLowerCase().includes(search)) ||
+        (d.txid && d.txid.toLowerCase().includes(search)) ||
+        (d.interval && d.interval.toLowerCase().includes(search)),
     )
   }
-  
+
   return filtered
 })
-
 
 const selectWallet = (wallet) => {
   selectedWallet.value = wallet
@@ -1629,10 +1925,10 @@ const formatCurrency = (amount) => {
 function formatDate(timestamp) {
   if (!timestamp) return 'N/A'
   const date = new Date(timestamp)
-  return date.toLocaleDateString('en-US', { 
-    year: 'numeric', 
-    month: 'short', 
-    day: 'numeric'
+  return date.toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
   })
 }
 
@@ -1644,7 +1940,7 @@ function formatDateTime(timestamp) {
     month: 'short',
     day: 'numeric',
     hour: '2-digit',
-    minute: '2-digit'
+    minute: '2-digit',
   })
 }
 
@@ -1726,7 +2022,12 @@ const viewDonationDetails = (donation) => {
   donationDetailDialog.value = {
     open: true,
     _raw: donation,
-    statusColor: donation.status === 'completed' ? 'positive' : donation.status === 'failed' ? 'negative' : 'warning',
+    statusColor:
+      donation.status === 'completed'
+        ? 'positive'
+        : donation.status === 'failed'
+          ? 'negative'
+          : 'warning',
     statusLabel: (donation.status || 'pending').toUpperCase(),
     formattedAmount,
     coin: donation.coin || 'BCH',
@@ -1739,24 +2040,24 @@ const viewDonationDetails = (donation) => {
       { label: 'Donor Email', value: donation.donor_email || 'N/A' },
       { label: 'Interval', value: donation.interval || 'One-time' },
       { label: 'Message', value: donation.message || 'No message' },
-    ]
+    ],
   }
 }
 
 const viewReceipt = (donation) => {
   try {
     const receiptDate = new Date(donation.date || donation.timestamp).toLocaleDateString('en-US', {
-      year: 'numeric', 
-      month: 'long', 
+      year: 'numeric',
+      month: 'long',
       day: 'numeric',
       hour: '2-digit',
-      minute: '2-digit'
+      minute: '2-digit',
     })
 
     const currentDate = new Date().toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'long',
-      day: 'numeric'
+      day: 'numeric',
     })
 
     const mockTxId = `BTHLP-${Date.now().toString().slice(-10)}`
@@ -1766,7 +2067,12 @@ const viewReceipt = (donation) => {
     receiptDialog.value = {
       open: true,
       donation,
-      statusColor: donation.status === 'completed' ? 'positive' : donation.status === 'failed' ? 'negative' : 'warning',
+      statusColor:
+        donation.status === 'completed'
+          ? 'positive'
+          : donation.status === 'failed'
+            ? 'negative'
+            : 'warning',
       statusLabel: (donation.status || 'pending').toUpperCase(),
       receiptNumber: mockTxId,
       currentDate,
@@ -1776,7 +2082,7 @@ const viewReceipt = (donation) => {
       walletAddress: walletInfo.address,
       recipient: donation.recipient || 'N/A',
       cause: donation.cause || 'N/A',
-      formattedAmount
+      formattedAmount,
     }
   } catch (error) {
     console.error('Error in viewReceipt:', error)
@@ -1784,34 +2090,33 @@ const viewReceipt = (donation) => {
       type: 'negative',
       message: 'Error viewing receipt',
       caption: error.message,
-      position: 'top'
+      position: 'top',
     })
   }
 }
 
 const downloadReceipt = (donation) => {
   try {
-    const receiptDate = new Date(donation.date).toLocaleDateString('en-US', { 
-      year: 'numeric', 
-      month: 'long', 
+    const receiptDate = new Date(donation.date).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
       day: 'numeric',
       hour: '2-digit',
-      minute: '2-digit'
+      minute: '2-digit',
     })
-    
-    const currentDate = new Date().toLocaleDateString('en-US', { 
-      year: 'numeric', 
-      month: 'long', 
+
+    const currentDate = new Date().toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
       day: 'numeric',
       hour: '2-digit',
-      minute: '2-digit'
+      minute: '2-digit',
     })
-    
+
     const mockTxId = `BTHLP-${Date.now().toString().slice(-10)}`
     const walletInfo = selectedWallet.value
     const formattedAmount = formatCurrency(donation.amount)
-    
-    
+
     const receiptContent = `
 ╔════════════════════════════════════════════════════════════════════════════╗
 ║                                                                            ║
@@ -1824,7 +2129,7 @@ const downloadReceipt = (donation) => {
 
                           OFFICIAL DONATION RECEIPT
                         Tax-Deductible Donation Record
-                                                                              
+
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
@@ -1850,7 +2155,7 @@ const downloadReceipt = (donation) => {
  Recipient Organization:   ${donation.recipient}
  Cause Category:           ${donation.cause}
  Payment Method:           Bitcoin Cash (BCH)
- 
+
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
                             DONATION AMOUNT
@@ -1863,7 +2168,7 @@ const downloadReceipt = (donation) => {
 
  This receipt serves as official documentation for tax purposes. Please
  consult with your tax advisor regarding the deductibility of this donation
- in your jurisdiction. BiToHelp is a registered charitable platform 
+ in your jurisdiction. CrypToCare is a registered charitable platform
  facilitating cryptocurrency donations to verified non-profit organizations.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -1879,38 +2184,37 @@ const downloadReceipt = (donation) => {
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-                              BiToHelp Platform
+                              CrypToCare Platform
                     Cryptocurrency Donation Platform
           This is a computer-generated receipt and is valid without signature
-                 For inquiries: support@bitohelp.org
+                 For inquiries: support@CrypToCare.org
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
     `
-    
-   
+
     const blob = new Blob([receiptContent], { type: 'text/plain;charset=utf-8' })
     const url = window.URL.createObjectURL(blob)
     const link = document.createElement('a')
     link.href = url
-    link.download = `BiToHelp_Receipt_${mockTxId}.txt`
+    link.download = `CrypToCare_Receipt_${mockTxId}.txt`
     document.body.appendChild(link)
     link.click()
     document.body.removeChild(link)
     window.URL.revokeObjectURL(url)
-    
+
     $q.notify({
       type: 'positive',
       message: 'Receipt downloaded successfully!',
-      caption: `Saved as BiToHelp_Receipt_${mockTxId}.txt`,
+      caption: `Saved as CrypToCare_Receipt_${mockTxId}.txt`,
       position: 'top',
       timeout: 3000,
       icon: 'download',
       actions: [
         {
           label: 'OK',
-          color: 'white'
-        }
-      ]
+          color: 'white',
+        },
+      ],
     })
   } catch (error) {
     console.error('Error in downloadReceipt:', error)
@@ -1919,7 +2223,7 @@ const downloadReceipt = (donation) => {
       message: 'Error downloading receipt',
       caption: error.message,
       position: 'top',
-      icon: 'error'
+      icon: 'error',
     })
   }
 }
@@ -1929,14 +2233,14 @@ const refreshActivity = () => {
     type: 'info',
     message: 'Refreshing activity...',
     position: 'top',
-    timeout: 1000
+    timeout: 1000,
   })
   setTimeout(() => {
     $q.notify({
       type: 'positive',
       message: 'Activity updated',
       position: 'top',
-      timeout: 1500
+      timeout: 1500,
     })
   }, 1000)
 }
@@ -1954,7 +2258,7 @@ const viewRecipientDetails = (recipient) => {
       { label: 'Number of Donations', value: recipient.count },
       { label: 'Cycles Tracked', value: historyRows.length },
       { label: 'Last Donation', value: recipient.lastDate || '—' },
-    ]
+    ],
   }
 }
 
@@ -1967,81 +2271,105 @@ const build3dScatter = async () => {
   const donations = donationHistory.value
   if (!donations.length) return
   let Plotly
-  try { Plotly = (await import('plotly.js-gl3d-dist-min')).default } catch { return }
+  try {
+    Plotly = (await import('plotly.js-gl3d-dist-min')).default
+  } catch {
+    return
+  }
 
-  const recipientNames = [...new Set(donations.map(d => d.recipient || 'Unknown'))]
+  const recipientNames = [...new Set(donations.map((d) => d.recipient || 'Unknown'))]
   const CAUSE_COLORS = [
-    '#1976d2','#7b1fa2','#2e7d32','#e65100','#c62828','#00838f','#37474f','#ad1457'
+    '#1976d2',
+    '#7b1fa2',
+    '#2e7d32',
+    '#e65100',
+    '#c62828',
+    '#00838f',
+    '#37474f',
+    '#ad1457',
   ]
-  const causeList = [...new Set(donations.map(d => d.cause || 'General'))]
+  const causeList = [...new Set(donations.map((d) => d.cause || 'General'))]
 
-  const sorted = [...donations].sort((a, b) =>
-    new Date(a.timestamp || a.date || 0) - new Date(b.timestamp || b.date || 0)
+  const sorted = [...donations].sort(
+    (a, b) => new Date(a.timestamp || a.date || 0) - new Date(b.timestamp || b.date || 0),
   )
   const baseTime = new Date(sorted[0].timestamp || sorted[0].date || Date.now()).getTime()
 
   const isDark = $q.dark.isActive
   // paper_bgcolor / plot_bgcolor are 2-D-only properties; scene.bgcolor controls the GL3D viewport.
   // WebGL ignores alpha, so we use solid colours to avoid a black scene background.
-  const paperBg    = isDark ? 'rgba(0,0,0,0)'    : 'rgba(0,0,0,0)'
-  const sceneBg    = isDark ? '#12182e'           : '#f8faff'
-  const textColor  = isDark ? 'rgba(255,255,255,0.75)' : '#37474f'
-  const gridColor  = isDark ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.22)'
+  const paperBg = isDark ? 'rgba(0,0,0,0)' : 'rgba(0,0,0,0)'
+  const sceneBg = isDark ? '#12182e' : '#f8faff'
+  const textColor = isDark ? 'rgba(255,255,255,0.75)' : '#37474f'
+  const gridColor = isDark ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.22)'
 
   // Group by cause for separate traces (legend)
   const traces = causeList.map((cause, ci) => {
-    const causeRows = sorted.filter(d => (d.cause || 'General') === cause)
+    const causeRows = sorted.filter((d) => (d.cause || 'General') === cause)
     return {
       type: 'scatter3d',
       mode: 'markers',
       name: cause,
-      x: causeRows.map(d => +(((new Date(d.timestamp || d.date || Date.now()).getTime() - baseTime) / 86400000).toFixed(1))),
-      y: causeRows.map(d => parseFloat(d.amount || 0)),
-      z: causeRows.map(d => recipientNames.indexOf(d.recipient || 'Unknown')),
-      text: causeRows.map(d => `${d.recipient || 'Unknown'}<br>${parseFloat(d.amount || 0).toFixed(4)} BCH<br>${d.cause || 'General'}`),
+      x: causeRows.map(
+        (d) =>
+          +(
+            (new Date(d.timestamp || d.date || Date.now()).getTime() - baseTime) /
+            86400000
+          ).toFixed(1),
+      ),
+      y: causeRows.map((d) => parseFloat(d.amount || 0)),
+      z: causeRows.map((d) => recipientNames.indexOf(d.recipient || 'Unknown')),
+      text: causeRows.map(
+        (d) =>
+          `${d.recipient || 'Unknown'}<br>${parseFloat(d.amount || 0).toFixed(4)} BCH<br>${d.cause || 'General'}`,
+      ),
       hovertemplate: '%{text}<extra></extra>',
       marker: {
         size: 7,
         color: CAUSE_COLORS[ci % CAUSE_COLORS.length],
         opacity: 0.85,
-        line: { color: 'rgba(255,255,255,0.3)', width: 0.5 }
-      }
+        line: { color: 'rgba(255,255,255,0.3)', width: 0.5 },
+      },
     }
   })
 
   const layout = {
     paper_bgcolor: paperBg,
-    plot_bgcolor:  paperBg,
+    plot_bgcolor: paperBg,
     margin: { l: 0, r: 0, t: 10, b: 0 },
     legend: {
       font: { color: textColor, size: 11 },
       bgcolor: 'rgba(0,0,0,0)',
       orientation: 'h',
-      x: 0, y: -0.05
+      x: 0,
+      y: -0.05,
     },
     scene: {
       bgcolor: sceneBg,
       xaxis: {
         title: { text: 'Days Since First', font: { color: textColor, size: 10 } },
-        gridcolor: gridColor, zerolinecolor: gridColor,
+        gridcolor: gridColor,
+        zerolinecolor: gridColor,
         tickfont: { color: textColor, size: 9 },
-        showbackground: false
+        showbackground: false,
       },
       yaxis: {
         title: { text: 'BCH Amount', font: { color: textColor, size: 10 } },
-        gridcolor: gridColor, zerolinecolor: gridColor,
+        gridcolor: gridColor,
+        zerolinecolor: gridColor,
         tickfont: { color: textColor, size: 9 },
-        showbackground: false
+        showbackground: false,
       },
       zaxis: {
         title: { text: 'Recipient', font: { color: textColor, size: 10 } },
-        gridcolor: gridColor, zerolinecolor: gridColor,
+        gridcolor: gridColor,
+        zerolinecolor: gridColor,
         tickfont: { color: textColor, size: 9 },
         tickvals: recipientNames.map((_, i) => i),
-        ticktext: recipientNames.map(n => n.length > 12 ? n.slice(0, 12) + '…' : n),
-        showbackground: false
-      }
-    }
+        ticktext: recipientNames.map((n) => (n.length > 12 ? n.slice(0, 12) + '…' : n)),
+        showbackground: false,
+      },
+    },
   }
 
   const config = { responsive: true, displayModeBar: false }
@@ -2057,23 +2385,34 @@ const build3dScatter = async () => {
 watch(
   () => [donationHistory.value, $q.dark.isActive],
   () => nextTick(build3dScatter),
-  { deep: true }
+  { deep: true },
 )
 // ─────────────────────────────────────────────────────────────────────────────
 
-onMounted(async () => {
-  window.addEventListener(WALLET_CONNECTED_EVENT, handleWalletConnectionChanged)
+const loadWalletData = async () => {
+  if (!connectedWalletSnapshot.value.connected) {
+    donationStore.disconnectWallet()
+    return
+  }
+  const addr = connectedWalletSnapshot.value.address
+  if (!addr) return
 
   loadingDonations.value = true
+  await donationStore.connectWallet(addr)
   await Promise.all([
-    donationStore.fetchDonations(50),
+    donationStore.fetchWalletDonations(addr, 50),
     fetchPayoutCycles(),
     new Promise((resolve) => setTimeout(resolve, 600)),
   ])
   loadingDonations.value = false
-  console.log('DonorPage mounted')
   await nextTick()
   build3dScatter()
+}
+
+onMounted(async () => {
+  window.addEventListener(WALLET_CONNECTED_EVENT, handleWalletConnectionChanged)
+  await loadWalletData()
+  console.log('DonorPage mounted')
 })
 
 onUnmounted(() => {
@@ -2084,8 +2423,7 @@ onUnmounted(() => {
 <style scoped lang="scss">
 .donor-page {
   overflow-x: hidden;
-  background:
-    linear-gradient(135deg, #f0f4ff 0%, #f7f4ff 50%, #f0f9ff 100%);
+  background: linear-gradient(135deg, #f0f4ff 0%, #f7f4ff 50%, #f0f9ff 100%);
   background-attachment: fixed;
   min-height: 100vh;
 }
@@ -2094,8 +2432,7 @@ onUnmounted(() => {
   background:
     radial-gradient(ellipse at 0% 0%, rgba(25, 50, 90, 0.6) 0%, transparent 55%),
     radial-gradient(ellipse at 100% 0%, rgba(50, 30, 80, 0.5) 0%, transparent 55%),
-    radial-gradient(ellipse at 50% 100%, rgba(10, 30, 60, 0.4) 0%, transparent 60%),
-    #0d1117;
+    radial-gradient(ellipse at 50% 100%, rgba(10, 30, 60, 0.4) 0%, transparent 60%), #0d1117;
 }
 
 .sidebar-container {
@@ -2114,7 +2451,7 @@ onUnmounted(() => {
   background: rgba(255, 255, 255, 0.72);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  border-left: 1.5px solid rgba(21, 101, 192, 0.10);
+  border-left: 1.5px solid rgba(21, 101, 192, 0.1);
 }
 
 .body--dark .main-content {
@@ -2129,7 +2466,7 @@ onUnmounted(() => {
   h5 {
     font-size: 1.5rem;
     line-height: 1.3;
-    
+
     strong {
       font-weight: 700;
     }
@@ -2220,14 +2557,15 @@ onUnmounted(() => {
   border-radius: 20px;
   padding: 3px 10px;
   cursor: pointer;
-  transition: background 0.15s ease, color 0.15s ease;
+  transition:
+    background 0.15s ease,
+    color 0.15s ease;
 
   &:hover {
     background: rgba(21, 101, 192, 0.1);
     color: #1565c0;
   }
 }
-
 
 .sidebar-address-pill-label {
   font-family: sans-serif;
@@ -2246,7 +2584,7 @@ onUnmounted(() => {
 
 .body--dark .sidebar-account-card {
   background: rgba(30, 36, 60, 0.75);
-  border-color: rgba(255, 255, 255, 0.10);
+  border-color: rgba(255, 255, 255, 0.1);
   box-shadow:
     0 1px 3px rgba(0, 0, 0, 0.25),
     0 4px 14px rgba(0, 0, 0, 0.22);
@@ -2285,7 +2623,6 @@ onUnmounted(() => {
     color: #90caf9;
   }
 }
-
 
 .sidebar-avatar {
   width: 38px;
@@ -2388,7 +2725,7 @@ onUnmounted(() => {
   color: #5d9cf5 !important;
 }
 
-.body--dark .sidebar-account-card .sidebar-stat-value[style*="2e7d32"] {
+.body--dark .sidebar-account-card .sidebar-stat-value[style*='2e7d32'] {
   color: #66bb6a !important;
 }
 
@@ -2411,7 +2748,9 @@ onUnmounted(() => {
   background: rgba(255, 255, 255, 0.72);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
 
   &:hover {
     border-color: #1565c0 !important;
@@ -2519,7 +2858,7 @@ onUnmounted(() => {
   padding: 10px;
   color: white;
   transition: all 0.2s ease;
-  
+
   &:hover {
     transform: translateY(-5px);
     box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
@@ -2529,19 +2868,25 @@ onUnmounted(() => {
 .wallet-stat-card-blue {
   background: linear-gradient(135deg, #6c85f5dc 0%, #8799f3 100%);
   border: 2px solid rgba(255, 255, 255, 0.5);
-  box-shadow: 0 4px 16px rgba(108, 133, 245, 0.45), 0 1px 4px rgba(0,0,0,0.18);
+  box-shadow:
+    0 4px 16px rgba(108, 133, 245, 0.45),
+    0 1px 4px rgba(0, 0, 0, 0.18);
 }
 
 .wallet-stat-card-purple {
   background: linear-gradient(135deg, #a9a4ffd3 0%, #7e7affd0 100%);
   border: 2px solid rgba(255, 255, 255, 0.5);
-  box-shadow: 0 4px 16px rgba(126, 122, 255, 0.45), 0 1px 4px rgba(0,0,0,0.18);
+  box-shadow:
+    0 4px 16px rgba(126, 122, 255, 0.45),
+    0 1px 4px rgba(0, 0, 0, 0.18);
 }
 
 .wallet-stat-card-yellow {
   background: linear-gradient(135deg, #e3d273d9 0%, #ebcf89e2 100%);
   border: 2px solid rgba(255, 255, 255, 0.5);
-  box-shadow: 0 4px 16px rgba(227, 210, 115, 0.45), 0 1px 4px rgba(0,0,0,0.18);
+  box-shadow:
+    0 4px 16px rgba(227, 210, 115, 0.45),
+    0 1px 4px rgba(0, 0, 0, 0.18);
 }
 
 .wallet-stat-header {
@@ -2619,7 +2964,6 @@ onUnmounted(() => {
   object-fit: contain;
 }
 
-
 .stats-card {
   border-radius: 8px;
   background: rgba(255, 255, 255, 0.65) !important;
@@ -2634,12 +2978,11 @@ onUnmounted(() => {
   border-color: rgba(100, 160, 255, 0.25) !important;
 }
 
-
 .project-card-detail {
   border-radius: 12px;
   overflow: hidden;
   transition: all 0.3s ease;
-  
+
   &:hover {
     transform: translateX(-5px);
     box-shadow: 0 8px 16px rgba(14, 63, 221, 0.15);
@@ -2665,10 +3008,8 @@ onUnmounted(() => {
   color: #c8d8f0 !important;
 }
 
-
-
 @property --angle {
-  syntax: "<angle>";
+  syntax: '<angle>';
   initial-value: 0deg;
   inherits: false;
 }
@@ -2686,11 +3027,7 @@ onUnmounted(() => {
   transform: scale(1.05);
   box-shadow: 0 8px 16px rgba(211, 37, 37, 0.1);
   border: 8px solid transparent;
-  border-image: conic-gradient(
-    from var(--angle),
-    #150ae5, #ffea01,
-    #02f791, #f20404
-  ) 1;
+  border-image: conic-gradient(from var(--angle), #150ae5, #ffea01, #02f791, #f20404) 1;
 
   animation: border-rotate 4s linear infinite;
 }
@@ -2757,7 +3094,6 @@ onUnmounted(() => {
   color: #d8e8ff !important;
 }
 
-
 .sidebar-toggle {
   display: flex;
   background: rgba(0, 0, 0, 0.06);
@@ -2799,24 +3135,33 @@ onUnmounted(() => {
   letter-spacing: 0.4px;
   border-radius: 12px;
   box-shadow: 0 4px 16px rgba(21, 101, 192, 0.35);
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
   position: relative;
   overflow: hidden;
 }
 .make-donation-btn::after {
   content: '';
   position: absolute;
-  top: 0; left: -100%;
+  top: 0;
+  left: -100%;
   width: 60%;
   height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.38), transparent);
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.38), transparent);
   transform: skewX(-20deg);
   animation: donation-shimmer 2.8s ease infinite;
 }
 @keyframes donation-shimmer {
-  0%   { left: -100%; }
-  60%  { left: 160%; }
-  100% { left: 160%; }
+  0% {
+    left: -100%;
+  }
+  60% {
+    left: 160%;
+  }
+  100% {
+    left: 160%;
+  }
 }
 .make-donation-btn:hover {
   transform: translateY(-2px);
@@ -2892,7 +3237,6 @@ onUnmounted(() => {
 :deep(.q-tab-panel) {
   background: transparent !important;
 }
-
 
 /* ─── Donation Activity section ─────────────────────────────────── */
 .activity-heading {
@@ -2998,7 +3342,6 @@ onUnmounted(() => {
   }
 }
 
-
 @media (max-width: 1024px) {
   .sidebar-container {
     padding-bottom: 2rem;
@@ -3065,7 +3408,9 @@ onUnmounted(() => {
 
 .tx-close-btn {
   color: #546e7a !important;
-  transition: color 0.15s, background 0.15s;
+  transition:
+    color 0.15s,
+    background 0.15s;
 }
 .tx-close-btn:hover {
   color: #1565c0 !important;
@@ -3322,7 +3667,7 @@ onUnmounted(() => {
   align-items: center;
   justify-content: space-between;
   padding: 11px 14px 8px;
-  border-bottom: 1.5px solid rgba(21, 101, 192, 0.10);
+  border-bottom: 1.5px solid rgba(21, 101, 192, 0.1);
 }
 
 .donation-mobile-card__recipient {
@@ -3397,7 +3742,7 @@ onUnmounted(() => {
 }
 
 .body--dark .donation-mobile-card__footer {
-  border-top-color: rgba(93, 156, 245, 0.10);
+  border-top-color: rgba(93, 156, 245, 0.1);
 }
 
 .recipient-history-txid {

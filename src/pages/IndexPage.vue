@@ -671,10 +671,10 @@
             <div class="about-content-professional">
               <div class="row q-col-gutter-xl items-center">
                 <div class="col-12 col-md-6">
-                  <div class="about-badge q-mb-md">About BitoHelp</div>
+                  <div class="about-badge q-mb-md">About CrypToCare</div>
                   <h2 class="text-h3 text-weight-bold q-mb-md">Blockchain-Powered Social Impact</h2>
                   <p class="text-body1 text-grey-8 q-mb-lg" style="line-height: 1.8">
-                    Founded in 2026, BitoHelp is a cryptocurrency donation platform built on
+                    Founded in 2026, CrypToCare is a cryptocurrency donation platform built on
                     transparency, innovation, and social responsibility. We leverage blockchain
                     technology to create a trusted bridge between donors and verified nonprofits
                     worldwide.
@@ -742,7 +742,7 @@
                 <div class="col-12 col-md-6">
                   <div class="about-visual-section">
                     <div class="about-main-image q-mb-md">
-                      <img src="~assets/hero.png" alt="BitoHelp Platform" />
+                      <img src="~assets/hero.png" alt="CrypToCare Platform" />
                     </div>
                     <div class="row q-col-gutter-sm">
                       <div class="col-6">
@@ -772,8 +772,8 @@
             <div class="col-12 col-md-4">
               <div class="footer-brand-section">
                 <div class="footer-logo q-mb-md">
-                  <img src="~assets/image1.png" alt="BiToHelp" class="footer-logo-img" />
-                  <span class="footer-brand-name">BiToHelp</span>
+                  <img src="~assets/image1.png" alt="CrypToCare" class="footer-logo-img" />
+                  <span class="footer-brand-name">CrypToCare</span>
                 </div>
                 <p class="footer-description text-body2 q-mb-lg">
                   Empowering social impact through transparent blockchain-powered cryptocurrency
@@ -887,7 +887,7 @@
         <div class="container">
           <div class="row items-center justify-between">
             <div class="col-12 col-md-6 text-center text-md-left">
-              <p class="footer-copyright text-body2">© 2026 BiToHelp. All rights reserved.</p>
+              <p class="footer-copyright text-body2">© 2026 CrypToCare. All rights reserved.</p>
             </div>
             <div class="col-12 col-md-6 text-center text-md-right">
               <div class="footer-legal-links">
@@ -908,12 +908,12 @@
 <script setup>
 import { ref, onMounted, onUnmounted } from 'vue'
 
-const isConnected = ref(localStorage.getItem('bitohelp.wallet.connected') === '1')
+const isConnected = ref(localStorage.getItem('cryptocare.wallet.connected') === '1')
 function onWalletChange() {
-  isConnected.value = localStorage.getItem('bitohelp.wallet.connected') === '1'
+  isConnected.value = localStorage.getItem('cryptocare.wallet.connected') === '1'
 }
-onMounted(() => window.addEventListener('bitohelp:wallet-connection-changed', onWalletChange))
-onUnmounted(() => window.removeEventListener('bitohelp:wallet-connection-changed', onWalletChange))
+onMounted(() => window.addEventListener('cryptocare:wallet-connection-changed', onWalletChange))
+onUnmounted(() => window.removeEventListener('cryptocare:wallet-connection-changed', onWalletChange))
 
 const testimonials = [
   {

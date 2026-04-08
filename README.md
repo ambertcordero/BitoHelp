@@ -1,13 +1,13 @@
-# BiToHelp - Cryptocurrency Donation Platform
+# CrypToCare - Cryptocurrency Donation Platform
 
 A blockchain-powered donation platform built with Quasar (Vue 3) and Django REST Framework. Enables transparent cryptocurrency donations to verified nonprofits using Bitcoin Cash (BCH) and CashScript smart contracts.
 
 ##  Project Structure
 
 ```
-bitohelp/
+CrypToCare/
 ├── backend/                    # Django REST API
-│   ├── bitohelp_api/          # Django project settings
+│   ├── CrypToCare_api/          # Django project settings
 │   ├── donations/             # Donations app (models, views, API)
 │   ├── manage.py              # Django management
 │   └── requirements.txt       # Python dependencies

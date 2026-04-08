@@ -303,16 +303,16 @@ const notify = (payload) => {
     return
   }
   if (import.meta.env.DEV) {
-    console.warn('[BitoHelp][notify:fallback]', payload)
+    console.warn('[CrypToCare][notify:fallback]', payload)
   }
 }
 
-const DONATIONS_STORAGE_KEY = 'bitohelp.donations'
-const WALLET_SNAPSHOT_STORAGE_KEY = 'bitohelp.wallet.snapshot'
-const WALLET_BALANCE_ADJUST_EVENT = 'bitohelp:wallet-balance-adjust'
-const WALLET_BALANCE_REFRESH_EVENT = 'bitohelp:wallet-balance-refresh'
-const DONATION_SENT_EVENT = 'bitohelp:donation-sent'
-const WALLET_CLIENT_GLOBAL_KEY = '__bitohelpWalletClient__'
+const DONATIONS_STORAGE_KEY = 'cryptocare.donations'
+const WALLET_SNAPSHOT_STORAGE_KEY = 'cryptocare.wallet.snapshot'
+const WALLET_BALANCE_ADJUST_EVENT = 'cryptocare:wallet-balance-adjust'
+const WALLET_BALANCE_REFRESH_EVENT = 'cryptocare:wallet-balance-refresh'
+const DONATION_SENT_EVENT = 'cryptocare:donation-sent'
+const WALLET_CLIENT_GLOBAL_KEY = '__cryptocareWalletClient__'
 const WALLET_REQUEST_TIMEOUT_MS = 30000
 const PAYTACA_BCH_CHIPNET_WC_LIMITATION_MESSAGE =
   'Paytaca approved the request but did not return a signed BCH chipnet transaction over WalletConnect. No funds were sent. This appears to be a wallet-side issue.'
@@ -779,7 +779,7 @@ const executeWalletRequest = async (walletClient, chainId, method, candidatePara
   for (const params of candidateParams) {
     try {
       if (import.meta.env.DEV) {
-        console.info('[BitoHelp][donation-request:start]', { method, chainId, params })
+        console.info('[CrypToCare][donation-request:start]', { method, chainId, params })
       }
 
       // Capture request ID in parallel (not blocking) — needed for history fallback.
@@ -809,7 +809,7 @@ const executeWalletRequest = async (walletClient, chainId, method, candidatePara
         if (capturedRequestId !== null && typeof walletClient?.getHistoryRecord === 'function') {
           if (import.meta.env.DEV) {
             console.warn(
-              '[BitoHelp][donation-request:relay-drop] Polling history for id:',
+              '[CrypToCare][donation-request:relay-drop] Polling history for id:',
               capturedRequestId,
             )
           }
@@ -819,7 +819,10 @@ const executeWalletRequest = async (walletClient, chainId, method, candidatePara
             const record = await walletClient.getHistoryRecord(capturedRequestId)
             if (record?.response?.result !== undefined) {
               if (import.meta.env.DEV) {
-                console.info('[BitoHelp][donation-request:history-recovered]', record.response.result)
+                console.info(
+                  '[CrypToCare][donation-request:history-recovered]',
+                  record.response.result,
+                )
               }
               response = record.response.result
               break
@@ -842,7 +845,7 @@ const executeWalletRequest = async (walletClient, chainId, method, candidatePara
       }
 
       if (import.meta.env.DEV) {
-        console.info('[BitoHelp][donation-request:success]', { method, response })
+        console.info('[CrypToCare][donation-request:success]', { method, response })
       }
       return response
     } catch (error) {
@@ -941,7 +944,7 @@ const signBchTransactionWithWalletConnect = async ({ walletClient, chainId, sign
 
   if (import.meta.env.DEV) {
     console.info(
-      '[BitoHelp][bch-session:preflight]',
+      '[CrypToCare][bch-session:preflight]',
       validateBchWalletSession(walletClient, resolvedChainId),
     )
   } else {
@@ -952,7 +955,7 @@ const signBchTransactionWithWalletConnect = async ({ walletClient, chainId, sign
     const candidatePayloads = buildBchSignRequestVariants(signingPayload)
     if (import.meta.env.DEV) {
       console.info(
-        '[BitoHelp][bch-sign-variants]',
+        '[CrypToCare][bch-sign-variants]',
         candidatePayloads.map((payload, idx) => ({
           variant: idx + 1,
           ...summarizeBchSigningPayload(payload),
@@ -1016,7 +1019,7 @@ const runChipnetBchDonationFlow = async ({
   const vaultAddress = vault.address
 
   if (import.meta.env.DEV) {
-    console.info('[BitoHelp][vault-contract]', {
+    console.info('[CrypToCare][vault-contract]', {
       vaultAddress,
       params: vault.params,
       charityAddress,
@@ -1047,16 +1050,17 @@ const runChipnetBchDonationFlow = async ({
   })
 
   if (import.meta.env.DEV) {
-    console.info('[BitoHelp][bch-sign-payload]', summarizeBchSigningPayload(signingPayload))
+    console.info('[CrypToCare][bch-sign-payload]', summarizeBchSigningPayload(signingPayload))
     console.info(
-      '[BitoHelp][bch-sign-compat]',
+      '[CrypToCare][bch-sign-compat]',
       summarizeBchSigningCompatibility(signingPayload, walletClient),
     )
   }
 
   submissionStatus.value = {
     type: '',
-    message: 'Waiting for wallet signature... confirm in Paytaca. (May take a moment after accepting)',
+    message:
+      'Waiting for wallet signature... confirm in Paytaca. (May take a moment after accepting)',
   }
 
   const signedResult = await signBchTransactionWithWalletConnect({
@@ -1412,6 +1416,7 @@ const submitDonation = async () => {
         interval: form.value.interval,
         interval_blocks: intervalBlocks,
         payout_mode: payoutMode.value,
+        wallet_address: (activeAccount || '').toLowerCase(),
       })
 
       // Schedule all payout cycles in the backend so the dashboard
@@ -1426,21 +1431,25 @@ const submitDonation = async () => {
         for (let cycle = 1; cycle <= totalCycles; cycle++) {
           const dueAt = new Date(Date.now() + cycle * intervalMs).toISOString()
           // best-effort — don't block on failures
-          api.post('payouts/request/', {
-            donation_id: savedDonationId ?? donationId,
-            donor_email: form.value.email || '',
-            donor_name: form.value.name || 'Anonymous',
-            recipient_address: form.value.recipientAddress,
-            vault_address: vaultAddr,
-            payout_amount_satoshis: Number(withdrawalSatoshis),
-            coin: form.value.coin,
-            interval_label: form.value.interval,
-            interval_blocks: intervalBlocks,
-            cycle_number: cycle,
-            total_cycles: totalCycles,
-            due_at: dueAt,
-            payout_mode: payoutMode.value,
-          }).catch(() => { /* best-effort */ })
+          api
+            .post('payouts/request/', {
+              donation_id: savedDonationId ?? donationId,
+              donor_email: form.value.email || '',
+              donor_name: form.value.name || 'Anonymous',
+              recipient_address: form.value.recipientAddress,
+              vault_address: vaultAddr,
+              payout_amount_satoshis: Number(withdrawalSatoshis),
+              coin: form.value.coin,
+              interval_label: form.value.interval,
+              interval_blocks: intervalBlocks,
+              cycle_number: cycle,
+              total_cycles: totalCycles,
+              due_at: dueAt,
+              payout_mode: payoutMode.value,
+            })
+            .catch(() => {
+              /* best-effort */
+            })
         }
       }
     } catch {
@@ -1502,7 +1511,7 @@ const submitDonation = async () => {
 <style scoped>
 /* ── Glassmorphism panels ────────────────────────────────────── */
 .donation-form-panel {
-  background: rgba(255, 255, 255, 0.60);
+  background: rgba(255, 255, 255, 0.6);
   backdrop-filter: blur(20px) saturate(180%);
   -webkit-backdrop-filter: blur(20px) saturate(180%);
   border: 2px solid #1565c0;
@@ -1512,18 +1521,20 @@ const submitDonation = async () => {
     0 8px 32px rgba(30, 40, 80, 0.14),
     0 16px 48px rgba(30, 40, 80, 0.08);
   padding: 28px;
-  transition: box-shadow 0.25s ease, transform 0.25s ease;
+  transition:
+    box-shadow 0.25s ease,
+    transform 0.25s ease;
 }
 .donation-form-panel:hover {
   box-shadow:
     0 2px 0 rgba(21, 101, 192, 0.18),
     0 12px 40px rgba(30, 40, 80, 0.18),
-    0 24px 60px rgba(30, 40, 80, 0.10);
+    0 24px 60px rgba(30, 40, 80, 0.1);
   transform: translateY(-3px);
 }
 
 .donation-summary-panel {
-  background: rgba(255, 255, 255, 0.60);
+  background: rgba(255, 255, 255, 0.6);
   backdrop-filter: blur(20px) saturate(180%);
   -webkit-backdrop-filter: blur(20px) saturate(180%);
   border: 2px solid #1565c0;
@@ -1533,13 +1544,15 @@ const submitDonation = async () => {
     0 8px 32px rgba(30, 40, 80, 0.14),
     0 16px 48px rgba(30, 40, 80, 0.08);
   padding: 28px;
-  transition: box-shadow 0.25s ease, transform 0.25s ease;
+  transition:
+    box-shadow 0.25s ease,
+    transform 0.25s ease;
 }
 .donation-summary-panel:hover {
   box-shadow:
     0 2px 0 rgba(21, 101, 192, 0.18),
     0 12px 40px rgba(30, 40, 80, 0.18),
-    0 24px 60px rgba(30, 40, 80, 0.10);
+    0 24px 60px rgba(30, 40, 80, 0.1);
   transform: translateY(-3px);
 }
 

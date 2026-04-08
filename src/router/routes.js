@@ -13,6 +13,8 @@ const routes = [
       { path: 'mission', component: () => import('pages/MissionPage.vue') },
       { path: 'about', component: () => import('pages/AboutPage.vue') },
       { path: 'contact', component: () => import('pages/ContactPage.vue') },
+      { path: 'wallet-users', component: () => import('pages/WalletUsersPage.vue') },
+      { path: 'wallet-users/:id', component: () => import('pages/WalletUserDetailPage.vue') },
     ],
   },
 

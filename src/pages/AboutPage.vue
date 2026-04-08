@@ -1,4 +1,4 @@
-﻿<template>
+<template>
   <q-page class="about-page">
 
     <!-- HERO ini !!!-->
@@ -7,7 +7,7 @@
         <div class="row items-center">
           <div class="col-12 col-md-6">
             <h1 class="hero-title text-white">
-              About BitoHelp
+              About CrypToCare
             </h1>
             <p class="hero-subtitle text-white">
               A blockchain-powered donation platform built to make charitable giving faster,
@@ -27,12 +27,12 @@
             <div class="about-badge q-mb-md">Our Story</div>
             <h2 class="text-h3 text-weight-bold q-mb-md">Blockchain-Powered Social Impact</h2>
             <p class="text-body1 text-grey-8 q-mb-lg" style="line-height: 1.8">
-              BitoHelp started as a capstone project with one question — why do charity platforms
+              CrypToCare started as a capstone project with one question — why do charity platforms
               still charge 5–15% in processing fees when Bitcoin Cash can do it for less than
               a centavo?
             </p>
             <p class="text-body1 text-grey-8 q-mb-xl" style="line-height: 1.8">
-              We built BitoHelp to prove that direct, trustless giving is not only possible —
+              We built CrypToCare to prove that direct, trustless giving is not only possible —
               it is better. Every donation is on-chain, every charity is vetted, and every
               peso goes where it is supposed to go.
             </p>
@@ -71,7 +71,7 @@
 
           <div class="col-12 col-md-6">
             <div class="about-main-image q-mb-sm">
-              <img src="~assets/hero.png" alt="BitoHelp Platform" />
+              <img src="~assets/hero.png" alt="CrypToCare Platform" />
             </div>
             <div class="row q-col-gutter-sm">
               <div class="col-6">
@@ -96,7 +96,7 @@
       <div class="container">
         <h2 class="text-h3 text-weight-bold q-mb-sm">Meet the Team</h2>
         <p class="text-body1 text-grey-7 q-mb-xl">
-          The developers and advocates behind BitoHelp.
+          The developers and advocates behind CrypToCare.
         </p>
 
         <div class="row q-col-gutter-lg">

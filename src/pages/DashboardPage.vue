@@ -1149,7 +1149,7 @@
           <div class="row items-center justify-between no-wrap">
             <div>
               <div class="tx-detail-title">Donation Details</div>
-              <div class="tx-detail-sub">BitoHelp Charity Dashboard</div>
+              <div class="tx-detail-sub">CrypToCare Charity Dashboard</div>
             </div>
             <q-btn flat round dense icon="close" @click="txDetailDialog.open = false" class="tx-close-btn" />
           </div>
@@ -1517,12 +1517,12 @@ const fetchNonprofitDetail = async (nonprofitId) => {
   }
 }
 
-const isConnected = ref(localStorage.getItem('bitohelp.wallet.connected') === '1')
+const isConnected = ref(localStorage.getItem('cryptocare.wallet.connected') === '1')
 function onWalletChange() {
-  isConnected.value = localStorage.getItem('bitohelp.wallet.connected') === '1'
+  isConnected.value = localStorage.getItem('cryptocare.wallet.connected') === '1'
 }
-onMounted(() => window.addEventListener('bitohelp:wallet-connection-changed', onWalletChange))
-onUnmounted(() => window.removeEventListener('bitohelp:wallet-connection-changed', onWalletChange))
+onMounted(() => window.addEventListener('cryptocare:wallet-connection-changed', onWalletChange))
+onUnmounted(() => window.removeEventListener('cryptocare:wallet-connection-changed', onWalletChange))
 
 const loadingDonations = ref(false)
 const apiDonations = ref([])

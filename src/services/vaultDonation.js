@@ -15,7 +15,7 @@ import { getAddressHash160 } from './bchChipnet.js'
 import { getAddressUtxos } from './electrumClient.js'
 import { api } from '../boot/axios.js'
 
-const VAULT_STORAGE_KEY = 'bitohelp.vaults'
+const VAULT_STORAGE_KEY = 'cryptocare.vaults'
 
 let providerInstance = null
 
@@ -158,7 +158,7 @@ export const checkVaultUtxo = async (contract, intervalBlocks) => {
     if (wtMatch && wtMatch.height > 0 && intervalBlocks > 0) {
       const confirmations = currentHeight - wtMatch.height
       if (import.meta.env.DEV) {
-        console.info('[BitoHelp][vault-utxo:maturity]', {
+        console.info('[CrypToCare][vault-utxo:maturity]', {
           utxo: `${vaultUtxo.txid}:${vaultUtxo.vout}`,
           block: wtMatch.height,
           currentHeight,
@@ -173,7 +173,7 @@ export const checkVaultUtxo = async (contract, intervalBlocks) => {
   } catch (err) {
     // Watchtower pre-check failed — fall through and let the network enforce BIP68
     if (import.meta.env.DEV) {
-      console.warn('[BitoHelp][vault-utxo:maturity-fallback]', err?.message)
+      console.warn('[CrypToCare][vault-utxo:maturity-fallback]', err?.message)
     }
   }
 
@@ -222,7 +222,7 @@ export const executeWithdraw = async (record) => {
     const txid = sendResult.txid
 
     if (import.meta.env.DEV) {
-      console.info('[BitoHelp][vault-withdraw:drain]', { txid, amount: drainAmount.toString() })
+      console.info('[CrypToCare][vault-withdraw:drain]', { txid, amount: drainAmount.toString() })
     }
 
     return {
@@ -244,7 +244,7 @@ export const executeWithdraw = async (record) => {
   const txid = sendResult.txid
 
   if (import.meta.env.DEV) {
-    console.info('[BitoHelp][vault-withdraw:cycle]', {
+    console.info('[CrypToCare][vault-withdraw:cycle]', {
       txid,
       toRecipient: withdrawalAmount.toString(),
       remaining: remaining.toString(),
@@ -263,16 +263,16 @@ export const executeWithdraw = async (record) => {
 // ---- Auto-withdraw scheduler ----
 
 // Use window-level Map so HMR doesn't create duplicate timers
-if (!window.__bitohelp_vaultTimers) {
-  window.__bitohelp_vaultTimers = new Map()
+if (!window.__cryptocare_vaultTimers) {
+  window.__cryptocare_vaultTimers = new Map()
 }
-const activeTimers = window.__bitohelp_vaultTimers
+const activeTimers = window.__cryptocare_vaultTimers
 
 // Track pending approval IDs per cycle to avoid duplicate email requests
-if (!window.__bitohelp_pendingApprovals) {
-  window.__bitohelp_pendingApprovals = new Map()
+if (!window.__cryptocare_pendingApprovals) {
+  window.__cryptocare_pendingApprovals = new Map()
 }
-const pendingApprovals = window.__bitohelp_pendingApprovals
+const pendingApprovals = window.__cryptocare_pendingApprovals
 
 /**
  * Handle the inbox-approval flow for a single cycle:
@@ -329,7 +329,7 @@ const handleInboxApproval = async (record, cycleNumber, currentBalanceSats = nul
       pendingApprovals.set(idempotencyKey, approvalId)
 
       if (import.meta.env.DEV) {
-        console.info('[BitoHelp][vault-approval:requested]', {
+        console.info('[CrypToCare][vault-approval:requested]', {
           donationId: record.donationId,
           approvalId,
           cycle: cycleNumber,
@@ -337,7 +337,7 @@ const handleInboxApproval = async (record, cycleNumber, currentBalanceSats = nul
       }
     } catch (err) {
       if (import.meta.env.DEV) {
-        console.warn('[BitoHelp][vault-approval:request-failed]', err?.message)
+        console.warn('[CrypToCare][vault-approval:request-failed]', err?.message)
       }
       return { skip: true, delayMs: POLL_INTERVAL_MS * 2 }
     }
@@ -359,7 +359,7 @@ const handleInboxApproval = async (record, cycleNumber, currentBalanceSats = nul
     return { waiting: true, approvalId, delayMs: 10_000 }
   } catch (err) {
     if (import.meta.env.DEV) {
-      console.warn('[BitoHelp][vault-approval:poll-failed]', err?.message)
+      console.warn('[CrypToCare][vault-approval:poll-failed]', err?.message)
     }
     return { waiting: true, approvalId, delayMs: POLL_INTERVAL_MS }
   }
@@ -373,7 +373,7 @@ const reportExecution = async (approvalId, txid) => {
     await api.post(`payouts/${approvalId}/execute/`, { txid })
   } catch (err) {
     if (import.meta.env.DEV) {
-      console.warn('[BitoHelp][vault-approval:report-failed]', err?.message)
+      console.warn('[CrypToCare][vault-approval:report-failed]', err?.message)
     }
   }
 }
@@ -443,7 +443,7 @@ export const startAutoWithdraw = (record, onCycle) => {
         record.payoutMode === 'inbox_approval'
           ? 'vault-approval:cycle'
           : 'vault-autowithdraw:attempt'
-      console.info(`[BitoHelp][${modeLabel}]`, {
+      console.info(`[CrypToCare][${modeLabel}]`, {
         status: record.payoutMode === 'inbox_approval' ? 'Checking approval' : 'Attempting',
         timeSent: fmtTime(),
         donationId: id,
@@ -463,7 +463,7 @@ export const startAutoWithdraw = (record, onCycle) => {
         if (currentBalanceSats < minNeeded) {
           if (import.meta.env.DEV) {
             console.info(
-              '%c[BitoHelp] Vault empty — stopping permanently',
+              '%c[CrypToCare] Vault empty — stopping permanently',
               'color: #ff9800; font-weight: bold',
               {
                 donationId: id,
@@ -488,7 +488,7 @@ export const startAutoWithdraw = (record, onCycle) => {
         }
         if (approval.waiting) {
           if (import.meta.env.DEV) {
-            console.info('[BitoHelp][vault-approval:waiting]', {
+            console.info('[CrypToCare][vault-approval:waiting]', {
               donationId: id,
               approvalId: approval.approvalId,
               cycle: cycleNumber + 1,
@@ -499,7 +499,7 @@ export const startAutoWithdraw = (record, onCycle) => {
         }
         if (approval.expired) {
           if (import.meta.env.DEV) {
-            console.warn('[BitoHelp][vault-approval:expired]', {
+            console.warn('[CrypToCare][vault-approval:expired]', {
               donationId: id,
               cycle: cycleNumber + 1,
             })
@@ -512,7 +512,7 @@ export const startAutoWithdraw = (record, onCycle) => {
 
         // Approved — execute the withdrawal
         if (import.meta.env.DEV) {
-          console.info('[BitoHelp][vault-approval:approved]', {
+          console.info('[CrypToCare][vault-approval:approved]', {
             donationId: id,
             approvalId: approval.approvalId,
             cycle: cycleNumber + 1,
@@ -524,7 +524,7 @@ export const startAutoWithdraw = (record, onCycle) => {
         if (maxCycles > 0 && cycleNumber >= maxCycles) {
           if (import.meta.env.DEV) {
             console.info(
-              '%c[BitoHelp] All cycles completed — stopping vault',
+              '%c[CrypToCare] All cycles completed — stopping vault',
               'color: #4caf50; font-weight: bold',
               {
                 donationId: id,
@@ -551,7 +551,7 @@ export const startAutoWithdraw = (record, onCycle) => {
               status: result.drained ? 'drained' : 'withdrawing',
             })
             if (import.meta.env.DEV) {
-              console.info('[BitoHelp][vault-autowithdraw:success]', {
+              console.info('[CrypToCare][vault-autowithdraw:success]', {
                 status: result.drained ? 'Successful (final drain)' : 'Successful',
                 timeSent: fmtTime(),
                 donationId: id,
@@ -583,7 +583,7 @@ export const startAutoWithdraw = (record, onCycle) => {
             const key = `${record.donationId}:cycle:${cycleNumber + 1}`
             pendingApprovals.set(key, approval.approvalId)
             if (import.meta.env.DEV) {
-              console.info('[BitoHelp][vault-approval:bip68-retry]', {
+              console.info('[CrypToCare][vault-approval:bip68-retry]', {
                 donationId: id,
                 approvalId: approval.approvalId,
               })
@@ -601,7 +601,7 @@ export const startAutoWithdraw = (record, onCycle) => {
       if (smartMaxCycles > 0 && cycleNumber >= smartMaxCycles) {
         if (import.meta.env.DEV) {
           console.info(
-            '%c[BitoHelp] All cycles completed — stopping vault',
+            '%c[CrypToCare] All cycles completed — stopping vault',
             'color: #4caf50; font-weight: bold',
             {
               donationId: id,
@@ -624,7 +624,7 @@ export const startAutoWithdraw = (record, onCycle) => {
             // Vault appears to be empty after many attempts
             updateVaultRecord(id, { status: 'drained' })
             if (import.meta.env.DEV) {
-              console.info('[BitoHelp][vault-autowithdraw:drained]', {
+              console.info('[CrypToCare][vault-autowithdraw:drained]', {
                 status: 'Drained (no UTXOs after max retries)',
                 timeSent: fmtTime(),
                 donationId: id,
@@ -635,7 +635,7 @@ export const startAutoWithdraw = (record, onCycle) => {
           }
           // Funding tx may still be unconfirmed — retry after a delay
           if (import.meta.env.DEV) {
-            console.info('[BitoHelp][vault-autowithdraw:no-utxos]', {
+            console.info('[CrypToCare][vault-autowithdraw:no-utxos]', {
               status: 'Waiting (no UTXOs yet)',
               timeSent: fmtTime(),
               donationId: id,
@@ -650,7 +650,7 @@ export const startAutoWithdraw = (record, onCycle) => {
           const blocksLeft = (result.needed || 1) - (result.confirmations || 0)
           const waitMs = Math.max(blocksLeft * BLOCK_TIME_MS, 60_000)
           if (import.meta.env.DEV) {
-            console.info('[BitoHelp][vault-autowithdraw:too-young]', {
+            console.info('[CrypToCare][vault-autowithdraw:too-young]', {
               status: 'Waiting (UTXO too young)',
               timeSent: fmtTime(),
               donationId: id,
@@ -664,7 +664,7 @@ export const startAutoWithdraw = (record, onCycle) => {
         }
         // Unknown failure — retry after poll interval
         if (import.meta.env.DEV) {
-          console.warn('[BitoHelp][vault-autowithdraw:failed]', {
+          console.warn('[CrypToCare][vault-autowithdraw:failed]', {
             status: 'Failed (unknown)',
             timeSent: fmtTime(),
             donationId: id,
@@ -685,7 +685,7 @@ export const startAutoWithdraw = (record, onCycle) => {
       })
 
       if (import.meta.env.DEV) {
-        console.info('[BitoHelp][vault-autowithdraw:success]', {
+        console.info('[CrypToCare][vault-autowithdraw:success]', {
           status: result.drained ? 'Successful (final drain)' : 'Successful',
           timeSent: fmtTime(),
           donationId: id,
@@ -717,7 +717,7 @@ export const startAutoWithdraw = (record, onCycle) => {
       if (result.drained) {
         if (import.meta.env.DEV) {
           console.info(
-            '%c[BitoHelp] Vault Empty — Fund is now Complete',
+            '%c[CrypToCare] Vault Empty — Fund is now Complete',
             'color: #4caf50; font-weight: bold; font-size: 14px',
             {
               timeSent: fmtTime(),
@@ -742,7 +742,7 @@ export const startAutoWithdraw = (record, onCycle) => {
       const isContractRequire = /Require statement failed/i.test(msg)
 
       if (import.meta.env.DEV) {
-        console.warn('[BitoHelp][vault-autowithdraw:error]', {
+        console.warn('[CrypToCare][vault-autowithdraw:error]', {
           status: isBip68 ? 'Waiting (BIP68 not final)' : 'Error',
           timeSent: fmtTime(),
           donationId: id,
@@ -772,7 +772,7 @@ export const startAutoWithdraw = (record, onCycle) => {
   const initialDelay = Math.max(0, firstWithdrawAt - now)
 
   if (import.meta.env.DEV) {
-    console.info('[BitoHelp][vault-autowithdraw:start]', {
+    console.info('[CrypToCare][vault-autowithdraw:start]', {
       status: 'Scheduled',
       timeSent: fmtTime(),
       donationId: id,

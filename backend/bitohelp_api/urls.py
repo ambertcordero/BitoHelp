@@ -24,4 +24,6 @@ urlpatterns = [
     path('api/', include('donations.urls')),
     path('api/', include('nonprofits.urls')),
     path('api/', include('payouts.urls')),
+    path('api/', include('users.urls')),
+    path('api/', include('chatbot.urls')),
 ]

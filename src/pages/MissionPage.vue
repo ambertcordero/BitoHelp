@@ -1,4 +1,4 @@
-﻿<template>
+<template>
   <q-page class="mission-page">
 
     <!-- HERO ini !!!-->
@@ -10,7 +10,7 @@
               Our Mission
             </h1>
             <p class="hero-subtitle text-white">
-              We believe that giving should be borderless, instant, and transparent. BitoHelp uses
+              We believe that giving should be borderless, instant, and transparent. CrypToCare uses
               Bitcoin Cash to connect donors directly with verified nonprofits â€” no middlemen,
               no hidden fees, no delays.
             </p>
@@ -45,7 +45,7 @@
             <h2 class="mission-heading text-weight-bold q-mb-lg">What We Stand For</h2>
 
             <p class="text-body1 text-grey-8" style="line-height: 1.8;">
-              BitoHelp was built on a simple belief â€” technology can make generosity more
+              CrypToCare was built on a simple belief â€” technology can make generosity more
               powerful. We leverage Bitcoin Cash to give donors full visibility over their
               contributions, from wallet to cause.
             </p>
@@ -125,7 +125,7 @@
           <div class="col-12 col-md-8">
             <h2 class="text-h3 text-weight-bold q-mb-md">How It Works</h2>
             <p class="text-body1 text-grey-8" style="line-height: 1.8">
-              Donating with BitoHelp takes less than a minute. No bank accounts, no sign-up
+              Donating with CrypToCare takes less than a minute. No bank accounts, no sign-up
               required â€” just connect your wallet and give.
             </p>
           </div>
@@ -178,7 +178,7 @@
                   <span class="text-weight-bold text-negative">2.9% + $0.30</span>
                 </div>
                 <div style="display: flex; align-items: center; gap: 12px;">
-                  <span class="text-caption text-grey-6">BitoHelp / BCH:</span>
+                  <span class="text-caption text-grey-6">CrypToCare / BCH:</span>
                   <span class="text-weight-bold text-positive">&lt;$0.01</span>
                 </div>
               </div>

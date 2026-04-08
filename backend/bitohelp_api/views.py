@@ -4,7 +4,7 @@ from django.http import JsonResponse
 def api_root(request):
     """Root endpoint showing available API routes"""
     return JsonResponse({
-        'message': 'BiToHelp API Server',
+        'message': 'CrypToCare API Server',
         'version': '1.0.0',
         'status': 'running',
         'endpoints': {

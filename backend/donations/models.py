@@ -18,6 +18,10 @@ class Donation(models.Model):
     interval_blocks = models.IntegerField(default=0)
     payout_mode = models.CharField(max_length=20, default='smart', blank=True,
                                    help_text='smart = auto-withdraw, inbox_approval = email approval required')
+    wallet_user = models.ForeignKey('users.WalletUser', on_delete=models.SET_NULL,
+                                    related_name='donations', null=True, blank=True, db_index=True)
+    wallet_address = models.CharField(max_length=255, blank=True, db_index=True,
+                                      help_text='Donor wallet address (lowercase)')
     class Meta:
         ordering = ['-timestamp']
         verbose_name = 'Donation'
@@ -33,6 +37,8 @@ class Donation(models.Model):
 
 
     def save(self, *args, **kwargs):
+        if self.wallet_address:
+            self.wallet_address = self.wallet_address.lower().strip()
         super().save(*args, **kwargs)
         # Update nonprofit stats after saving - disabled to prevent database locks
         # TODO: Move to async task or post_save signal

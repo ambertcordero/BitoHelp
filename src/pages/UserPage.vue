@@ -338,8 +338,8 @@
 
       <div class="donation-footer">
         <div class="footer-brand">
-          <img src="~assets/image1.png" alt="BiToHelp" />
-          <div class="footer-brand-text">BiToHelp</div>
+          <img src="~assets/image1.png" alt="CrypToCare" />
+          <div class="footer-brand-text">CrypToCare</div>
         </div>
         <div class="footer-col">
           <div class="footer-title">About Us</div>

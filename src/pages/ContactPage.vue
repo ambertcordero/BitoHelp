@@ -1,4 +1,4 @@
-﻿<template>
+<template>
   <q-page class="contact-page">
 
     <!-- HERO ini !!!-->
@@ -103,8 +103,8 @@
               </div>
               <div>
                 <div class="text-subtitle2 text-weight-bold">Email</div>
-                <div class="text-body2 text-grey-7">support@bitohelp.io</div>
-                <div class="text-body2 text-grey-7">partnerships@bitohelp.io</div>
+                <div class="text-body2 text-grey-7">support@CrypToCare.io</div>
+                <div class="text-body2 text-grey-7">partnerships@CrypToCare.io</div>
               </div>
             </div>
 
@@ -114,7 +114,7 @@
               </div>
               <div>
                 <div class="text-subtitle2 text-weight-bold">Telegram</div>
-                <div class="text-body2 text-grey-7">@BitoHelpSupport</div>
+                <div class="text-body2 text-grey-7">@CrypToCareSupport</div>
                 <div class="text-caption text-grey-5">Usually responds in a few hours</div>
               </div>
             </div>
@@ -166,7 +166,7 @@
       <section class="contact-faq-section q-py-xl q-px-md" style="background: #f8f9fa;">
       <div class="container">
         <h2 class="text-h4 text-weight-bold q-mb-sm">Frequently Asked Questions</h2>
-        <p class="text-body1 text-grey-7 q-mb-xl">Common questions about BitoHelp.</p>
+        <p class="text-body1 text-grey-7 q-mb-xl">Common questions about CrypToCare.</p>
 
         <div class="row q-col-gutter-lg">
           <div class="col-12 col-md-8">
@@ -191,7 +191,7 @@
               class="faq-item q-mb-sm"
               :class="{ 'faq-item--active': selectedFaq === 'verified' }"
               @click="selectedFaq = selectedFaq === 'verified' ? null : 'verified'"
-              label="Are the charities on BitoHelp verified?"
+              label="Are the charities on CrypToCare verified?"
               icon="verified"
               expand-separator
             >
@@ -213,7 +213,7 @@
             >
               <q-card flat>
                 <q-card-section class="text-grey-8" style="line-height: 1.8">
-                  BitoHelp charges 0% platform fees. The only cost is the Bitcoin Cash network
+                  CrypToCare charges 0% platform fees. The only cost is the Bitcoin Cash network
                   transaction fee, which is usually less than ₱0.01.
                 </q-card-section>
               </q-card>
@@ -229,7 +229,7 @@
             >
               <q-card flat>
                 <q-card-section class="text-grey-8" style="line-height: 1.8">
-                  Yes! BitoHelp supports recurring donations through smart contracts.
+                  Yes! CrypToCare supports recurring donations through smart contracts.
                   You can set a monthly or weekly schedule and cancel anytime.
                 </q-card-section>
               </q-card>

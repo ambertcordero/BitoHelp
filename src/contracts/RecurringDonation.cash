@@ -50,9 +50,9 @@ contract VaultDonation(
     }
 
     // Let the original funder reclaim any remaining funds at any time.
-    function reclaim(pubkey pk, sig s) {
+    function reclaim(pubkey pk) {
         require(hash160(pk) == funder);
-        require(checkSig(s, pk));
+        require(this.age >= interval * 2);
 
         bytes25 funderLock = new LockingBytecodeP2PKH(funder);
         int minerFee = 1000;

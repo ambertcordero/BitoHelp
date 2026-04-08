@@ -56,11 +56,11 @@ export default defineConfig((/* ctx */) => {
       // extendViteConf (viteConf) {},
       // viteVuePluginOptions: {},
 
-      extendViteConf (viteConf) {
+      extendViteConf(viteConf) {
         viteConf.optimizeDeps = viteConf.optimizeDeps || {}
         viteConf.optimizeDeps.include = [
           ...(viteConf.optimizeDeps.include || []),
-          'plotly.js-gl3d-dist-min'
+          'plotly.js-gl3d-dist-min',
         ]
       },
 
@@ -198,7 +198,7 @@ export default defineConfig((/* ctx */) => {
       builder: {
         // https://www.electron.build/configuration
 
-        appId: 'bitohelp',
+        appId: 'cryptocare',
       },
     },
 

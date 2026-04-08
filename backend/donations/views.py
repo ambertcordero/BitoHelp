@@ -8,6 +8,7 @@ from rest_framework.decorators import api_view, action
 from rest_framework.response import Response
 from .models import Donation
 from .serializers import DonationSerializer, DonationStatsSerializer
+from users.models import WalletUser
 import time
 
 
@@ -17,15 +18,23 @@ class DonationViewSet(viewsets.ModelViewSet):
     serializer_class = DonationSerializer
     
     def create(self, request, *args, **kwargs):
-        """Override create to retry on database lock"""
+        """Override create to retry on database lock and link wallet user"""
         max_retries = 5
         for attempt in range(max_retries):
             try:
                 serializer = self.get_serializer(data=request.data)
                 serializer.is_valid(raise_exception=True)
-                
+
                 with transaction.atomic():
-                    self.perform_create(serializer)
+                    # Auto-link wallet user if wallet_address provided
+                    wallet_addr = request.data.get('wallet_address', '').lower().strip()
+                    extra_kwargs = {}
+                    if wallet_addr:
+                        extra_kwargs['wallet_address'] = wallet_addr
+                        wallet_user = WalletUser.objects.filter(wallet_address=wallet_addr).first()
+                        if wallet_user:
+                            extra_kwargs['wallet_user'] = wallet_user
+                    self.perform_create(serializer, **extra_kwargs)
                 
                 headers = self.get_success_headers(serializer.data)
                 return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
@@ -38,7 +47,22 @@ class DonationViewSet(viewsets.ModelViewSet):
                 raise
         
         return Response({'error': 'Database temporarily unavailable'}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
-    
+
+    def perform_create(self, serializer, **extra_kwargs):
+        serializer.save(**extra_kwargs)
+
+    def list(self, request, *args, **kwargs):
+        """Optionally filter donations by wallet address."""
+        wallet = request.query_params.get('wallet', '').lower().strip()
+        queryset = self.get_queryset()
+        if wallet:
+            queryset = queryset.filter(wallet_address=wallet)
+        limit = request.query_params.get('limit')
+        if limit:
+            queryset = queryset[:int(limit)]
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
+
     @action(detail=False, methods=['get'])
     def recent(self, request):
         limit = int(request.query_params.get('limit', 10))
@@ -99,5 +123,5 @@ def donation_stats(request):
 def health_check(request):
     return Response({
         'status': 'healthy',
-        'message': 'BiToHelp API is running'
+        'message': 'CrypToCare API is running'
     })
