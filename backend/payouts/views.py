@@ -1,3 +1,4 @@
+import re
 from django.http import JsonResponse, HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 from rest_framework.decorators import api_view, permission_classes
@@ -7,6 +8,9 @@ from rest_framework.response import Response
 from .models import PayoutApproval
 from .serializers import PayoutApprovalSerializer, PayoutApprovalListSerializer, PayoutAuditLogSerializer
 from .services import create_pending_approval, send_approval_email, process_approval, mark_executed, mark_failed, refresh_and_send
+
+
+TXID_PATTERN = re.compile(r'^[A-Fa-f0-9]{64}$')
 
 
 # ── Gmail ConfirmAction callback ──────────────────────────────────────
@@ -199,9 +203,17 @@ def report_execution(request, pk):
     except PayoutApproval.DoesNotExist:
         return Response({'error': 'Not found'}, status=404)
 
-    txid = request.data.get('txid', '')
+    txid = (request.data.get('txid', '') or '').strip()
     if not txid:
         return Response({'error': 'txid is required'}, status=400)
+
+    if not TXID_PATTERN.fullmatch(txid):
+        return Response(
+            {'error': 'txid must be a 64-character hexadecimal blockchain transaction ID.'},
+            status=400,
+        )
+
+    txid = txid.lower()
 
     if approval.status == 'executed':
         return Response({'message': 'Already executed', 'txid': approval.txid})

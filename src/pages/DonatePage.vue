@@ -744,6 +744,36 @@ const validateBchWalletSession = (walletClient, chainId) => {
   return summary
 }
 
+const buildBchSignRequestVariants = (signingPayload) => {
+  const base = signingPayload && typeof signingPayload === 'object' ? signingPayload : {}
+  const transaction =
+    base.transaction && typeof base.transaction === 'object' ? base.transaction : { inputs: [] }
+  const inputs = Array.isArray(transaction.inputs) ? transaction.inputs : []
+  const sourceOutputs = Array.isArray(base.sourceOutputs) ? base.sourceOutputs : []
+
+  const inlineInputSourceOutput = {
+    ...base,
+    transaction: {
+      ...transaction,
+      inputs: inputs.map((input, index) => {
+        const sourceOutput = sourceOutputs[index]
+        if (!sourceOutput) return input
+        return { ...input, sourceOutput }
+      }),
+    },
+  }
+
+  return [
+    base,
+    // Some wallets only parse source outputs when nested per-input.
+    inlineInputSourceOutput,
+    // Some wallets reject top-level sourceOutputs entirely.
+    Object.fromEntries(
+      Object.entries(inlineInputSourceOutput).filter(([key]) => key !== 'sourceOutputs'),
+    ),
+  ]
+}
+
 const executeWalletRequest = async (walletClient, chainId, method, candidateParams) => {
   let lastError = null
   for (const params of candidateParams) {
@@ -826,6 +856,9 @@ const getErrorMessage = (error, fallback) => {
   const message =
     error?.message || error?.reason || error?.cause?.message || error?.data?.message || fallback
   if (typeof message !== 'string') return fallback
+  if (/failed to publish custom payload|tag:\s*undefined/i.test(message)) {
+    return 'Wallet could not relay the BCH signing payload (tag undefined). Reconnect WalletConnect and retry; if it persists, update or switch wallet app.'
+  }
   if (
     /user rejected|rejected by user|denied by user|cancelled by user|canceled by user/i.test(
       message,
@@ -916,9 +949,22 @@ const signBchTransactionWithWalletConnect = async ({ walletClient, chainId, sign
   }
 
   try {
-    return await executeWalletRequest(walletClient, resolvedChainId, 'bch_signTransaction', [
-      signingPayload,
-    ])
+    const candidatePayloads = buildBchSignRequestVariants(signingPayload)
+    if (import.meta.env.DEV) {
+      console.info(
+        '[BitoHelp][bch-sign-variants]',
+        candidatePayloads.map((payload, idx) => ({
+          variant: idx + 1,
+          ...summarizeBchSigningPayload(payload),
+        })),
+      )
+    }
+    return await executeWalletRequest(
+      walletClient,
+      resolvedChainId,
+      'bch_signTransaction',
+      candidatePayloads,
+    )
   } catch (error) {
     const details = serializeErrorDetails(error)
     const walletReason = details?.reason || error?.reason
@@ -1349,7 +1395,7 @@ const submitDonation = async () => {
     // Also save to backend database (best-effort)
     try {
       const matchedNp = nonprofits.value.find((np) => np.name === form.value.organization)
-      const explorerUrl = txReference ? `https://chipnet.chaingraph.cash/tx/${txReference}` : ''
+      const explorerUrl = txReference ? `https://chipnet.bchexplorer.info/tx/${txReference}` : ''
       const donationRes = await api.post('donations/', {
         txid: txReference,
         recipient: form.value.recipientAddress,

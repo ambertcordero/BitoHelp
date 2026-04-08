@@ -36,6 +36,7 @@ class PayoutApproval(models.Model):
 
     # Payout details
     recipient_address = models.CharField(max_length=255)
+    txid = models.CharField(max_length=255, blank=True)
     vault_address = models.CharField(max_length=255, blank=True)
     payout_amount_satoshis = models.BigIntegerField()
     coin = models.CharField(max_length=20, default='BCH')

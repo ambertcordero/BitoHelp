@@ -869,19 +869,29 @@
           <!-- Donation history -->
           <div v-if="recipientDetailDialog.donations.length > 0" class="q-mt-md">
             <div style="font-size: 12px; font-weight: 700; color: #78909c; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px;">Donation History</div>
-            <div class="tx-detail-table">
+            <div class="tx-detail-table recipient-history-table">
               <div
                 v-for="(d, i) in recipientDetailDialog.donations"
                 :key="i"
-                class="tx-detail-row"
+                class="tx-detail-row recipient-history-row"
               >
-                <div class="tx-detail-label">{{ d.date || d.timestamp || '—' }}</div>
-                <div class="tx-detail-value">
+                <div class="tx-detail-label recipient-history-label">
+                  <div style="font-weight: 700;">{{ d.cycleLabel || 'Cycle' }}</div>
+                  <div style="font-size: 11px; color: #78909c; margin-top: 2px;">{{ d.date || d.timestamp || '—' }}</div>
+                  <div
+                    v-if="d.txid"
+                    class="recipient-history-txid"
+                    @click="$q.copyToClipboard(d.txid).then(() => $q.notify({ type: 'positive', message: 'TxID copied', position: 'top', timeout: 1200 }))"
+                  >
+                    TXID: {{ d.txid }}
+                  </div>
+                </div>
+                <div class="tx-detail-value recipient-history-value">
                   <span style="font-weight: 700;">{{ d.amount }} BCH</span>
                   <q-badge
-                    :color="d.status === 'completed' ? 'positive' : 'warning'"
+                    :color="d.status === 'withdrawn' || d.status === 'completed' ? 'positive' : 'warning'"
                     :label="d.status || 'pending'"
-                    class="q-ml-sm"
+                    class="q-ml-sm recipient-history-badge"
                     style="font-size: 10px;"
                   />
                 </div>
@@ -1070,7 +1080,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch, nextTick } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue'
 import { Line as LineChart, Bar as BarChart, Doughnut as DoughnutChart, Radar as RadarChart } from 'vue-chartjs'
 import {
   Chart as ChartJS,
@@ -1102,14 +1112,45 @@ ChartJS.register(
 )
 import { useDonationStore } from '../stores/donation-store'
 import { useQuasar } from 'quasar'
+import { api } from 'boot/axios'
 import bchImg from 'src/assets/bch.png'
 import projectImg from 'src/assets/project.png'
 import transactionImg from 'src/assets/transaction.png'
 
 const $q = useQuasar()
 const donationStore = useDonationStore()
+const WALLET_SNAPSHOT_STORAGE_KEY = 'bitohelp.wallet.snapshot'
+const WALLET_CONNECTED_EVENT = 'bitohelp:wallet-connection-changed'
+
+const connectedWalletSnapshot = ref({
+  connected: false,
+  address: '',
+  namespace: '',
+})
+const handleWalletConnectionChanged = () => refreshConnectedWalletSnapshot()
+
+const refreshConnectedWalletSnapshot = () => {
+  try {
+    const raw = localStorage.getItem(WALLET_SNAPSHOT_STORAGE_KEY)
+    if (!raw) {
+      connectedWalletSnapshot.value = { connected: false, address: '', namespace: '' }
+      return
+    }
+    const parsed = JSON.parse(raw)
+    connectedWalletSnapshot.value = {
+      connected: Boolean(parsed?.connected),
+      address: parsed?.address || '',
+      namespace: parsed?.namespace || '',
+    }
+  } catch {
+    connectedWalletSnapshot.value = { connected: false, address: '', namespace: '' }
+  }
+}
+
+refreshConnectedWalletSnapshot()
 
 const loadingDonations = ref(true)
+const payoutCyclesByDonationId = ref({})
 
 const recipientDetailDialog = ref({
   open: false,
@@ -1165,104 +1206,90 @@ const statusFilter = ref('All')
 const categoryFilter = ref('All')
 
 
-const wallets = ref([
-  {
-    id: 1,
-    name: 'Personal Wallet',
-    address: 'qp3wjpa3tjlj042z2wv7hahsldgwhwy0rq9sywjpyy',
-    fullNumber: 'qr5agtachyxvm8pqg2z7z8z9z5z6z7z8z9zdef789',
+const wallets = ref([])
+
+const selectedWallet = ref(null)
+
+const buildWalletsFromDonations = () => {
+  if (!connectedWalletSnapshot.value.connected) {
+    wallets.value = []
+    selectedWallet.value = null
+    return
+  }
+
+  const donations = donationHistory.value || []
+  const totalDonated = donations.reduce((sum, donation) => sum + parseFloat(donation.amount || 0), 0)
+  const donationCount = donations.length
+  const timestamps = donations
+    .map((d) => new Date(d.timestamp || d.date || Date.now()).getTime())
+    .filter((ts) => Number.isFinite(ts))
+    .sort((a, b) => a - b)
+
+  const firstDonationTs = timestamps[0] || Date.now()
+  const lastDonationTs = timestamps[timestamps.length - 1] || Date.now()
+
+  const profileConfigs = [
+    { name: 'Guest Wallet', email: 'guest@bitohelp.local', product: 'Paytaca Guest' },
+    { name: 'Business Account', email: 'business@bitohelp.local', product: 'Paytaca Business' },
+    { name: 'Family Account', email: 'family@bitohelp.local', product: 'Paytaca Family' },
+  ]
+  const connectedAddress = connectedWalletSnapshot.value.address || ''
+
+  const nextWallets = profileConfigs.map((profile, idx) => ({
+    id: `connected-wallet-${idx + 1}`,
+    name: profile.name,
+    address: connectedAddress,
+    fullNumber: connectedAddress,
     type: 'Paytaca',
-    totalDonated: 5.75,
-    donationCount: 12,
-    totalFees: 0.00012,
-    donorName: 'Juan Dela Cruz',
-    email: 'juan@example.com',
-    firstDonation: 'Jan 15, 2026',
-    lastDonation: 'Mar 13, 2026',
-    accountName: 'Personal Wallet',
-    product: 'Paytaca',
-    iban: 'qp3wjpa3tjlj042z2wv7hahsldgwhwy0rq9sywjpyy',
+    totalDonated,
+    donationCount,
+    totalFees: 0,
+    donorName: profile.name,
+    email: profile.email,
+    firstDonationTs,
+    lastDonationTs,
+    accountName: profile.name,
+    product: profile.product,
+    iban: connectedAddress,
     swift: 'BCYPCY2N',
-    branch: 'Juan Dela Cruz',
+    branch: profile.name,
     creditRate: '1000',
-    debitRate: '5.75',
-    overdraftLimit: '5.75',
+    debitRate: totalDonated.toFixed(4),
+    overdraftLimit: totalDonated.toFixed(4),
     impactCards: [
       {
         id: 1,
         title1: 'TOTAL',
         title2: 'DONATED',
         colorClass: 'wallet-stat-card-blue',
-        largeValue: '5.75 BCH',
-        rightIcon: bchImg
+        largeValue: `${totalDonated.toFixed(4)} BCH`,
+        rightIcon: bchImg,
       },
       {
         id: 2,
         title1: 'PROJECTS',
         title2: 'SUPPORTED',
         colorClass: 'wallet-stat-card-purple',
-        largeValue: '8+',
-        rightIcon: projectImg
+        largeValue: '—',
+        rightIcon: projectImg,
       },
       {
         id: 3,
         title1: 'TOTAL',
         title2: 'TRANSACTIONS',
         colorClass: 'wallet-stat-card-yellow',
-        largeValue: '12+',
-        rightIcon: transactionImg
-      }
-    ]
-  },
-  {
-    id: 2,
-    name: 'Business Wallet',
-    address: 'qq8z6kx7qzj3zjz5qz9z5z6z7z8z9zabc123456',
-    fullNumber: 'qq8z6kx7qzj3zjz5qz9z5z6z7z8z9zabc123456',
-    type: 'Paytaca',
-    totalDonated: 12.50,
-    donationCount: 25,
-    totalFees: 0.00025,
-    donorName: 'ABC Corporation',
-    email: 'corporate@example.com',
-    firstDonation: 'Dec 1, 2025',
-    lastDonation: 'Mar 12, 2026',
-    accountName: 'Business Wallet',
-    product: 'Paytaca',
-    iban: 'qq8z6kx7qzj3zjz5qz9z5z6z7z8z9zabc123456',
-    swift: 'BCYPCY2N',
-    branch: 'ABC Corporation',
-    creditRate: '1000',
-    debitRate: '12.50',
-    overdraftLimit: '12.50',
-    impactCards: []
-  },
-  {
-    id: 3,
-    name: 'Family Fund',
-    address: 'qr5agtachyxvm8pqg2z7z8z9z5z6z7z8z9zdef789',
-    fullNumber: 'qr5agtachyxvm8pqg2z7z8z9z5z6z7z8z9zdef789',
-    type: 'Paytaca',
-    totalDonated: 3.25,
-    donationCount: 8,
-    totalFees: 0.00008,
-    donorName: 'Dela Cruz Family',
-    email: 'family@example.com',
-    firstDonation: 'Feb 10, 2026',
-    lastDonation: 'Mar 11, 2026',
-    accountName: 'Family Fund',
-    product: 'Paytaca',
-    iban: 'qr5agtachyxvm8pqg2z7z8z9z5z6z7z8z9zdef789',
-    swift: 'BCYPCY2N',
-    branch: 'Dela Cruz Family',
-    creditRate: '1000',
-    debitRate: '3.25',
-    overdraftLimit: '3.25',
-    impactCards: []
-  }
-])
+        largeValue: `${donationCount}+`,
+        rightIcon: transactionImg,
+      },
+    ],
+    firstDonation: formatDate(firstDonationTs),
+    lastDonation: formatDate(lastDonationTs),
+  }))
 
-const selectedWallet = ref(wallets.value[0])
+  wallets.value = nextWallets
+  const currentId = selectedWallet.value?.id
+  selectedWallet.value = wallets.value.find((wallet) => wallet.id === currentId) || wallets.value[0]
+}
 
 const donationColumns = [
   { name: 'date', label: 'Date', field: row => formatDate(row.timestamp), align: 'left', sortable: true },
@@ -1275,55 +1302,15 @@ const donationColumns = [
 ]
 
 
-const sampleDonations = [
-  {
-    id: 1,
-    txid: 'sample_tx_001',
-    recipient: 'Typhoon Relief Fund',
-    donor_name: 'John Doe',
-    amount: '0.50',
-    coin: 'BCH',
-    cause: 'Disaster Relief',
-    interval: 'One-time',
-    timestamp: '2026-03-15T10:30:00Z',
-    message: 'Hope this helps!'
-  },
-  {
-    id: 2,
-    txid: 'sample_tx_002',
-    recipient: 'Medical Emergency Fund',
-    donor_name: 'Maria Santos',
-    amount: '1.25',
-    coin: 'BCH',
-    cause: 'Healthcare',
-    interval: 'Monthly',
-    timestamp: '2026-03-14T14:20:00Z',
-    message: 'Supporting healthcare'
-  },
-  {
-    id: 3,
-    txid: 'sample_tx_003',
-    recipient: 'Education Scholarship',
-    donor_name: 'Anonymous',
-    amount: '0.75',
-    coin: 'BCH',
-    cause: 'Education',
-    interval: 'Quarterly',
-    timestamp: '2026-03-10T09:15:00Z',
-    message: ''
-  }
-]
-
-
 const donationHistory = computed(() => {
   const realDonations = donationStore.donationHistory || []
-  return realDonations.length > 0 ? realDonations : sampleDonations
+  return realDonations
 })
 
 
 const allDonations = computed(() => {
   const realDonations = donationStore.donationHistory || []
-  return realDonations.length > 0 ? realDonations : sampleDonations
+  return realDonations
 })
 
 // ── Chart helpers ─────────────────────────────────────────────────────────────
@@ -1507,28 +1494,17 @@ const radarChartOptions = computed(() => ({
 // ─────────────────────────────────────────────────────────────────────────────
 
 const updateWalletStats = () => {
-  if (donationHistory.value && donationHistory.value.length > 0) {
-    const total = donationHistory.value.reduce((sum, d) => sum + parseFloat(d.amount || 0), 0)
-    const count = donationHistory.value.length
-    
-  
-    selectedWallet.value.totalDonated = total
-    selectedWallet.value.donationCount = count
-    selectedWallet.value.debitRate = total.toFixed(4)
-    selectedWallet.value.overdraftLimit = total.toFixed(4)
-    
-
-    if (selectedWallet.value.impactCards && selectedWallet.value.impactCards.length > 0) {
-      selectedWallet.value.impactCards[0].largeValue = `${total.toFixed(4)} BCH`
-      selectedWallet.value.impactCards[2].largeValue = `${count}+`
-    }
-  }
+  buildWalletsFromDonations()
 }
 
 
 watch(() => donationStore.donationHistory, () => {
   updateWalletStats()
 }, { immediate: true, deep: true })
+
+watch(connectedWalletSnapshot, () => {
+  updateWalletStats()
+}, { deep: true })
 
 
 const supportedProjects = ref([
@@ -1650,7 +1626,7 @@ const formatCurrency = (amount) => {
   return num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 8 })
 }
 
-const formatDate = (timestamp) => {
+function formatDate(timestamp) {
   if (!timestamp) return 'N/A'
   const date = new Date(timestamp)
   return date.toLocaleDateString('en-US', { 
@@ -1658,6 +1634,84 @@ const formatDate = (timestamp) => {
     month: 'short', 
     day: 'numeric'
   })
+}
+
+function formatDateTime(timestamp) {
+  if (!timestamp) return 'N/A'
+  const date = new Date(timestamp)
+  return date.toLocaleString('en-US', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
+  })
+}
+
+const normalizeCycleStatus = (status) => {
+  const value = (status || '').toLowerCase()
+  if (value === 'executed') return 'withdrawn'
+  return value || 'pending'
+}
+
+const fetchPayoutCycles = async () => {
+  try {
+    const response = await api.get('payouts/')
+    const payouts = Array.isArray(response.data) ? response.data : []
+    const grouped = {}
+
+    payouts.forEach((payout) => {
+      if (!payout?.donation_id) return
+      if (!grouped[payout.donation_id]) grouped[payout.donation_id] = []
+      grouped[payout.donation_id].push(payout)
+    })
+
+    Object.keys(grouped).forEach((donationId) => {
+      grouped[donationId].sort((a, b) => (a.cycle_number || 0) - (b.cycle_number || 0))
+    })
+
+    payoutCyclesByDonationId.value = grouped
+  } catch (error) {
+    payoutCyclesByDonationId.value = {}
+    console.warn('Unable to load payout cycles for donor view:', error)
+  }
+}
+
+const buildRecipientHistoryRows = (recipient) => {
+  const rows = []
+  const donations = recipient?.donations || []
+
+  donations.forEach((donation) => {
+    const cycles = payoutCyclesByDonationId.value[donation.id] || []
+
+    if (cycles.length > 0) {
+      cycles.forEach((cycle) => {
+        const amountBch = Number(cycle.payout_amount_satoshis || 0) / 1e8
+        const rawDate = cycle.executed_at || cycle.due_at || donation.timestamp || donation.date
+        rows.push({
+          cycleLabel: `Cycle ${cycle.cycle_number || 1}/${cycle.total_cycles || 1}`,
+          date: formatDateTime(rawDate),
+          amount: formatCurrency(amountBch),
+          status: normalizeCycleStatus(cycle.status),
+          txid: cycle.txid || donation.txid || '',
+          sortKey: new Date(rawDate).getTime() || 0,
+        })
+      })
+      return
+    }
+
+    const rawDate = donation.timestamp || donation.date
+    rows.push({
+      cycleLabel: donation.interval ? 'Cycle 1/1' : 'One-time',
+      date: formatDateTime(rawDate),
+      amount: formatCurrency(donation.amount),
+      status: normalizeCycleStatus(donation.status),
+      txid: donation.txid || '',
+      sortKey: new Date(rawDate).getTime() || 0,
+    })
+  })
+
+  return rows.sort((a, b) => (b.sortKey || 0) - (a.sortKey || 0))
 }
 
 const openReceiptFromDetail = () => {
@@ -1888,15 +1942,17 @@ const refreshActivity = () => {
 }
 
 const viewRecipientDetails = (recipient) => {
+  const historyRows = buildRecipientHistoryRows(recipient)
   recipientDetailDialog.value = {
     open: true,
     name: recipient.name,
     hasCompleted: recipient.hasCompleted,
     totalAmount: formatCurrency(recipient.totalAmount),
-    donations: recipient.donations || [],
+    donations: historyRows,
     rows: [
       { label: 'Cause', value: recipient.cause || 'General' },
       { label: 'Number of Donations', value: recipient.count },
+      { label: 'Cycles Tracked', value: historyRows.length },
       { label: 'Last Donation', value: recipient.lastDate || '—' },
     ]
   }
@@ -2006,15 +2062,22 @@ watch(
 // ─────────────────────────────────────────────────────────────────────────────
 
 onMounted(async () => {
+  window.addEventListener(WALLET_CONNECTED_EVENT, handleWalletConnectionChanged)
+
   loadingDonations.value = true
   await Promise.all([
     donationStore.fetchDonations(50),
+    fetchPayoutCycles(),
     new Promise((resolve) => setTimeout(resolve, 600)),
   ])
   loadingDonations.value = false
   console.log('DonorPage mounted')
   await nextTick()
   build3dScatter()
+})
+
+onUnmounted(() => {
+  window.removeEventListener(WALLET_CONNECTED_EVENT, handleWalletConnectionChanged)
 })
 </script>
 
@@ -3335,5 +3398,46 @@ onMounted(async () => {
 
 .body--dark .donation-mobile-card__footer {
   border-top-color: rgba(93, 156, 245, 0.10);
+}
+
+.recipient-history-txid {
+  font-size: 11px;
+  color: #1565c0;
+  margin-top: 2px;
+  font-family: monospace;
+  word-break: break-all;
+  cursor: pointer;
+}
+
+@media (max-width: 600px) {
+  .recipient-history-row {
+    flex-direction: column;
+    gap: 8px;
+    padding: 10px 12px;
+  }
+
+  .recipient-history-label {
+    min-width: 0;
+    width: 100%;
+  }
+
+  .recipient-history-value {
+    width: 100%;
+    text-align: left;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .recipient-history-badge {
+    margin-left: 0 !important;
+  }
+
+  .recipient-history-txid {
+    font-size: 10px;
+    line-height: 1.3;
+  }
 }
 </style>

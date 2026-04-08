@@ -82,6 +82,8 @@ export default defineConfig((/* ctx */) => {
     devServer: {
       // https: true,
       host: process.env.DOCKER ? '0.0.0.0' : 'localhost',
+      port: 9000,
+      strictPort: true,
       open: !process.env.DOCKER,
     },
 

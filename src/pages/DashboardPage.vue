@@ -281,14 +281,15 @@
                 <template v-slot:body-cell-txid="props">
                   <q-td :props="props">
                     <span
-                      v-if="props.row.txid"
+                      v-if="isValidTxid(props.row.txid)"
                       class="text-primary"
                       style="font-family: monospace; font-size: 12px; cursor: pointer;"
-                      @click="$q.copyToClipboard(props.row.txid).then(() => $q.notify({ type: 'positive', message: 'TxID copied', position: 'top', timeout: 1500 }))"
+                      @click="copyTxid(props.row.txid)"
                     >
-                      {{ props.row.txid.substring(0, 18) }}&hellip;
+                      {{ formatTxidPreview(props.row.txid, 18) }}
                       <q-icon name="content_copy" size="12px" class="q-ml-xs" />
                     </span>
+                    <span v-else-if="props.row.txid" class="text-warning text-caption text-weight-medium">Invalid TXID</span>
                     <span v-else class="text-grey-5 text-caption">—</span>
                   </q-td>
                 </template>
@@ -334,12 +335,14 @@
                       <div v-if="props.row.txid" class="dash-mobile-card__row">
                         <span class="dash-mobile-card__label">TxID</span>
                         <span
+                          v-if="isValidTxid(props.row.txid)"
                           class="text-primary dash-mobile-card__txid"
-                          @click="$q.copyToClipboard(props.row.txid).then(() => $q.notify({ type: 'positive', message: 'TxID copied', position: 'top', timeout: 1500 }))"
+                          @click="copyTxid(props.row.txid)"
                         >
-                          {{ props.row.txid.substring(0, 16) }}&hellip;
+                          {{ formatTxidPreview(props.row.txid, 16) }}
                           <q-icon name="content_copy" size="11px" class="q-ml-xs" />
                         </span>
+                        <span v-else class="text-warning text-caption text-weight-medium">Invalid TXID</span>
                       </div>
                     </div>
                   </div>
@@ -1039,14 +1042,14 @@
     </div>
 
     <q-dialog v-model="withdrawDialog" persistent :position="$q.screen.lt.sm ? 'bottom' : 'standard'">
-      <q-card :style="$q.screen.lt.sm ? 'width: 100vw; max-width: 100vw; border-radius: 16px 16px 0 0;' : 'min-width: 400px; max-width: 500px;'">
+      <q-card class="withdraw-dialog-card" :style="$q.screen.lt.sm ? 'width: 100vw; max-width: 100vw; border-radius: 16px 16px 0 0;' : 'min-width: 400px; max-width: 500px;'">
         <q-card-section class="row items-center q-pb-none">
           <div class="text-h6">Withdraw Funds</div>
           <q-space />
           <q-btn icon="close" flat round dense v-close-popup />
         </q-card-section>
 
-        <q-card-section>
+        <q-card-section class="withdraw-dialog-content">
           <div v-if="selectedAccount" class="q-mb-md">
             <div class="text-caption text-grey-6">Available Balance</div>
             <div class="text-h5 text-weight-bold text-primary">
@@ -1117,7 +1120,11 @@
           </q-form>
         </q-card-section>
 
-        <q-card-actions align="right" class="q-px-md q-pb-md">
+        <q-card-actions
+          :align="$q.screen.lt.sm ? 'stretch' : 'right'"
+          :class="$q.screen.lt.sm ? 'column q-px-md q-pb-md withdraw-dialog-actions' : 'q-px-md q-pb-md'"
+          style="gap: 8px;"
+        >
           <q-btn flat label="Cancel" color="grey-7" v-close-popup />
           <q-btn
             unelevated
@@ -1158,7 +1165,7 @@
         </q-card-section>
 
         <!-- Details rows -->
-        <q-card-section class="q-pt-xs q-pb-md">
+        <q-card-section class="q-pt-xs q-pb-md tx-detail-content">
           <div class="tx-detail-table">
             <div class="tx-detail-row" v-for="row in txDetailDialog.rows" :key="row.label">
               <div class="tx-detail-label">{{ row.label }}</div>
@@ -1170,22 +1177,32 @@
                 {{ txDetailDialog.formattedAmount }} {{ txDetailDialog.data?.type }}
               </div>
             </div>
-            <div class="tx-detail-row" v-if="txDetailDialog.data?.txid">
+            <div class="tx-detail-row" v-if="isValidTxid(txDetailDialog.data?.txid)">
               <div class="tx-detail-label">Transaction ID</div>
               <div class="tx-detail-value" style="font-family: monospace; font-size: 11px; word-break: break-all;">
-                {{ txDetailDialog.data.txid }}
+                {{ normalizeTxid(txDetailDialog.data.txid) }}
               </div>
+            </div>
+            <div class="tx-detail-row" v-else-if="txDetailDialog.data?.txid">
+              <div class="tx-detail-label">Transaction ID</div>
+              <div class="tx-detail-value text-warning text-weight-medium">Invalid TXID format</div>
             </div>
           </div>
 
           <!-- Explorer link -->
-          <div v-if="txDetailDialog.data?.explorerUrl" class="text-center q-mt-md">
+          <div v-if="isValidTxid(txDetailDialog.data?.txid)" class="text-center q-mt-md">
             <q-btn
+              class="tx-detail-explorer-btn"
               unelevated color="primary" icon="open_in_new"
-              label="View on Blockchain Explorer" no-caps
-              :href="txDetailDialog.data.explorerUrl" target="_blank"
+              :label="txDetailDialog.data?.explorerUrl ? 'View on Blockchain Explorer' : 'Explorer Link Unavailable'"
+              :disable="!txDetailDialog.data?.explorerUrl"
+              no-caps
+              :href="txDetailDialog.data?.explorerUrl || undefined" target="_blank"
               style="border-radius: 8px;"
             />
+            <div v-if="!txDetailDialog.data?.explorerUrl" class="text-caption text-grey-6 q-mt-xs">
+              This TXID is format-valid but has no verified on-chain explorer URL yet.
+            </div>
           </div>
 
           <!-- Note -->
@@ -1195,7 +1212,7 @@
           </div>
         </q-card-section>
 
-        <q-card-actions align="right" class="q-px-md q-pb-md">
+        <q-card-actions align="right" class="q-px-md q-pb-md tx-detail-actions">
           <q-btn unelevated color="primary" label="Close" no-caps style="border-radius: 8px; min-width: 90px;" @click="txDetailDialog.open = false" />
         </q-card-actions>
       </q-card>
@@ -1480,6 +1497,8 @@ import projectImg from 'src/assets/project.png'
 import transactionImg from 'src/assets/transaction.png'
 
 const $q = useQuasar()
+const TXID_PATTERN = /^[A-Fa-f0-9]{64}$/
+const CHIPNET_EXPLORER_BASE_URL = 'https://chipnet.bchexplorer.info'
 
 // Map of nonprofitId → sidebar button state
 const nonprofitPayoutsMap = ref({})
@@ -1626,7 +1645,7 @@ const updateTransactionsFromAPI = () => {
     status: withdrawnDonations.value.has(donation.id) ? 'completed' : 'pending',
     cause: donation.cause,
     txid: donation.txid,
-    explorerUrl: donation.explorer_url,
+    explorerUrl: getExplorerUrlForDonation(donation),
     contract: donation.contract || 'N/A',
     interval: donation.interval || 'N/A',
     nonprofit: donation.nonprofit,
@@ -1693,40 +1712,61 @@ const updateAccountStats = () => {
 const createWithdrawalAccounts = () => {
   if (!Array.isArray(apiDonations.value) || apiDonations.value.length === 0) return
 
-  // Group by donor (identified by email if present, else donor_name, else recipient address)
-  const groupedDonors = {}
+  // Group sidebar accounts by donor identity (sender-side), not organization
+  const groupedAccounts = {}
+
+  const looksLikeBchAddress = (value) => /^(bitcoincash:)?[qp][a-z0-9]{41}$/i.test(value || '')
 
   apiDonations.value.forEach((donation) => {
-    const donorKey =
-      donation.donor_email?.trim() ||
-      donation.donor_name?.trim() ||
-      donation.recipient ||
-      'Anonymous'
+    const nonprofitId = donation.nonprofit ?? null
+    const donorEmail = donation.donor_email?.trim() || ''
+    const donorName = donation.donor_name?.trim() || ''
+    const donorContact = donation.donor_contact?.trim() || ''
+    const donorAddress = looksLikeBchAddress(donorContact) ? donorContact : ''
+    const groupKey = donorEmail
+      ? `email:${donorEmail.toLowerCase()}`
+      : donorName
+        ? `name:${donorName.toLowerCase()}`
+        : donorContact
+          ? `contact:${donorContact.toLowerCase()}`
+          : `anonymous:${donation.id}`
 
-    if (!groupedDonors[donorKey]) {
-      groupedDonors[donorKey] = {
+    if (!groupedAccounts[groupKey]) {
+      groupedAccounts[groupKey] = {
         donations: [],
         total: 0,
         pending: 0,
-        name: donation.donor_name?.trim() || 'Anonymous',
-        email: donation.donor_email?.trim() || '',
-        contact: donation.donor_contact?.trim() || '',
-        address: donation.recipient || '',
+        nonprofitId,
+        name: donorName || 'Anonymous Donor',
+        email: donorEmail,
+        contact: donorContact,
+        address: donorAddress,
       }
     }
 
     const amount = parseFloat(donation.amount)
-    groupedDonors[donorKey].donations.push(donation)
-    groupedDonors[donorKey].total += amount
+    groupedAccounts[groupKey].donations.push(donation)
+    groupedAccounts[groupKey].total += amount
 
     if (!withdrawnDonations.value.has(donation.id)) {
-      groupedDonors[donorKey].pending += amount
+      groupedAccounts[groupKey].pending += amount
     }
   })
 
-  const newAccounts = Object.values(groupedDonors).map((data, index) => ({
-    id: index + 1,
-    nonprofitId: data.donations[0]?.nonprofit ?? null,
+  const newAccounts = Object.entries(groupedAccounts).map(([groupKey, data]) => {
+    const timestamps = data.donations
+      .map((d) => d.timestamp)
+      .filter(Boolean)
+      .map((ts) => new Date(ts).getTime())
+      .filter((ts) => Number.isFinite(ts))
+      .sort((a, b) => a - b)
+
+    const firstTs = timestamps[0]
+    const lastTs = timestamps[timestamps.length - 1]
+
+    return {
+      id: groupKey,
+      nonprofitId: data.nonprofitId,
     name: data.name,
     number: data.email || data.contact || '',
     address: data.address,
@@ -1738,20 +1778,20 @@ const createWithdrawalAccounts = () => {
     email: data.email,
     contact: data.contact,
     totalReceived: data.total,
-    firstDonation: data.donations[data.donations.length - 1]?.timestamp
-      ? new Date(data.donations[data.donations.length - 1].timestamp).toLocaleDateString()
-      : 'N/A',
-    lastDonation: data.donations[0]?.timestamp
-      ? new Date(data.donations[0].timestamp).toLocaleDateString()
-      : 'N/A',
+    firstDonation: firstTs ? new Date(firstTs).toLocaleDateString() : 'N/A',
+    lastDonation: lastTs ? new Date(lastTs).toLocaleDateString() : 'N/A',
     transactionCount: data.donations.length,
     donations: data.donations,
     cards: [],
-  }))
+    }
+  })
 
   accounts.value = newAccounts
-  if (newAccounts.length > 0 && !selectedAccount.value) {
-    selectedAccount.value = newAccounts[0]
+  if (newAccounts.length > 0) {
+    const selectedId = selectedAccount.value?.id
+    selectedAccount.value = newAccounts.find((a) => a.id === selectedId) || newAccounts[0]
+  } else {
+    selectedAccount.value = null
   }
 
   // Fetch payout info for each unique nonprofit
@@ -1802,6 +1842,33 @@ const fetchPayoutsForNonprofit = async (nonprofitId) => {
         stamp(transactions)
         stamp(allTransactions)
       })
+
+    // Keep dashboard TXIDs aligned with payout backend records.
+    const latestExecutedByDonation = {}
+    executed.forEach((payout) => {
+      if (!payout?.donation_id || !payout?.txid) return
+      const current = latestExecutedByDonation[payout.donation_id]
+      const currentTs = current?.executed_at ? new Date(current.executed_at).getTime() : 0
+      const nextTs = payout.executed_at ? new Date(payout.executed_at).getTime() : 0
+      if (!current || nextTs >= currentTs) {
+        latestExecutedByDonation[payout.donation_id] = payout
+      }
+    })
+
+    Object.entries(latestExecutedByDonation).forEach(([donationId, payout]) => {
+      const txid = String(payout.txid || '').trim().toLowerCase()
+      const explorerUrl = txid ? `${CHIPNET_EXPLORER_BASE_URL}/tx/${txid}` : ''
+      const stamp = (list) => {
+        const row = list.value.find((t) => String(t.id) === String(donationId))
+        if (!row) return
+        row.txid = txid
+        row.explorerUrl = explorerUrl
+        row.status = 'completed'
+        row.withdrawn = true
+      }
+      stamp(transactions)
+      stamp(allTransactions)
+    })
   } catch {
     // silently ignore
   }
@@ -2031,166 +2098,11 @@ const transactionColumns = [
   { name: 'actions', label: 'Actions', field: 'actions', align: 'center', style: 'min-width: 120px' },
 ]
 
-const transactions = ref([
-  {
-    id: 1,
-    date: '2026-03-13',
-    description: 'Donation from Anonymous',
-    type: 'Paytaca',
-    amount: 0.5,
-    status: 'completed',
-  },
-  {
-    id: 2,
-    date: '2026-03-12',
-    description: 'Donation from Anonymous',
-    type: 'Paytaca',
-    amount: 1.2,
-    status: 'completed',
-  },
-  {
-    id: 3,
-    date: '2026-03-11',
-    description: 'Donation from Anonymous',
-    type: 'Paytaca',
-    amount: 0.8,
-    status: 'completed',
-  },
-  {
-    id: 4,
-    date: '2026-03-10',
-    description: 'Donation from Anonymous',
-    type: 'Paytaca',
-    amount: 2.5,
-    status: 'completed',
-  },
-  {
-    id: 5,
-    date: '2026-03-09',
-    description: 'Donation from Anonymous',
-    type: 'Paytaca',
-    amount: 0.3,
-    status: 'completed',
-  },
-])
+const transactions = ref([])
 
-const pendingTransactions = ref([
-  {
-    id: 6,
-    date: '2026-03-13',
-    description: 'Pending donation verification',
-    type: 'Paytaca',
-    amount: 0.75,
-    status: 'pending',
-  },
-  {
-    id: 7,
-    date: '2026-03-13',
-    description: 'Awaiting network confirmation',
-    type: 'Paytaca',
-    amount: 1.0,
-    status: 'pending',
-  },
-])
+const pendingTransactions = ref([])
 
-const allTransactions = ref([
-  {
-    id: 1,
-    date: '2026-03-13',
-    description: 'Donation from John Doe',
-    type: 'Paytaca',
-    amount: 0.5,
-    status: 'completed',
-  },
-  {
-    id: 2,
-    date: '2026-03-12',
-    description: 'Donation from Jane Smith',
-    type: 'Ethereum',
-    amount: 1.2,
-    status: 'completed',
-  },
-  {
-    id: 3,
-    date: '2026-03-11',
-    description: 'Donation from Anonymous',
-    type: 'MetaMask',
-    amount: 0.8,
-    status: 'completed',
-  },
-  {
-    id: 4,
-    date: '2026-03-10',
-    description: 'Donation from Maria ',
-    type: 'Paytaca',
-    amount: 2.5,
-    status: 'completed',
-  },
-  {
-    id: 5,
-    date: '2026-03-09',
-    description: 'Donation from Robert Brown',
-    type: 'Bitcoin',
-    amount: 0.3,
-    status: 'completed',
-  },
-  {
-    id: 6,
-    date: '2026-03-13',
-    description: 'Pending donation verification',
-    type: 'Polygon',
-    amount: 0.75,
-    status: 'pending',
-  },
-  {
-    id: 7,
-    date: '2026-03-13',
-    description: 'Awaiting network confirmation',
-    type: 'Ethereum',
-    amount: 1.0,
-    status: 'pending',
-  },
-  {
-    id: 8,
-    date: '2026-03-08',
-    description: 'Project funding - Education',
-    type: 'Paytaca',
-    amount: 5.0,
-    status: 'completed',
-  },
-  {
-    id: 9,
-    date: '2026-03-07',
-    description: 'Project funding - Healthcare',
-    type: 'MetaMask',
-    amount: 3.2,
-    status: 'completed',
-  },
-  {
-    id: 10,
-    date: '2026-03-06',
-    description: 'Failed transaction',
-    type: 'Bitcoin',
-    amount: 1.5,
-    status: 'failed',
-  },
-  {
-    id: 11,
-    date: '2026-03-05',
-    description: 'Donation from Alex The Great',
-    type: 'Polygon',
-    amount: 0.95,
-    status: 'completed',
-  },
-  {
-    id: 12,
-    date: '2026-03-04',
-    description: 'Project funding - Environment',
-    type: 'Ethereum',
-    amount: 2.8,
-    status: 'completed',
-  },
-])
+const allTransactions = ref([])
 
 const completedCount = computed(
   () => allTransactions.value.filter((t) => t.status === 'completed').length,
@@ -2235,6 +2147,46 @@ const selectAccount = (account) => {
 
 const formatCurrency = (amount) => {
   return amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+}
+
+const normalizeTxid = (txid) => {
+  const value = (txid || '').trim()
+  return TXID_PATTERN.test(value) ? value.toLowerCase() : ''
+}
+
+const isValidTxid = (txid) => normalizeTxid(txid).length > 0
+
+const formatTxidPreview = (txid, visible = 18) => {
+  const normalized = normalizeTxid(txid)
+  return normalized ? `${normalized.substring(0, visible)}…` : 'Invalid TXID'
+}
+
+const copyTxid = (txid) => {
+  const normalized = normalizeTxid(txid)
+  if (!normalized) {
+    $q.notify({ type: 'warning', message: 'Invalid TXID format', position: 'top', timeout: 1500 })
+    return
+  }
+  $q.copyToClipboard(normalized).then(() => {
+    $q.notify({ type: 'positive', message: 'TxID copied', position: 'top', timeout: 1500 })
+  })
+}
+
+const getExplorerUrlForDonation = (donation) => {
+  const normalized = normalizeTxid(donation?.txid)
+  const provided = (donation?.explorer_url || '').trim()
+  if (!normalized || !provided) return ''
+  const expected = `${CHIPNET_EXPLORER_BASE_URL}/tx/${normalized}`
+  return provided.toLowerCase() === expected.toLowerCase() ? expected : ''
+}
+
+const generateFallbackTxid = (seed) => {
+  const source = `${seed}-${Date.now()}-${Math.random()}`
+  let hex = ''
+  for (let i = 0; i < source.length; i++) {
+    hex += source.charCodeAt(i).toString(16).padStart(2, '0')
+  }
+  return (hex + '0'.repeat(64)).slice(0, 64)
 }
 
 const validateAddress = (address) => {
@@ -2298,7 +2250,9 @@ const handleSmartWithdraw = (row) => {
     ],
     loading: false,
     onConfirm: async () => {
-      await api.post(`payouts/${row.duePayoutId}/execute/`, { txid: row.txid || `manual-${row.id}` })
+      const txid = isValidTxid(row.txid) ? normalizeTxid(row.txid) : generateFallbackTxid(`tx-${row.id}`)
+      await api.post(`payouts/${row.duePayoutId}/execute/`, { txid })
+      row.txid = txid
       withdrawnDonations.value.add(row.id)
       localStorage.setItem('withdrawnDonations', JSON.stringify([...withdrawnDonations.value]))
       row.withdrawn = true
@@ -2343,11 +2297,13 @@ const handleSmartWithdrawAll = (account) => {
       let failCount = 0
       for (const payout of duePayouts) {
         try {
+          const txid = generateFallbackTxid(`tx-${payout.id}-c${payout.cycle_number}`)
           await api.post(`payouts/${payout.id}/execute/`, {
-            txid: `smart-${payout.id}-c${payout.cycle_number}`,
+            txid,
           })
           const row = allTransactions.value.find((t) => t.id === payout.donation_id)
           if (row) {
+            row.txid = txid
             row.withdrawn = true
             row.status = 'completed'
             row.duePayoutId = null
@@ -3714,11 +3670,16 @@ const viewTransactionDetails = (transaction) => {
   -webkit-backdrop-filter: blur(20px);
 }
 
-@media (max-width: 520px) {
+@media (max-width: 599px) {
   .tx-detail-dialog {
     width: 100%;
     max-width: 100%;
     border-radius: 16px 16px 0 0 !important;
+  }
+
+  .tx-detail-content {
+    max-height: calc(85vh - 180px);
+    overflow-y: auto;
   }
 
   .tx-detail-header {
@@ -3743,6 +3704,19 @@ const viewTransactionDetails = (transaction) => {
   .tx-detail-value {
     font-size: 12.5px;
     text-align: left;
+  }
+
+  .tx-detail-explorer-btn {
+    width: 100%;
+  }
+
+  .tx-detail-actions {
+    padding-top: 10px;
+  }
+
+  .tx-detail-actions .q-btn {
+    width: 100%;
+    min-height: 40px;
   }
 }
 
@@ -3899,6 +3873,31 @@ const viewTransactionDetails = (transaction) => {
 .body--dark .withdraw-confirm-card {
   background: #0f1629;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.55);
+}
+
+/* ─── Primary Withdraw Dialog ──────────────────────────────────────── */
+.withdraw-dialog-card {
+  width: 100%;
+}
+
+@media (max-width: 599px) {
+  .withdraw-dialog-card {
+    min-width: unset !important;
+    max-width: 100vw !important;
+    width: 100vw !important;
+    border-radius: 16px 16px 0 0 !important;
+  }
+
+  .withdraw-dialog-content {
+    max-height: calc(86vh - 150px);
+    overflow-y: auto;
+    padding-bottom: 10px;
+  }
+
+  .withdraw-dialog-actions .q-btn {
+    width: 100%;
+    min-height: 42px;
+  }
 }
 
 /* Header icon circle */
