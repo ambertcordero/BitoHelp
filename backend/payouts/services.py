@@ -79,9 +79,36 @@ def create_pending_approval(
             idempotency_key=idempotency_key,
         )
     except IntegrityError:
-        # Duplicate idempotency_key — return existing record
+        # Duplicate idempotency_key — check if existing is expired/failed
         existing = PayoutApproval.objects.filter(idempotency_key=idempotency_key).first()
         if existing:
+            if existing.status in (PayoutApproval.Status.EXPIRED, PayoutApproval.Status.FAILED):
+                # Replace stale approval: delete old, create fresh one
+                existing.delete()
+                approval = PayoutApproval.objects.create(
+                    donation_ref=donation_id,
+                    donor_email=donor_email,
+                    donor_name=donor_name,
+                    recipient_address=recipient_address,
+                    vault_address=vault_address,
+                    payout_amount_satoshis=payout_amount_satoshis,
+                    coin=coin,
+                    interval_label=interval_label,
+                    interval_blocks=interval_blocks,
+                    cycle_number=cycle_number,
+                    total_cycles=total_cycles,
+                    due_at=due_at,
+                    approval_token_hash=hashed_token,
+                    approval_expires_at=timezone.now() + timedelta(hours=24),
+                    idempotency_key=idempotency_key,
+                )
+                PayoutAuditLog.objects.create(
+                    payout_approval=approval,
+                    action=PayoutAuditLog.Action.CREATED,
+                    detail=f'Replaced expired/failed approval for {payout_amount_satoshis} sats',
+                )
+                approval._vault_balance_satoshis = vault_balance_satoshis
+                return approval, raw_token
             return existing, None
         raise
 

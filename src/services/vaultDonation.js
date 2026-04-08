@@ -504,7 +504,9 @@ export const startAutoWithdraw = (record, onCycle) => {
               cycle: cycleNumber + 1,
             })
           }
-          scheduleNext(approval.delayMs)
+          // Wait a full interval before re-requesting (a fresh email will be sent)
+          const waitMs = Number(record.intervalBlocks) * BLOCK_TIME_MS + POLL_INTERVAL_MS
+          scheduleNext(waitMs)
           return
         }
 

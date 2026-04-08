@@ -10,6 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
+import os
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -20,12 +21,12 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-l!$bk3rg!%xwzhl#93*$s118eh%aj=9)8o9-8%)si8#!9%&0wc'
+SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', 'django-insecure-l!$bk3rg!%xwzhl#93*$s118eh%aj=9)8o9-8%)si8#!9%&0wc')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.environ.get('DJANGO_DEBUG', 'True').lower() in ('true', '1', 'yes')
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
 
 
 # Application definition
@@ -52,6 +53,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'corsheaders.middleware.CorsMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -132,6 +134,8 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
 STATIC_URL = 'static/'
+STATIC_ROOT = BASE_DIR / 'staticfiles'
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
@@ -139,12 +143,13 @@ STATIC_URL = 'static/'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # CORS Configuration
+_extra_cors = os.environ.get('CORS_ALLOWED_ORIGINS', '')
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:9000",
     "http://localhost:9001",
     "http://localhost:9002",
     "http://localhost:8080",
-]
+] + ([o.strip() for o in _extra_cors.split(',') if o.strip()] if _extra_cors else [])
 
 CORS_ALLOW_CREDENTIALS = False
 
@@ -196,4 +201,4 @@ DEFAULT_FROM_EMAIL = 'cryp2care@gmail.com'
 PAYOUT_FROM_EMAIL = 'cryp2care@gmail.com'
 
 # Site base URL for email links
-SITE_BASE_URL = 'http://localhost:8001'
+SITE_BASE_URL = os.environ.get('SITE_BASE_URL', 'http://localhost:8001')
