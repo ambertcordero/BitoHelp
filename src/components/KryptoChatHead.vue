@@ -29,8 +29,13 @@
             <q-avatar v-if="msg.role === 'assistant'" size="28px" class="krypto-msg-avatar">
               <img :src="KryptoAvatar" alt="Krypto" />
             </q-avatar>
-            <!-- eslint-disable-next-line vue/no-v-html -->
-            <div class="krypto-bubble" v-html="formatMessage(msg.content)"></div>
+            <div class="krypto-msg-body">
+              <!-- eslint-disable-next-line vue/no-v-html -->
+              <div class="krypto-bubble" v-html="formatMessage(msg.content)"></div>
+              <div v-for="(chart, ci) in msg.charts || []" :key="ci" class="krypto-chart-wrap">
+                <canvas :ref="(el) => mountChart(el, `${i}-${ci}`, chart)"></canvas>
+              </div>
+            </div>
           </div>
 
           <!-- Typing indicator -->
@@ -89,6 +94,7 @@ import { ref, reactive, computed, nextTick, watch, onMounted, onBeforeUnmount } 
 import { useQuasar } from 'quasar'
 import { api } from 'src/boot/axios'
 import KryptoAvatar from 'src/assets/Krypto.png'
+import Chart from 'chart.js/auto'
 
 const $q = useQuasar()
 const isDark = computed(() => $q.dark.isActive)
@@ -100,6 +106,9 @@ const messages = ref([])
 const messagesContainer = ref(null)
 const inputEl = ref(null)
 const bubbleEl = ref(null)
+
+// ── Chart instances map (for cleanup) ──
+const chartInstances = new Map()
 
 // ── Drag state ──
 const BUBBLE_SIZE = 60
@@ -131,7 +140,63 @@ onMounted(() => {
 })
 onBeforeUnmount(() => {
   window.removeEventListener('resize', snapToEdge)
+  chartInstances.forEach((c) => c.destroy())
+  chartInstances.clear()
 })
+
+// ── Chart rendering ──
+const CHART_COLORS = [
+  '#4caf50',
+  '#2196f3',
+  '#ff9800',
+  '#e91e63',
+  '#9c27b0',
+  '#00bcd4',
+  '#ff5722',
+  '#607d8b',
+]
+
+function mountChart(el, key, chartData) {
+  if (!el || chartInstances.has(key)) return
+  nextTick(() => {
+    const type = chartData.type || 'bar'
+    const isPieish = type === 'pie' || type === 'doughnut'
+    const datasets = (chartData.datasets || []).map((ds, i) => ({
+      ...ds,
+      backgroundColor:
+        ds.backgroundColor ||
+        (isPieish
+          ? CHART_COLORS.slice(0, ds.data?.length || 0)
+          : CHART_COLORS[i % CHART_COLORS.length]),
+      borderColor:
+        ds.borderColor || (type === 'line' ? CHART_COLORS[i % CHART_COLORS.length] : undefined),
+    }))
+    const dark = isDark.value
+    const textColor = dark ? '#e0e8f0' : '#2c3e50'
+    const gridColor = dark ? '#8eaccd' : '#999'
+    const config = {
+      type,
+      data: { labels: chartData.labels || [], datasets },
+      options: {
+        responsive: true,
+        maintainAspectRatio: true,
+        plugins: {
+          title: {
+            display: !!chartData.title,
+            text: chartData.title || '',
+            color: textColor,
+            font: { size: 13 },
+          },
+          legend: { labels: { color: textColor, font: { size: 11 } } },
+        },
+        ...(isPieish
+          ? {}
+          : { scales: { x: { ticks: { color: gridColor } }, y: { ticks: { color: gridColor } } } }),
+      },
+    }
+    chartInstances.set(key, new Chart(el, config))
+  })
+}
 
 function onDragStart(e) {
   drag.pointerId = e.pointerId
@@ -249,7 +314,9 @@ async function sendMessage() {
 
   try {
     const { data } = await api.post('chat/', { message: text, history })
-    messages.value.push({ role: 'assistant', content: data.reply })
+    const msg = { role: 'assistant', content: data.reply }
+    if (data.charts?.length) msg.charts = data.charts
+    messages.value.push(msg)
   } catch {
     messages.value.push({
       role: 'assistant',
@@ -406,6 +473,21 @@ async function sendMessage() {
 }
 .krypto-msg-avatar {
   flex-shrink: 0;
+}
+.krypto-msg-body {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.krypto-chart-wrap {
+  margin-top: 8px;
+  background: rgba(0, 0, 0, 0.15);
+  border-radius: 12px;
+  padding: 10px;
+  max-width: 300px;
+}
+.krypto-light .krypto-chart-wrap {
+  background: rgba(0, 0, 0, 0.04);
 }
 
 .krypto-bubble {
