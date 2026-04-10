@@ -1,6 +1,9 @@
+# Ignore items that should not be in the frontend build context
+
 node_modules
 .q-cache
 dist
 .git
-*.log
+\*.log
 backend
+.devcontainer

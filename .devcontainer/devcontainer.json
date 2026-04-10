@@ -1,0 +1,156 @@
+// -------------------------------------------------------
+// CrypToCare — Dev Container configuration
+//
+// When a developer opens this repo in VS Code with the
+// Dev Containers extension installed, VS Code will prompt
+// "Reopen in Container". The container gives them Node 22
+// + pnpm + Python 3.12 — zero manual setup required.
+//
+// Docs: https://containers.dev/implementors/json_reference
+// -------------------------------------------------------
+{
+  "name": "CrypToCare Dev",
+
+  // Build from the Dockerfile in this directory
+  "build": {
+    "dockerfile": "Dockerfile",
+    "context": ".."
+  },
+
+  // ---- Features (optional extras) ----
+  // Git is pre-installed in the base image
+
+  // ---- Port forwarding ----
+  // 9000 = Quasar dev server, 8001 = Django dev server
+  "forwardPorts": [9000, 8001],
+  "portsAttributes": {
+    "9000": { "label": "Frontend (Quasar)" },
+    "8001": { "label": "Backend (Django)" }
+  },
+
+  // ---- Post-create setup ----
+  // Runs once after the container is created. Installs all
+  // dependencies so the developer can start coding immediately.
+  "postCreateCommand": "pnpm install && pip3 install --break-system-packages -r backend/requirements.txt && python3 backend/manage.py migrate",
+
+  // ---- VS Code settings inside the container ----
+  "customizations": {
+    "vscode": {
+      "settings": {
+        "terminal.integrated.defaultProfile.linux": "bash",
+        "python.defaultInterpreterPath": "/usr/bin/python3"
+      },
+      "extensions": [
+        "Vue.volar",
+        "dbaeumer.vscode-eslint",
+        "esbenp.prettier-vscode",
+        "ms-python.python",
+        "ms-python.vscode-pylance"
+      ]
+    }
+  },
+
+  // Run as the built-in non-root "node" user (from the base image)
+  "remoteUser": "node"
+}
+// =============================================================================
+// CrypToCare — Dev Container Configuration
+// =============================================================================
+//
+// This file configures a Dev Container for the CrypToCare project so that
+// any developer can open the repo in VS Code (with Docker Desktop running)
+// and get a fully provisioned development environment — zero manual setup.
+//
+// What happens automatically:
+//   1. Docker builds the .devcontainer/Dockerfile (Node 20 + Python 3)
+//   2. postCreateCommand installs all frontend (pnpm) and backend (pip) deps
+//   3. VS Code installs recommended extensions for Vue/JS/Python development
+//   4. Ports 9000 (frontend) and 8001 (backend) are forwarded to the host
+//
+// Usage:
+//   - Install "Dev Containers" extension in VS Code (ms-vscode-remote.remote-containers)
+//   - Ensure Docker Desktop is running
+//   - Open this repo in VS Code → "Reopen in Container" (or Ctrl+Shift+P → "Dev Containers: Reopen in Container")
+//   - Wait for the build to complete, then start developing!
+//
+// =============================================================================
+{
+  "name": "CrypToCare Dev Environment",
+
+  // Build the dev container from our custom Dockerfile
+  "build": {
+    "dockerfile": "Dockerfile",
+    "context": ".."
+  },
+
+  // --------------------------------------------------------------------------
+  // Post-create command: runs ONCE after the container is first created.
+  // Installs all project dependencies so the dev can start coding immediately.
+  // --------------------------------------------------------------------------
+  "postCreateCommand": "pnpm install && cd backend && python -m venv venv && . venv/bin/activate && pip install -r requirements.txt && python manage.py migrate --noinput",
+
+  // --------------------------------------------------------------------------
+  // Forwarded ports: accessible from the host machine's browser
+  // --------------------------------------------------------------------------
+  "forwardPorts": [
+    9000, // Quasar dev server (frontend)
+    8001  // Django dev server (backend)
+  ],
+  "portsAttributes": {
+    "9000": {
+      "label": "Frontend (Quasar)",
+      "onAutoForward": "openBrowser"
+    },
+    "8001": {
+      "label": "Backend (Django)",
+      "onAutoForward": "silent"
+    }
+  },
+
+  // --------------------------------------------------------------------------
+  // VS Code extensions: installed automatically inside the container
+  // --------------------------------------------------------------------------
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        // Vue / Frontend
+        "Vue.volar",                          // Vue 3 language support
+        "dbaeumer.vscode-eslint",             // ESLint integration
+        "esbenp.prettier-vscode",             // Prettier code formatter
+        "bradlc.vscode-tailwindcss",          // Tailwind CSS IntelliSense (if used)
+        "formulahendry.auto-rename-tag",      // Auto rename HTML/Vue tags
+        "formulahendry.auto-close-tag",       // Auto close HTML/Vue tags
+
+        // Python / Django
+        "ms-python.python",                   // Python language support
+        "ms-python.vscode-pylance",           // Python type checker / IntelliSense
+        "batisteo.vscode-django",             // Django template & snippets
+
+        // General development
+        "editorconfig.editorconfig",          // EditorConfig support
+        "eamodio.gitlens",                    // Git history & blame
+        "ms-azuretools.vscode-docker",        // Docker support
+        "GitHub.copilot"                      // GitHub Copilot
+      ],
+      "settings": {
+        "editor.formatOnSave": true,
+        "editor.defaultFormatter": "esbenp.prettier-vscode",
+        "eslint.validate": ["javascript", "vue"],
+        "python.defaultInterpreterPath": "/workspace/backend/venv/bin/python",
+        "terminal.integrated.defaultProfile.linux": "bash"
+      }
+    }
+  },
+
+  // --------------------------------------------------------------------------
+  // Environment variables available inside the dev container
+  // --------------------------------------------------------------------------
+  "containerEnv": {
+    "VITE_API_URL": "http://localhost:8001/api/",
+    "DJANGO_DEBUG": "True",
+    "ALLOWED_HOSTS": "localhost,127.0.0.1"
+  },
+
+  // Run as the default non-root "node" user for security
+  "remoteUser": "node"
+}
