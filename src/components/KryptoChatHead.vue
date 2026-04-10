@@ -286,6 +286,14 @@ function formatMessage(text) {
     return `<a href="${safeUrl}" class="krypto-link" target="_blank" rel="noopener">${url}</a>`
   })
 
+  // Bold: **text** or __text__
+  s = s.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+  s = s.replace(/__(.+?)__/g, '<strong>$1</strong>')
+
+  // Italic: *text* or _text_ (but not inside URLs/words with underscores)
+  s = s.replace(/(?<!\w)\*(?!\s)(.+?)(?<!\s)\*(?!\w)/g, '<em>$1</em>')
+  s = s.replace(/(?<!\w)_(?!\s)(.+?)(?<!\s)_(?!\w)/g, '<em>$1</em>')
+
   // Newlines to <br>
   s = s.replace(/\n/g, '<br>')
   return s
