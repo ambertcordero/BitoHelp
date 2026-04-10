@@ -60,6 +60,45 @@
           </q-btn>
 
           <q-btn flat no-caps label="Contact" class="nav-item" to="/contact" />
+
+          <!-- Network selector -->
+          <q-btn flat no-caps class="nav-item">
+            <div class="row items-center no-wrap">
+              <q-icon name="lan" size="18px" class="q-mr-xs" />
+              <span>{{ networkStore.networkLabel }}</span>
+              <q-icon name="expand_more" size="20px" class="q-ml-xs" />
+            </div>
+            <q-menu anchor="bottom left" self="top left">
+              <q-list style="min-width: 200px">
+                <q-item
+                  clickable
+                  v-ripple
+                  @click="networkStore.switchNetwork('chipnet')"
+                  :class="{ 'bg-blue-1': networkStore.isChipnet }"
+                >
+                  <q-item-section avatar><q-icon name="science" color="blue" /></q-item-section>
+                  <q-item-section>Chipnet (Testnet)</q-item-section>
+                  <q-item-section side v-if="networkStore.isChipnet"
+                    ><q-icon name="check" color="primary"
+                  /></q-item-section>
+                </q-item>
+                <q-item
+                  clickable
+                  v-ripple
+                  @click="confirmMainnetSwitch"
+                  :class="{ 'bg-orange-1': networkStore.isMainnet }"
+                >
+                  <q-item-section avatar
+                    ><q-icon name="account_balance" color="orange"
+                  /></q-item-section>
+                  <q-item-section>Mainnet</q-item-section>
+                  <q-item-section side v-if="networkStore.isMainnet"
+                    ><q-icon name="check" color="orange"
+                  /></q-item-section>
+                </q-item>
+              </q-list>
+            </q-menu>
+          </q-btn>
         </div>
 
         <q-space />
@@ -207,10 +246,7 @@
                   :key="notification.id"
                   clickable
                   v-ripple
-                  @click="
-                    markAsRead(notification.id)
-                    notifSheetOpen = false
-                  "
+                  @click="markAsRead(notification.id); notifSheetOpen = false"
                   :class="{ 'bg-blue-1': !notification.read }"
                 >
                   <q-item-section avatar>
@@ -299,6 +335,17 @@
           <p v-if="walletError" class="wallet-error">{{ walletError }}</p>
         </div>
       </q-toolbar>
+
+      <!-- Mainnet warning banner -->
+      <q-banner
+        v-if="networkStore.isMainnet"
+        dense
+        class="bg-orange text-white text-center text-weight-bold"
+        style="min-height: 32px; font-size: 0.85rem"
+      >
+        <q-icon name="warning" class="q-mr-xs" />
+        MAINNET — Real funds at risk. Transactions are irreversible.
+      </q-banner>
     </q-header>
 
     <q-page-container class="has-mobile-nav">
@@ -614,6 +661,33 @@
               <path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6z" />
             </svg>
           </router-link>
+
+          <div class="mobile-drawer-divider" />
+          <div class="mobile-drawer-section-label">Network</div>
+
+          <button
+            class="mobile-drawer-item"
+            :class="{ 'mobile-drawer-item--active': networkStore.isChipnet }"
+            @click="networkStore.switchNetwork('chipnet')"
+          >
+            <div class="mobile-drawer-icon mobile-drawer-icon--blue">
+              <q-icon name="science" size="18px" />
+            </div>
+            <span>Chipnet (Testnet)</span>
+            <q-icon v-if="networkStore.isChipnet" name="check" color="primary" class="q-ml-auto" />
+          </button>
+
+          <button
+            class="mobile-drawer-item"
+            :class="{ 'mobile-drawer-item--active': networkStore.isMainnet }"
+            @click="confirmMainnetSwitch"
+          >
+            <div class="mobile-drawer-icon mobile-drawer-icon--amber">
+              <q-icon name="account_balance" size="18px" />
+            </div>
+            <span>Mainnet</span>
+            <q-icon v-if="networkStore.isMainnet" name="check" color="orange" class="q-ml-auto" />
+          </button>
         </div>
 
         <!-- Drawer Footer -->
@@ -675,8 +749,9 @@ import { WalletConnectModal } from '@walletconnect/modal'
 import { QSkeleton } from 'quasar'
 import lottie from 'lottie-web'
 import { useDonationStore } from '../stores/donation-store'
+import { useNetworkStore } from '../stores/network-store'
 import { useQuasar } from 'quasar'
-import { fetchAddressBalance, normalizeChipnetAddress } from '../services/bchChipnet'
+import { fetchAddressBalance, normalizeAddress } from '../services/bchChipnet'
 import { resumeAllAutoWithdraws } from '../services/vaultDonation'
 import KryptoChatHead from '../components/KryptoChatHead.vue'
 
@@ -693,6 +768,21 @@ const $q = useQuasar()
 const router = useRouter()
 const route = useRoute()
 const donationStore = useDonationStore()
+const networkStore = useNetworkStore()
+
+const confirmMainnetSwitch = () => {
+  if (networkStore.isMainnet) return
+  $q.dialog({
+    title: 'Switch to Mainnet?',
+    message:
+      'You are about to switch to Mainnet. Transactions on Mainnet use REAL Bitcoin Cash and are irreversible. Proceed?',
+    cancel: { flat: true, label: 'Stay on Chipnet' },
+    ok: { color: 'orange', label: 'Switch to Mainnet' },
+    persistent: true,
+  }).onOk(() => {
+    networkStore.switchNetwork('mainnet')
+  })
+}
 
 // Mobile side drawer
 const mobileMenuOpen = ref(false)
@@ -713,7 +803,7 @@ const projectId = '1e52dff3b9c75d86cfc7b1190c02d3a0'
 // allowing session restoration after refresh.
 const walletConnectStoragePrefix = 'cryptocare-wc'
 const walletConnectRelayUrl = 'wss://relay.walletconnect.com'
-const bchChains = ['bch:bchtest']
+const bchChains = computed(() => [networkStore.walletConnectChainId])
 const evmChains = ['eip155:1', 'eip155:5', 'eip155:11155111']
 const evmNativeSymbols = {
   1: 'ETH',
@@ -1049,7 +1139,7 @@ const shortAddress = computed(() => {
 })
 
 const walletSymbol = computed(() => {
-  if (walletNamespace.value === 'bch') return walletChain.value === 'bch:bchtest' ? 'tBCH' : 'BCH'
+  if (walletNamespace.value === 'bch') return networkStore.isChipnet ? 'tBCH' : 'BCH'
   if (walletNamespace.value === 'eip155') {
     const chainNumber = walletChain.value.split(':')[1] || ''
     return evmNativeSymbols[chainNumber] || 'NATIVE'
@@ -1099,7 +1189,7 @@ const parseBchChainFromAccount = (account) => {
   if (!account || !account.startsWith('bch:')) return ''
   const parts = account.split(':')
   if (parts.length < 2) return ''
-  return 'bch:bchtest'
+  return networkStore.walletConnectChainId
 }
 
 const hasSupportedNamespace = (session) => {
@@ -1326,7 +1416,7 @@ const parseAccount = (account) => {
 function normalizeAddressForComparison(address, chainId) {
   const raw = String(address || '').trim()
   if (!raw) return ''
-  if ((chainId || '').startsWith('bch:')) return normalizeChipnetAddress(raw) || raw.toLowerCase()
+  if ((chainId || '').startsWith('bch:')) return normalizeAddress(raw) || raw.toLowerCase()
   return raw.toLowerCase()
 }
 
@@ -1432,10 +1522,10 @@ const updateFromSession = (session) => {
 
   if (bchNs?.accounts?.length) {
     namespaceKey = 'bch'
-    account = selectPreferredAccount(bchNs.accounts, bchChains)
+    account = selectPreferredAccount(bchNs.accounts, bchChains.value)
     chain = parseChainFromAccount(account)
     const allNormalized = bchNs.accounts
-      .map((a) => normalizeChipnetAddress(parseBchAccount(a)))
+      .map((a) => normalizeAddress(parseBchAccount(a)))
       .filter(Boolean)
     bchSessionAddresses.value = [...new Set(allNormalized)]
     if (import.meta.env.DEV) {
@@ -1473,7 +1563,7 @@ const updateFromSession = (session) => {
   const parsedAddress = parseAccount(account)
 
   if (namespaceKey === 'bch') {
-    const normalized = normalizeChipnetAddress(parsedAddress)
+    const normalized = normalizeAddress(parsedAddress)
     if (!normalized) {
       if (import.meta.env.DEV)
         console.error('[CrypToCare][bch-session] Invalid address', {
@@ -1569,7 +1659,7 @@ const fetchBalance = async (address, chainId = walletChain.value) => {
         setBalanceSafely(weiToNative(rpcBalance.wei))
       }
     } else {
-      const primaryNorm = normalizeChipnetAddress(address)
+      const primaryNorm = normalizeAddress(address)
       const addressList =
         bchSessionAddresses.value.length > 0
           ? bchSessionAddresses.value
@@ -1683,7 +1773,7 @@ const initWalletConnect = async () => {
           if (accountChain) walletChain.value = accountChain
           const parsedAddress = parseAccount(account)
           if (walletNamespace.value === 'bch') {
-            const normalized = normalizeChipnetAddress(parsedAddress)
+            const normalized = normalizeAddress(parsedAddress)
             if (!normalized) {
               walletError.value = `Invalid BCH address: ${parsedAddress}`
               resetWalletState()
@@ -1793,7 +1883,7 @@ const handleConnect = async () => {
         optionalNamespaces: {
           bch: {
             methods: ['bch_signMessage', 'bch_signTransaction', 'bch_sendTransaction'],
-            chains: bchChains,
+            chains: bchChains.value,
             events: [],
           },
         },
@@ -1804,7 +1894,7 @@ const handleConnect = async () => {
           optionalNamespaces: {
             bch: {
               methods: ['bch_signMessage', 'bch_signTransaction', 'bch_sendTransaction'],
-              chains: bchChains,
+              chains: bchChains.value,
               events: [],
             },
             eip155: {

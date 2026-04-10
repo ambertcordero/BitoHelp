@@ -1,5 +1,6 @@
 import { decode as decodeCashAddress, encode as encodeCashAddress } from 'cashaddrjs'
 import { getAddressUtxos, broadcastTransaction, getTransaction } from './electrumClient.js'
+import { useNetworkStore } from '../stores/network-store.js'
 
 const SATOSHIS_PER_BCH = 100000000n
 const BCH_DUST_SATOSHIS = 546n
@@ -17,15 +18,34 @@ const getEnvValue = (key, fallback = '') => {
 }
 
 export const getBchRuntimeConfig = () => {
-  const network = getEnvValue('BCH_NETWORK', 'chipnet').toLowerCase()
+  let network
+  try {
+    const networkStore = useNetworkStore()
+    network = networkStore.activeNetwork
+  } catch {
+    network = getEnvValue('BCH_NETWORK', 'chipnet').toLowerCase()
+  }
 
   return {
     network,
     isChipnet: network === 'chipnet',
+    isMainnet: network === 'mainnet',
     explorerBaseUrl: getEnvValue('BCH_EXPLORER_BASE_URL', ''),
     feeRateSatsPerByte: Number.parseFloat(
       getEnvValue('BCH_FEE_RATE_SATS_PER_BYTE', `${DEFAULT_FEE_RATE}`),
     ),
+  }
+}
+
+/**
+ * Get the address prefix for the currently active network.
+ */
+const getActivePrefix = () => {
+  try {
+    const networkStore = useNetworkStore()
+    return networkStore.addressPrefix
+  } catch {
+    return 'bchtest'
   }
 }
 
@@ -44,39 +64,55 @@ const hexToBytes = (hexValue) => {
   return bytes
 }
 
-export const normalizeChipnetAddress = (value) => {
+/**
+ * Normalize a BCH address to the given prefix (or the active network prefix).
+ * Accepts bare hashes, bchtest:, or bitcoincash: addresses and re-encodes
+ * them to the target prefix.
+ */
+export const normalizeAddress = (value, prefix) => {
   const raw = String(value ?? '').trim()
   if (!raw) {
     return ''
   }
 
+  const targetPrefix = prefix || getActivePrefix()
+
   // Extract just the hash payload — take everything after the last colon.
-  // This handles bare hashes, 'bchtest:qq...', 'bitcoincash:qq...', and even
-  // malformed CAIP segments like 'bch:chipnet:bchtest:qq...'.
   const baseHash = raw.includes(':') ? raw.slice(raw.lastIndexOf(':') + 1) : raw
   if (!baseHash) {
     return ''
   }
 
-  // Chipnet uses the 'bchtest' CashAddr prefix exclusively.
-  // Only accept addresses that validate against that prefix.
-  const candidate = `bchtest:${baseHash}`
+  const candidate = `${targetPrefix}:${baseHash}`
   try {
     const decoded = decodeCashAddress(candidate)
-    if (decoded?.prefix === 'bchtest') {
+    if (decoded?.prefix === targetPrefix) {
       return candidate.toLowerCase()
     }
   } catch {
-    // invalid CashAddr checksum for chipnet
+    // invalid CashAddr checksum for this prefix — try re-encoding from the other prefix
+  }
+
+  // Try decoding with the other prefix and re-encode to target
+  const otherPrefix = targetPrefix === 'bchtest' ? 'bitcoincash' : 'bchtest'
+  const otherCandidate = `${otherPrefix}:${baseHash}`
+  try {
+    const decoded = decodeCashAddress(otherCandidate)
+    return encodeCashAddress(targetPrefix, decoded.type, decoded.hash).toLowerCase()
+  } catch {
+    // completely invalid
   }
 
   return ''
 }
 
+export const normalizeChipnetAddress = (value) => normalizeAddress(value, 'bchtest')
+
+export const isValidAddress = (value) => Boolean(normalizeAddress(value))
 export const isValidChipnetAddress = (value) => Boolean(normalizeChipnetAddress(value))
 
 export const getAddressHash160 = (address) => {
-  const normalized = normalizeChipnetAddress(address)
+  const normalized = normalizeAddress(address)
   if (!normalized) return null
   try {
     const decoded = decodeCashAddress(normalized)
@@ -114,9 +150,9 @@ export const decimalBchToSatoshis = (value) => {
 }
 
 export const fetchAddressUtxos = async ({ address }) => {
-  const normalizedAddress = normalizeChipnetAddress(address)
+  const normalizedAddress = normalizeAddress(address)
   if (!normalizedAddress) {
-    throw new Error(`Invalid BCH chipnet address: "${address}"`)
+    throw new Error(`Invalid BCH address: "${address}"`)
   }
 
   const result = await getAddressUtxos(normalizedAddress)
@@ -414,7 +450,7 @@ export const buildWalletConnectBchSignPayload = ({
     userPrompt,
   }
 
-  const normalizedAccount = normalizeChipnetAddress(signingAccount || senderAddress)
+  const normalizedAccount = normalizeAddress(signingAccount || senderAddress)
   if (normalizedAccount) {
     payload.account = normalizedAccount
   }

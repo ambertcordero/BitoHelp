@@ -1,19 +1,34 @@
 /**
- * Watchtower REST API client for BCH chipnet.
+ * Watchtower REST API client for BCH.
  * Used for UTXO lookups, transaction broadcast, and confirmation checks.
  *
- * API base: https://chipnet.watchtower.cash/api/
+ * Network selection is driven by the Pinia network store.
  */
+
+import { useNetworkStore } from '../stores/network-store'
 
 const CHIPNET_BASE = 'https://chipnet.watchtower.cash/api'
 const MAINNET_BASE = 'https://watchtower.cash/api'
 const REQUEST_TIMEOUT_MS = 15000
 
+const getActiveBaseUrl = () => {
+  try {
+    const networkStore = useNetworkStore()
+    return networkStore.isMainnet ? MAINNET_BASE : CHIPNET_BASE
+  } catch {
+    // Store may not be initialised yet (e.g. during SSR bootstrap)
+    return CHIPNET_BASE
+  }
+}
+
 const getBaseUrl = (address) => {
   if (typeof address === 'string' && address.startsWith('bitcoincash:')) {
     return MAINNET_BASE
   }
-  return CHIPNET_BASE
+  if (typeof address === 'string' && address.startsWith('bchtest:')) {
+    return CHIPNET_BASE
+  }
+  return getActiveBaseUrl()
 }
 
 const fetchWithTimeout = async (url, options = {}) => {
@@ -60,7 +75,7 @@ export const getAddressUtxos = async (address) => {
  * Returns the transaction id on success.
  */
 export const broadcastTransaction = async (rawTxHex) => {
-  const url = `${CHIPNET_BASE}/broadcast/`
+  const url = `${getActiveBaseUrl()}/broadcast/`
   const response = await fetchWithTimeout(url, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -88,7 +103,7 @@ export const broadcastTransaction = async (rawTxHex) => {
  * @returns {{ confirmations: number }}
  */
 export const getTransaction = async (txid) => {
-  const url = `${CHIPNET_BASE}/tx/bch/${encodeURIComponent(txid)}/`
+  const url = `${getActiveBaseUrl()}/tx/bch/${encodeURIComponent(txid)}/`
   const response = await fetchWithTimeout(url)
 
   if (!response.ok) {
@@ -110,4 +125,4 @@ export const disconnect = () => {}
 /**
  * Get the currently active API base URL (for diagnostics).
  */
-export const getActiveServer = () => CHIPNET_BASE
+export const getActiveServer = () => getActiveBaseUrl()

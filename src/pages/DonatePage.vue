@@ -273,12 +273,13 @@ import {
   extractWalletSignedTransaction,
   fetchAddressUtxos,
   getBchRuntimeConfig,
-  isValidChipnetAddress,
+  isValidAddress,
   lockingBytecodeToAddressVariants,
-  normalizeChipnetAddress,
+  normalizeAddress,
   selectInputsAndBuildPlan,
 } from '../services/bchChipnet'
 import { createVaultContract, saveVaultRecord, startAutoWithdraw } from '../services/vaultDonation'
+import { useNetworkStore } from '../stores/network-store'
 import { api } from 'boot/axios'
 import { CASHSCRIPT_CONTRACT_PATH } from '../contracts/recurringDonation'
 
@@ -303,21 +304,22 @@ const notify = (payload) => {
     return
   }
   if (import.meta.env.DEV) {
-    console.warn('[CrypToCare][notify:fallback]', payload)
+    console.warn('[BitoHelp][notify:fallback]', payload)
   }
 }
 
-const DONATIONS_STORAGE_KEY = 'cryptocare.donations'
-const WALLET_SNAPSHOT_STORAGE_KEY = 'cryptocare.wallet.snapshot'
-const WALLET_BALANCE_ADJUST_EVENT = 'cryptocare:wallet-balance-adjust'
-const WALLET_BALANCE_REFRESH_EVENT = 'cryptocare:wallet-balance-refresh'
-const DONATION_SENT_EVENT = 'cryptocare:donation-sent'
-const WALLET_CLIENT_GLOBAL_KEY = '__cryptocareWalletClient__'
+const DONATIONS_STORAGE_KEY = 'bitohelp.donations'
+const WALLET_SNAPSHOT_STORAGE_KEY = 'bitohelp.wallet.snapshot'
+const WALLET_BALANCE_ADJUST_EVENT = 'bitohelp:wallet-balance-adjust'
+const WALLET_BALANCE_REFRESH_EVENT = 'bitohelp:wallet-balance-refresh'
+const DONATION_SENT_EVENT = 'bitohelp:donation-sent'
+const WALLET_CLIENT_GLOBAL_KEY = '__bitohelpWalletClient__'
 const WALLET_REQUEST_TIMEOUT_MS = 30000
 const PAYTACA_BCH_CHIPNET_WC_LIMITATION_MESSAGE =
   'Paytaca approved the request but did not return a signed BCH chipnet transaction over WalletConnect. No funds were sent. This appears to be a wallet-side issue.'
 
 const bchConfig = getBchRuntimeConfig()
+const networkStore = useNetworkStore()
 
 // --- Static options ---
 const causeOptions = [
@@ -703,10 +705,10 @@ const summarizeBchSigningCompatibility = (payload, walletClient) => {
   const sourceOutputs = Array.isArray(payload?.sourceOutputs) ? payload.sourceOutputs : []
   const firstSourceOutput = sourceOutputs[0] || null
   const sourceAddressVariants = lockingBytecodeToAddressVariants(firstSourceOutput?.lockingBytecode)
-  const walletAddress = normalizeChipnetAddress(walletClient?.address)
+  const walletAddress = normalizeAddress(walletClient?.address)
   const walletHashOnly = walletAddress ? walletAddress.split(':')[1] : null
   const getHashOnly = (address) => {
-    const normalized = normalizeChipnetAddress(address)
+    const normalized = normalizeAddress(address)
     return normalized ? normalized.split(':')[1] : null
   }
   const sourceHashOnly = getHashOnly(sourceAddressVariants?.bchtest)
@@ -719,12 +721,12 @@ const summarizeBchSigningCompatibility = (payload, walletClient) => {
 
 const validateBchWalletSession = (walletClient, chainId) => {
   const summary = getWalletSessionSummary(walletClient)
-  const normalizedAddress = normalizeChipnetAddress(summary.address)
+  const normalizedAddress = normalizeAddress(summary.address)
   const hasMatchingAccount = summary.accounts.some((account) => {
     const rawAccountAddress = account.includes(':')
       ? account.slice(account.indexOf(':') + 1)
       : account
-    return normalizeChipnetAddress(rawAccountAddress) === normalizedAddress
+    return normalizeAddress(rawAccountAddress) === normalizedAddress
   })
 
   if (!summary.topic) {
@@ -779,7 +781,7 @@ const executeWalletRequest = async (walletClient, chainId, method, candidatePara
   for (const params of candidateParams) {
     try {
       if (import.meta.env.DEV) {
-        console.info('[CrypToCare][donation-request:start]', { method, chainId, params })
+        console.info('[BitoHelp][donation-request:start]', { method, chainId, params })
       }
 
       // Capture request ID in parallel (not blocking) — needed for history fallback.
@@ -809,7 +811,7 @@ const executeWalletRequest = async (walletClient, chainId, method, candidatePara
         if (capturedRequestId !== null && typeof walletClient?.getHistoryRecord === 'function') {
           if (import.meta.env.DEV) {
             console.warn(
-              '[CrypToCare][donation-request:relay-drop] Polling history for id:',
+              '[BitoHelp][donation-request:relay-drop] Polling history for id:',
               capturedRequestId,
             )
           }
@@ -820,7 +822,7 @@ const executeWalletRequest = async (walletClient, chainId, method, candidatePara
             if (record?.response?.result !== undefined) {
               if (import.meta.env.DEV) {
                 console.info(
-                  '[CrypToCare][donation-request:history-recovered]',
+                  '[BitoHelp][donation-request:history-recovered]',
                   record.response.result,
                 )
               }
@@ -845,7 +847,7 @@ const executeWalletRequest = async (walletClient, chainId, method, candidatePara
       }
 
       if (import.meta.env.DEV) {
-        console.info('[CrypToCare][donation-request:success]', { method, response })
+        console.info('[BitoHelp][donation-request:success]', { method, response })
       }
       return response
     } catch (error) {
@@ -888,7 +890,7 @@ const sendEthDonation = async ({ walletClient, chainId, from, to, wei }) =>
 const isWalletCompatibleWithCoin = (walletSnapshot, coin) => {
   const namespace = walletSnapshot?.namespace || ''
   const chain = walletSnapshot?.chain || ''
-  if (coin === 'BCH') return namespace === 'bch' && chain === 'bch:bchtest'
+  if (coin === 'BCH') return namespace === 'bch' && chain === networkStore.walletConnectChainId
   if (coin === 'ETH')
     return namespace === 'eip155' && ['eip155:1', 'eip155:5', 'eip155:11155111'].includes(chain)
   return false
@@ -944,7 +946,7 @@ const signBchTransactionWithWalletConnect = async ({ walletClient, chainId, sign
 
   if (import.meta.env.DEV) {
     console.info(
-      '[CrypToCare][bch-session:preflight]',
+      '[BitoHelp][bch-session:preflight]',
       validateBchWalletSession(walletClient, resolvedChainId),
     )
   } else {
@@ -955,7 +957,7 @@ const signBchTransactionWithWalletConnect = async ({ walletClient, chainId, sign
     const candidatePayloads = buildBchSignRequestVariants(signingPayload)
     if (import.meta.env.DEV) {
       console.info(
-        '[CrypToCare][bch-sign-variants]',
+        '[BitoHelp][bch-sign-variants]',
         candidatePayloads.map((payload, idx) => ({
           variant: idx + 1,
           ...summarizeBchSigningPayload(payload),
@@ -980,7 +982,7 @@ const signBchTransactionWithWalletConnect = async ({ walletClient, chainId, sign
       details?.message === undefined &&
       details?.reason === undefined
 
-    if (resolvedChainId === 'bch:bchtest' && hasOpaqueWalletError) {
+    if (resolvedChainId === networkStore.walletConnectChainId && hasOpaqueWalletError) {
       throw new Error(PAYTACA_BCH_CHIPNET_WC_LIMITATION_MESSAGE)
     }
 
@@ -1019,7 +1021,7 @@ const runChipnetBchDonationFlow = async ({
   const vaultAddress = vault.address
 
   if (import.meta.env.DEV) {
-    console.info('[CrypToCare][vault-contract]', {
+    console.info('[BitoHelp][vault-contract]', {
       vaultAddress,
       params: vault.params,
       charityAddress,
@@ -1050,9 +1052,9 @@ const runChipnetBchDonationFlow = async ({
   })
 
   if (import.meta.env.DEV) {
-    console.info('[CrypToCare][bch-sign-payload]', summarizeBchSigningPayload(signingPayload))
+    console.info('[BitoHelp][bch-sign-payload]', summarizeBchSigningPayload(signingPayload))
     console.info(
-      '[CrypToCare][bch-sign-compat]',
+      '[BitoHelp][bch-sign-compat]',
       summarizeBchSigningCompatibility(signingPayload, walletClient),
     )
   }
@@ -1069,7 +1071,10 @@ const runChipnetBchDonationFlow = async ({
     signingPayload,
   })
 
-  submissionStatus.value = { type: '', message: 'Signature received. Broadcasting to Chipnet...' }
+  submissionStatus.value = {
+    type: '',
+    message: `Signature received. Broadcasting to ${networkStore.networkLabel}...`,
+  }
 
   const { rawTxHex, signedTxid } = extractWalletSignedTransaction(signedResult)
 
@@ -1100,6 +1105,7 @@ const runChipnetBchDonationFlow = async ({
     donorEmail: donorEmail || '',
     donorName: donorName || '',
     status: 'funded',
+    network: networkStore.activeNetwork,
   }
   saveVaultRecord(vaultRecord)
 
@@ -1159,7 +1165,7 @@ const submitDonation = async () => {
   const selectedCoin = form.value.coin
   const typedRecipientAddress = normalizeRecipientAddress(form.value.recipientAddress)
   const recipientAddress =
-    selectedCoin === 'BCH' ? normalizeChipnetAddress(typedRecipientAddress) : typedRecipientAddress
+    selectedCoin === 'BCH' ? normalizeAddress(typedRecipientAddress) : typedRecipientAddress
   const depositSatoshis = selectedCoin === 'BCH' ? decimalBchToSatoshis(form.value.deposit) : null
   const withdrawalSatoshis =
     selectedCoin === 'BCH' ? decimalBchToSatoshis(form.value.withdrawal) : null
@@ -1210,14 +1216,6 @@ const submitDonation = async () => {
       message: 'Please select a coin for this donation.',
     }
     notify({ type: 'warning', message: 'Please select a coin for this donation.' })
-    return
-  }
-
-  if (selectedCoin === 'BCH' && !bchConfig.isChipnet) {
-    submissionStatus.value = {
-      type: 'negative',
-      message: 'BCH donations require BCH_NETWORK=chipnet in app configuration.',
-    }
     return
   }
 
@@ -1282,14 +1280,15 @@ const submitDonation = async () => {
     return
   }
 
-  if (selectedCoin === 'BCH' && !isValidChipnetAddress(typedRecipientAddress)) {
+  if (selectedCoin === 'BCH' && !isValidAddress(typedRecipientAddress)) {
+    const prefix = networkStore.addressPrefix
     submissionStatus.value = {
       type: 'negative',
-      message: 'Recipient must be a valid BCH Chipnet address (bchtest:...).',
+      message: `Recipient must be a valid BCH ${networkStore.networkLabel} address (${prefix}:...).`,
     }
     notify({
       type: 'warning',
-      message: 'Recipient must be a valid BCH Chipnet address (bchtest:...).',
+      message: `Recipient must be a valid BCH ${networkStore.networkLabel} address (${prefix}:...).`,
     })
     return
   }
@@ -1399,7 +1398,7 @@ const submitDonation = async () => {
     // Also save to backend database (best-effort)
     try {
       const matchedNp = nonprofits.value.find((np) => np.name === form.value.organization)
-      const explorerUrl = txReference ? `https://chipnet.bchexplorer.info/tx/${txReference}` : ''
+      const explorerUrl = txReference ? `${networkStore.explorerBaseUrl}/tx/${txReference}` : ''
       const donationRes = await api.post('donations/', {
         txid: txReference,
         recipient: form.value.recipientAddress,
