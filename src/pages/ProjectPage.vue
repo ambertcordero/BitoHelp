@@ -124,6 +124,7 @@
                 <q-btn
                   flat
                   class="details-btn"
+                  label="View details"
                   @click="viewProject(4)"
                 />
               </div>
@@ -203,15 +204,27 @@
 
     <q-dialog v-model="showRegisterDialog" :maximized="$q.screen.lt.sm">
       <q-card class="register-dialog-card">
-        <q-card-section class="text-center" style="padding: 24px 24px 16px;">
-          <div style="margin-bottom: 16px;">
-            <q-icon name="currency_bitcoin" size="48px" color="orange" />
+
+        <!-- Header -->
+        <q-card-section class="dialog-header">
+          <q-btn
+            flat round dense
+            icon="close"
+            class="dialog-close-btn"
+            v-close-popup
+          />
+          <div class="dialog-icon-wrap">
+            <img src="~assets/CrypToCare.png" alt="CrypToCare" class="dialog-logo" />
           </div>
           <div class="dialog-title">Register Your Charity</div>
-          <div class="dialog-subtitle">Join our platform to start receiving Bitcoins donations.</div>
+          <div class="dialog-subtitle">Join our platform to start receiving Bitcoin donations.</div>
         </q-card-section>
 
-        <q-card-section style="padding: 0 24px 24px;">
+        <q-separator class="dialog-separator" />
+
+        <!-- Form body -->
+        <q-card-section class="dialog-form-section">
+
           <div class="form-field">
             <label class="field-label">Charity Name</label>
             <q-input
@@ -271,42 +284,52 @@
               outlined
               dense
               placeholder="Enter Bitcoin wallet address"
-            />
+            >
+              <template v-slot:prepend>
+                <q-icon name="account_balance_wallet" color="orange" />
+              </template>
+            </q-input>
           </div>
 
           <div class="form-field">
-            <label class="field-label">Upload Documents <span style="color: #999;">(optional)</span></label>
+            <label class="field-label">
+              Upload Documents
+              <span class="optional-label">(optional)</span>
+            </label>
             <q-file
               v-model="charityForm.documents"
               outlined
               dense
               placeholder="Choose File"
-              style="margin-bottom: 8px;"
+              class="q-mb-sm"
             >
               <template v-slot:prepend>
                 <q-icon name="attach_file" />
               </template>
             </q-file>
-            <div style="text-align: center; font-size: 13px; color: #666;">
-              Drag and drop files <a href="#" style="color: #0080ff; text-decoration: none;">here</a> or <a href="#" style="color: #0080ff; text-decoration: none;">Browse</a>
+            <div class="upload-hint">
+              Drag and drop files
+              <a href="#" class="dialog-link">here</a>
+              or
+              <a href="#" class="dialog-link">Browse</a>
             </div>
           </div>
 
           <q-btn
             unelevated
-            class="submit-btn"
+            class="submit-btn full-width q-mt-sm"
             label="Submit Application"
-            color="primary"
-            style="width: 100%; padding: 12px; background: #00BFFF; font-weight: 600; font-size: 15px; margin-top: 8px;"
+            no-caps
             @click="submitApplication"
           />
 
-          <div style="text-align: center; margin-top: 16px; font-size: 13px; color: #666;">
-            By registering, you agree to our 
-            <a href="#" style="color: #0080ff; text-decoration: none;">Terms of service</a> 
-            and 
-            <a href="#" style="color: #0080ff; text-decoration: none;">Privacy policy</a>.
+          <div class="terms-text">
+            By registering, you agree to our
+            <a href="#" class="dialog-link">Terms of service</a>
+            and
+            <a href="#" class="dialog-link">Privacy policy</a>.
           </div>
+
         </q-card-section>
       </q-card>
     </q-dialog>
@@ -315,42 +338,54 @@
     <q-dialog 
       v-model="showDetailsDialog" 
       v-if="selectedProject"
-      :maximized="false"
+      :maximized="$q.screen.lt.sm"
       transition-show="slide-up"
       transition-hide="slide-down"
     >
       <q-card class="glass-dialog-card responsive-dialog">
+
+        <!-- Hero image with close btn overlay -->
         <div class="details-header-image">
           <img :src="selectedProject.image" :alt="selectedProject.projectTitle" />
           <div class="details-overlay">
             <h2 class="details-project-title">{{ selectedProject.projectTitle }}</h2>
           </div>
+          <q-btn
+            flat round dense
+            icon="close"
+            class="details-close-btn"
+            v-close-popup
+          />
         </div>
 
-        <q-card-section style="padding: 24px;">
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
-            <h3 style="margin: 0; font-size: 24px; color: #333;">{{ selectedProject.name }}</h3>
-            <q-badge :label="selectedProject.status" color="positive" style="padding: 6px 12px; font-size: 12px;" />
+        <!-- Scrollable body -->
+        <q-card-section class="details-body">
+
+          <!-- Title row -->
+          <div class="details-title-row">
+            <h3 class="details-org-name">{{ selectedProject.name }}</h3>
+            <q-badge :label="selectedProject.status" color="positive" class="details-badge" />
           </div>
 
-          <div style="display: flex; align-items: center; margin-bottom: 20px; color: #0080ff;">
-            <q-icon name="category" size="20px" style="margin-right: 8px;" />
-            <span style="font-weight: 500;">{{ selectedProject.category }}</span>
+          <!-- Category -->
+          <div class="details-category">
+            <q-icon name="category" size="18px" />
+            <span>{{ selectedProject.category }}</span>
           </div>
 
-    
+          <!-- About -->
           <div class="details-section">
             <h4 class="section-label">About This Project</h4>
             <p class="details-text">{{ selectedProject.fullDescription }}</p>
           </div>
 
-          
+          <!-- Mission -->
           <div class="details-section">
             <h4 class="section-label">Mission Statement</h4>
-            <p class="details-text" style="font-style: italic; color: #555;">{{ selectedProject.mission }}</p>
+            <p class="details-text details-text--italic">{{ selectedProject.mission }}</p>
           </div>
 
-     
+          <!-- Impact stats -->
           <div class="details-section">
             <h4 class="section-label">Impact Statistics</h4>
             <div class="impact-grid">
@@ -361,25 +396,25 @@
             </div>
           </div>
 
-         
+          <!-- Fundraising progress -->
           <div class="details-section">
             <h4 class="section-label">Fundraising Progress</h4>
-            <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
-              <span style="font-weight: 600; color: #0080ff;">{{ selectedProject.amountRaised }}</span>
-              <span style="color: #666;">Goal: {{ selectedProject.projectGoal }}</span>
+            <div class="progress-labels">
+              <span class="progress-raised">{{ selectedProject.amountRaised }}</span>
+              <span class="progress-goal">Goal: {{ selectedProject.projectGoal }}</span>
             </div>
-            <q-linear-progress 
-              :value="parseInt(selectedProject.amountRaised.replace(/[^0-9]/g, '')) / parseInt(selectedProject.projectGoal.replace(/[^0-9]/g, ''))" 
-              color="primary" 
-              size="12px" 
-              style="border-radius: 6px; margin-bottom: 8px;"
+            <q-linear-progress
+              :value="parseInt(selectedProject.amountRaised.replace(/[^0-9]/g, '')) / parseInt(selectedProject.projectGoal.replace(/[^0-9]/g, ''))"
+              color="primary"
+              size="12px"
+              class="progress-bar"
             />
-            <div style="text-align: center; color: #666; font-size: 13px;">
+            <div class="progress-beneficiaries">
               Beneficiaries: <strong>{{ selectedProject.beneficiaries }}</strong>
             </div>
           </div>
 
-          
+          <!-- Contact -->
           <div class="details-section">
             <h4 class="section-label">Contact Information</h4>
             <div class="contact-info">
@@ -407,15 +442,14 @@
             </div>
           </div>
 
-        
+          <!-- Wallet -->
           <div class="details-section">
             <h4 class="section-label">Bitcoin Wallet Address</h4>
             <div class="wallet-container">
               <div class="wallet-address">{{ selectedProject.walletAddress }}</div>
-              <q-btn 
-                flat 
-                dense 
-                icon="content_copy" 
+              <q-btn
+                flat dense
+                icon="content_copy"
                 color="primary"
                 @click="copyWalletAddress(selectedProject.walletAddress)"
               >
@@ -424,25 +458,24 @@
             </div>
           </div>
 
-         
-          <div style="text-align: center; margin-top: 20px; padding-top: 20px; border-top: 1px solid #e0e0e0;">
-            <span style="color: #999; font-size: 13px;">
-              Registered since {{ selectedProject.registrationDate }}
-            </span>
+          <!-- Footer -->
+          <div class="details-footer">
+            <span>Registered since {{ selectedProject.registrationDate }}</span>
           </div>
+
         </q-card-section>
 
-        
-        <q-card-actions align="center" style="padding: 0 24px 24px;">
-          <q-btn 
+        <q-card-actions align="center" class="details-actions">
+          <q-btn
             unelevated
             color="primary"
             label="Close"
             no-caps
-            style="min-width: 120px; border-radius: 8px; font-weight: 600;"
+            class="details-close-action-btn"
             v-close-popup
           />
         </q-card-actions>
+
       </q-card>
     </q-dialog>
   </q-page>
@@ -964,12 +997,16 @@ const copyWalletAddress = (address) => {
 }
 
 
+/* ── Register Dialog ─────────────────────────────── */
 .register-dialog-card {
   width: 100%;
-  max-width: 600px;
-  border-radius: 12px;
-  overflow-y: auto;
-  max-height: 90vh;
+  max-width: 560px;
+  border-radius: 16px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  max-height: 92dvh;
+  background: #ffffff;
 }
 
 @media (max-width: 599px) {
@@ -981,122 +1018,522 @@ const copyWalletAddress = (address) => {
   }
 }
 
+/* Header */
+.dialog-header {
+  position: relative;
+  text-align: center;
+  padding: 28px 24px 20px;
+  background: linear-gradient(135deg, #0080ff 0%, #00bfff 100%);
+  color: #fff;
+  flex-shrink: 0;
+}
+
+.dialog-close-btn {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  color: rgba(255, 255, 255, 0.85) !important;
+}
+
+.dialog-close-btn:hover {
+  background: rgba(255, 255, 255, 0.15) !important;
+}
+
+.dialog-icon-wrap {
+  margin-bottom: 12px;
+  display: flex;
+  justify-content: center;
+}
+
+.dialog-logo {
+  height: 56px;
+  width: auto;
+  object-fit: contain;
+  filter: drop-shadow(0 2px 6px rgba(0,0,0,0.25));
+}
+
 .dialog-title {
-  font-size: 24px;
+  font-size: 22px;
   font-weight: 700;
-  color: #000;
-  margin-bottom: 8px;
+  color: #fff;
+  margin-bottom: 6px;
 }
 
 .dialog-subtitle {
   font-size: 14px;
-  color: #666;
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.dialog-separator {
+  flex-shrink: 0;
+}
+
+/* Form body */
+.dialog-form-section {
+  padding: 24px;
+  overflow-y: auto;
+  flex: 1 1 auto;
+}
+
+.optional-label {
+  font-weight: 400;
+  color: #999;
+  font-size: 12px;
+  margin-left: 4px;
+}
+
+.upload-hint {
+  text-align: center;
+  font-size: 13px;
+  color: #777;
+  margin-top: 4px;
+}
+
+.dialog-link {
+  color: #0080ff;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.dialog-link:hover {
+  text-decoration: underline;
+}
+
+.submit-btn {
+  border-radius: 8px;
+  padding: 12px 0;
+  font-weight: 600;
+  font-size: 15px;
+  background: linear-gradient(90deg, #0080ff 0%, #00bfff 100%) !important;
+  color: #fff !important;
+  letter-spacing: 0.3px;
+}
+
+.submit-btn:hover {
+  opacity: 0.92;
+}
+
+.terms-text {
+  text-align: center;
+  margin-top: 14px;
+  font-size: 12px;
+  color: #777;
+}
+
+/* Mobile form padding */
+@media (max-width: 599px) {
+  .dialog-form-section {
+    padding: 16px;
+  }
+
+  .dialog-header {
+    padding: 24px 16px 16px;
+  }
+
+  .dialog-title {
+    font-size: 20px;
+  }
+}
+
+/* ── Register Dialog — Dark Mode ─────────────────── */
+.body--dark .register-dialog-card {
+  background: #1a2240;
+}
+
+.body--dark .dialog-header {
+  background: linear-gradient(135deg, #0d47a1 0%, #0080c8 100%);
+}
+
+.body--dark .dialog-separator {
+  background: #2e3f6e;
+}
+
+.body--dark .dialog-form-section {
+  background: #1a2240;
+}
+
+.body--dark .field-label {
+  color: #c0d4f0;
+}
+
+.body--dark .optional-label {
+  color: #5a7099;
+}
+
+.body--dark .upload-hint {
+  color: #6a88aa;
+}
+
+.body--dark .dialog-link {
+  color: #5d9cf5;
+}
+
+.body--dark .terms-text {
+  color: #6a88aa;
 }
 
 
 .glass-dialog-card {
-  background: rgba(255, 255, 255, 0.95) !important;
-  backdrop-filter: blur(10px) saturate(180%);
-  -webkit-backdrop-filter: blur(10px) saturate(180%);
-  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.2);
+  background: #ffffff;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.18);
 }
 
 .responsive-dialog {
-  min-width: 700px;
-  max-width: 800px;
   width: 100%;
-  border-radius: 10px;
-  max-height: 90vh;
+  min-width: min(740px, 96vw);
+  max-width: 800px;
+  border-radius: 12px;
+  max-height: 90dvh;
   overflow: hidden;
   display: flex;
   flex-direction: column;
 }
 
-.responsive-dialog .q-card__section {
+/* Header image */
+.details-header-image {
+  position: relative;
+  width: 100%;
+  height: 260px;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.details-header-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.details-overlay {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.75) 0%, transparent 100%);
+  padding: 40px 20px 16px;
+}
+
+.details-project-title {
+  color: #fff;
+  font-size: 22px;
+  font-weight: 700;
+  margin: 0;
+  text-shadow: 1px 2px 6px rgba(0, 0, 0, 0.5);
+}
+
+.details-close-btn {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  color: #fff !important;
+  background: rgba(0, 0, 0, 0.35) !important;
+  backdrop-filter: blur(4px);
+}
+
+.details-close-btn:hover {
+  background: rgba(0, 0, 0, 0.55) !important;
+}
+
+/* Scrollable body */
+.details-body {
+  padding: 20px 24px;
   overflow-y: auto;
+  flex: 1 1 auto;
 }
 
-/* Responsive breakpoints */
-@media (max-width: 1024px) {
-  .responsive-dialog {
-    min-width: 600px;
-    max-width: 700px;
-  }
-  
-  .details-header-image {
-    height: 500px !important;
-  }
+.details-title-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 10px;
+  flex-wrap: wrap;
 }
 
+.details-org-name {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 700;
+  color: #222;
+  flex: 1;
+}
+
+.details-badge {
+  padding: 5px 10px;
+  font-size: 12px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.details-category {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #0080ff;
+  font-weight: 500;
+  font-size: 14px;
+  margin-bottom: 20px;
+}
+
+.details-section {
+  margin-bottom: 22px;
+}
+
+.section-label {
+  font-size: 15px;
+  font-weight: 700;
+  color: #222;
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+}
+
+.section-label::before {
+  content: '';
+  width: 4px;
+  height: 18px;
+  background: #0080ff;
+  margin-right: 10px;
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+
+.details-text {
+  font-size: 14px;
+  line-height: 1.75;
+  color: #555;
+  margin: 0;
+}
+
+.details-text--italic {
+  font-style: italic;
+  color: #666;
+}
+
+/* Progress */
+.progress-labels {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 8px;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.progress-raised {
+  font-weight: 700;
+  color: #0080ff;
+  font-size: 15px;
+}
+
+.progress-goal {
+  color: #777;
+  font-size: 14px;
+}
+
+.progress-bar {
+  border-radius: 6px;
+  margin-bottom: 8px;
+}
+
+.progress-beneficiaries {
+  text-align: center;
+  color: #777;
+  font-size: 13px;
+}
+
+/* Impact grid */
+.impact-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+}
+
+.impact-card {
+  background: #f0f5ff;
+  padding: 18px 14px;
+  border: 1px solid #c5d8ff;
+  border-radius: 10px;
+  text-align: center;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.impact-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 6px 18px rgba(0, 128, 255, 0.2);
+}
+
+.impact-value {
+  font-size: 26px;
+  font-weight: 700;
+  color: #0060cc;
+  margin-bottom: 6px;
+}
+
+.impact-label {
+  font-size: 12px;
+  color: #555;
+  line-height: 1.4;
+}
+
+/* Contact */
+.contact-info {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.contact-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px;
+  background: #f8f9fa;
+  border-radius: 8px;
+}
+
+.contact-label {
+  font-size: 11px;
+  color: #999;
+  margin-bottom: 3px;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.contact-value {
+  font-size: 14px;
+  color: #333;
+  font-weight: 500;
+  word-break: break-word;
+}
+
+/* Wallet */
+.wallet-container {
+  display: flex;
+  align-items: center;
+  background: #f8f9fa;
+  padding: 12px 16px;
+  border-radius: 8px;
+  border: 1px solid #e0e0e0;
+  gap: 8px;
+}
+
+.wallet-address {
+  flex: 1;
+  font-family: 'Courier New', monospace;
+  font-size: 13px;
+  color: #333;
+  word-break: break-all;
+  line-height: 1.5;
+}
+
+/* Footer */
+.details-footer {
+  text-align: center;
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid #ebebeb;
+  color: #aaa;
+  font-size: 13px;
+}
+
+.details-actions {
+  padding: 12px 24px 20px;
+  flex-shrink: 0;
+}
+
+.details-close-action-btn {
+  min-width: 130px;
+  border-radius: 8px;
+  font-weight: 600;
+}
+
+/* ── Details Dialog — Mobile ─────────────────────── */
 @media (max-width: 768px) {
   .responsive-dialog {
-    min-width: 90vw;
-    max-width: 95vw;
-    max-height: 85vh;
+    min-width: 92vw;
+    max-width: 96vw;
+    max-height: 88dvh;
+    border-radius: 10px;
   }
-  
+
   .details-header-image {
-    height: 450px !important;
+    height: 200px;
   }
-  
+
   .details-project-title {
-    font-size: 20px !important;
+    font-size: 18px;
   }
-  
-  .responsive-dialog .q-card__section {
-    padding: 16px !important;
+
+  .details-body {
+    padding: 16px;
   }
-  
+
+  .details-org-name {
+    font-size: 16px;
+  }
+
   .impact-grid {
-    grid-template-columns: 1fr !important;
-    gap: 12px !important;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+  }
+
+  .impact-value {
+    font-size: 20px;
   }
 }
 
 @media (max-width: 480px) {
   .responsive-dialog {
-    min-width: 95vw;
+    min-width: 96vw;
     max-width: 98vw;
-    max-height: 80vh;
+    max-height: 88dvh;
     border-radius: 8px;
   }
-  
+
   .details-header-image {
-    height: 400px !important;
+    height: 160px;
   }
-  
+
   .details-project-title {
-    font-size: 18px !important;
+    font-size: 15px;
   }
-  
-  .responsive-dialog h3 {
-    font-size: 16px !important;
+
+  .details-org-name {
+    font-size: 14px;
   }
-  
+
   .section-label {
-    font-size: 14px !important;
+    font-size: 13px;
   }
-  
+
   .details-text {
-    font-size: 13px !important;
+    font-size: 13px;
   }
-  
-  .contact-item {
-    padding: 8px !important;
+
+  .impact-grid {
+    grid-template-columns: 1fr;
+    gap: 10px;
   }
-  
+
+  .impact-value {
+    font-size: 22px;
+  }
+
   .wallet-address {
-    font-size: 10px !important;
+    font-size: 11px;
+  }
+
+  .contact-item {
+    padding: 10px 8px;
+  }
+
+  .progress-raised {
+    font-size: 14px;
   }
 }
 
-.glass-dialog-card .q-card__section {
-  background: transparent;
-}
-
-
+/* shared util */
 .q-dialog__backdrop {
-  background: rgba(0, 0, 0, 0.3) !important;
   backdrop-filter: blur(4px);
   -webkit-backdrop-filter: blur(4px);
 }
@@ -1111,146 +1548,6 @@ const copyWalletAddress = (address) => {
   font-weight: 600;
   color: #000;
   margin-bottom: 8px;
-}
-
-.submit-btn {
-  border-radius: 8px;
-}
-
-
-.details-header-image {
-  position: relative;
-  width: 100%;
-  height: 600px;
-  overflow: hidden;
-}
-
-.details-header-image img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.details-overlay {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  background: linear-gradient(to top, rgba(0, 0, 0, 0.8) 0%, transparent 100%);
-  padding: 30px 24px 20px;
-}
-
-.details-project-title {
-  color: white;
-  font-size: 28px;
-  font-weight: 700;
-  margin: 0;
-  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
-}
-
-.details-section {
-  margin-bottom: 24px;
-}
-
-.section-label {
-  font-size: 16px;
-  font-weight: 700;
-  color: #333;
-  margin-bottom: 12px;
-  display: flex;
-  align-items: center;
-}
-
-.section-label::before {
-  content: '';
-  width: 4px;
-  height: 20px;
-  background: #0080ff;
-  margin-right: 10px;
-  border-radius: 2px;
-}
-
-.details-text {
-  font-size: 15px;
-  line-height: 1.7;
-  color: #555;
-  margin: 0;
-}
-
-.impact-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 16px;
-}
-
-.impact-card {
-  background: linear-gradient(135deg, #f7f8fa80 0%, #edf0f252 100%);
-  padding: 20px;
-  border: #1449e8 solid 1px;
-  border-radius: 8px;
-  box-shadow: 0 4px 12px rgb(13, 114, 229);
-  transition: all 0.3s ease;
-}
-
-.impact-card:hover {
-  transform: translateY(-5px);
-  text-align: center;
-  color: rgb(239, 233, 233);
-}
-
-.impact-value {
-  font-size: 32px;
-  font-weight: 700;
-  margin-bottom: 8px;
-}
-
-.impact-label {
-  font-size: 13px;
-  opacity: 0.95;
-}
-
-.contact-info {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-.contact-item {
-  display: flex;
-  align-items: start;
-  gap: 12px;
-  padding: 12px;
-  background: #f8f9fa;
-  border-radius: 8px;
-}
-
-.contact-label {
-  font-size: 12px;
-  color: #999;
-  margin-bottom: 4px;
-}
-
-.contact-value {
-  font-size: 14px;
-  color: #333;
-  font-weight: 500;
-}
-
-.wallet-container {
-  display: flex;
-  align-items: center;
-  background: #f8f9fa;
-  padding: 12px 16px;
-  border-radius: 8px;
-  border: 1px solid #e0e0e0;
-}
-
-.wallet-address {
-  flex: 1;
-  font-family: 'Courier New', monospace;
-  font-size: 14px;
-  color: #333;
-  word-break: break-all;
 }
 
 /* ── ProjectPage Dark Mode ───────────────────────────────────── */
@@ -1316,24 +1613,19 @@ const copyWalletAddress = (address) => {
   color: #8fa8cb;
 }
 
-/* Register dialog */
+/* ── Details Dialog — Dark Mode ──────────────────── */
 .body--dark .glass-dialog-card {
-  background: #1a2240 !important;
+  background: #131e35;
 }
 
-.body--dark .dialog-title {
-  color: #e0eaff;
+.body--dark .details-org-name {
+  color: #dce8ff;
 }
 
-.body--dark .dialog-subtitle {
-  color: #8fa8cb;
+.body--dark .details-category {
+  color: #5d9cf5;
 }
 
-.body--dark .field-label {
-  color: #c0d4f0;
-}
-
-/* Details dialog */
 .body--dark .section-label {
   color: #c0d4f0;
 }
@@ -1342,16 +1634,37 @@ const copyWalletAddress = (address) => {
   color: #8fa8cb;
 }
 
+.body--dark .details-text--italic {
+  color: #7a96b8;
+}
+
+.body--dark .progress-goal {
+  color: #6a88aa;
+}
+
+.body--dark .progress-beneficiaries {
+  color: #6a88aa;
+}
+
 .body--dark .impact-card {
-  background: linear-gradient(135deg, #1a2a4a 0%, #1a2240 100%);
+  background: #1a2a4a;
+  border-color: #2e3f6e;
+}
+
+.body--dark .impact-value {
+  color: #7ecbff;
+}
+
+.body--dark .impact-label {
+  color: #8fa8cb;
 }
 
 .body--dark .contact-item {
-  background: #111827;
+  background: #0f1a2e;
 }
 
 .body--dark .contact-label {
-  color: #6a88aa;
+  color: #5a7099;
 }
 
 .body--dark .contact-value {
@@ -1359,11 +1672,20 @@ const copyWalletAddress = (address) => {
 }
 
 .body--dark .wallet-container {
-  background: #111827;
+  background: #0f1a2e;
   border-color: #2e3f6e;
 }
 
 .body--dark .wallet-address {
   color: #7ecbff;
+}
+
+.body--dark .details-footer {
+  border-top-color: #1e2e4a;
+  color: #5a7099;
+}
+
+.body--dark .details-actions {
+  background: #131e35;
 }
 </style>

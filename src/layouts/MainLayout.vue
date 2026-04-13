@@ -665,29 +665,37 @@
           <div class="mobile-drawer-divider" />
           <div class="mobile-drawer-section-label">Network</div>
 
-          <button
-            class="mobile-drawer-item"
-            :class="{ 'mobile-drawer-item--active': networkStore.isChipnet }"
-            @click="networkStore.switchNetwork('chipnet')"
-          >
-            <div class="mobile-drawer-icon mobile-drawer-icon--blue">
-              <q-icon name="science" size="18px" />
-            </div>
-            <span>Chipnet (Testnet)</span>
-            <q-icon v-if="networkStore.isChipnet" name="check" color="primary" class="q-ml-auto" />
-          </button>
+          <div class="network-switcher">
+            <button
+              class="network-card"
+              :class="{ 'network-card--active network-card--blue': networkStore.isChipnet }"
+              @click="networkStore.switchNetwork('chipnet')"
+            >
+              <div class="network-card__icon network-card__icon--blue">
+                <q-icon name="science" size="20px" />
+              </div>
+              <div class="network-card__info">
+                <span class="network-card__name">Chipnet</span>
+                <span class="network-card__sub">Testnet</span>
+              </div>
+              <span v-if="networkStore.isChipnet" class="network-card__dot network-card__dot--blue" />
+            </button>
 
-          <button
-            class="mobile-drawer-item"
-            :class="{ 'mobile-drawer-item--active': networkStore.isMainnet }"
-            @click="confirmMainnetSwitch"
-          >
-            <div class="mobile-drawer-icon mobile-drawer-icon--amber">
-              <q-icon name="account_balance" size="18px" />
-            </div>
-            <span>Mainnet</span>
-            <q-icon v-if="networkStore.isMainnet" name="check" color="orange" class="q-ml-auto" />
-          </button>
+            <button
+              class="network-card"
+              :class="{ 'network-card--active network-card--amber': networkStore.isMainnet }"
+              @click="confirmMainnetSwitch"
+            >
+              <div class="network-card__icon network-card__icon--amber">
+                <q-icon name="account_balance" size="20px" />
+              </div>
+              <div class="network-card__info">
+                <span class="network-card__name">Mainnet</span>
+                <span class="network-card__sub">Live</span>
+              </div>
+              <span v-if="networkStore.isMainnet" class="network-card__dot network-card__dot--amber" />
+            </button>
+          </div>
         </div>
 
         <!-- Drawer Footer -->
@@ -3342,6 +3350,168 @@ onBeforeUnmount(() => {
 .mobile-drawer-item--active .mobile-drawer-chevron {
   transform: translateX(3px);
   color: #2e58d8;
+}
+
+/* ── Network Switcher ────────────────────────────────────────── */
+.network-switcher {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  padding: 4px 2px 6px;
+}
+
+.network-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 12px 8px 10px;
+  border-radius: 14px;
+  border: 1.5px solid transparent;
+  background: rgba(0, 0, 0, 0.04);
+  cursor: pointer;
+  position: relative;
+  transition:
+    background 0.18s,
+    border-color 0.18s,
+    transform 0.15s;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.network-card:hover {
+  background: rgba(46, 88, 216, 0.07);
+  transform: translateY(-2px);
+}
+
+.network-card:active {
+  transform: scale(0.96);
+}
+
+.network-card--active.network-card--blue {
+  background: linear-gradient(135deg, rgba(46, 88, 216, 0.12) 0%, rgba(46, 88, 216, 0.05) 100%);
+  border-color: rgba(46, 88, 216, 0.35);
+  box-shadow: 0 2px 10px rgba(46, 88, 216, 0.15);
+}
+
+.network-card--active.network-card--amber {
+  background: linear-gradient(135deg, rgba(255, 152, 0, 0.14) 0%, rgba(255, 152, 0, 0.05) 100%);
+  border-color: rgba(255, 152, 0, 0.4);
+  box-shadow: 0 2px 10px rgba(255, 152, 0, 0.18);
+}
+
+.network-card__icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.network-card:hover .network-card__icon,
+.network-card--active .network-card__icon {
+  transform: scale(1.1);
+}
+
+.network-card__icon--blue {
+  background: rgba(46, 88, 216, 0.12);
+  color: #2e58d8;
+}
+
+.network-card__icon--amber {
+  background: rgba(255, 152, 0, 0.14);
+  color: #e65100;
+}
+
+.network-card__info {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+}
+
+.network-card__name {
+  font-size: 13px;
+  font-weight: 700;
+  color: #333;
+  line-height: 1.2;
+}
+
+.network-card__sub {
+  font-size: 10px;
+  font-weight: 500;
+  color: #999;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.network-card__dot {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.network-card__dot--blue {
+  background: #2e58d8;
+  box-shadow: 0 0 0 2px rgba(46, 88, 216, 0.25);
+}
+
+.network-card__dot--amber {
+  background: #ff9800;
+  box-shadow: 0 0 0 2px rgba(255, 152, 0, 0.3);
+}
+
+/* Dark mode */
+.body--dark .network-card {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.body--dark .network-card:hover {
+  background: rgba(130, 177, 255, 0.08);
+}
+
+.body--dark .network-card--active.network-card--blue {
+  background: linear-gradient(135deg, rgba(130, 177, 255, 0.16) 0%, rgba(130, 177, 255, 0.06) 100%);
+  border-color: rgba(130, 177, 255, 0.4);
+  box-shadow: 0 2px 10px rgba(130, 177, 255, 0.15);
+}
+
+.body--dark .network-card--active.network-card--amber {
+  background: linear-gradient(135deg, rgba(255, 183, 77, 0.18) 0%, rgba(255, 183, 77, 0.06) 100%);
+  border-color: rgba(255, 183, 77, 0.45);
+  box-shadow: 0 2px 10px rgba(255, 183, 77, 0.2);
+}
+
+.body--dark .network-card__icon--blue {
+  background: rgba(130, 177, 255, 0.14);
+  color: #82b1ff;
+}
+
+.body--dark .network-card__icon--amber {
+  background: rgba(255, 183, 77, 0.14);
+  color: #ffb74d;
+}
+
+.body--dark .network-card__name {
+  color: rgba(200, 210, 240, 0.9);
+}
+
+.body--dark .network-card__sub {
+  color: rgba(200, 210, 240, 0.4);
+}
+
+.body--dark .network-card__dot--blue {
+  background: #82b1ff;
+  box-shadow: 0 0 0 2px rgba(130, 177, 255, 0.25);
+}
+
+.body--dark .network-card__dot--amber {
+  background: #ffb74d;
+  box-shadow: 0 0 0 2px rgba(255, 183, 77, 0.3);
 }
 
 /* ── 7. Footer with pill toggle + brand strip ────────────────── */
