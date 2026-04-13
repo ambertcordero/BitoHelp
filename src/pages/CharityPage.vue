@@ -217,8 +217,9 @@
                         <div class="donor-field-content">
                           <div class="donor-field-label">Transaction ID</div>
                           <div class="donor-field-value txid">
-                            {{ donation.txid }}
+                            {{ formatTxidForDisplay(donation.txid) }}
                             <q-btn 
+                              v-if="isValidTxid(donation.txid)"
                               flat 
                               dense 
                               round 
@@ -227,12 +228,13 @@
                               @click.stop="copyToClipboard(donation.txid)"
                             />
                             <q-btn 
+                              v-if="isValidTxid(donation.txid)"
                               flat 
                               dense 
                               round 
                               icon="open_in_new" 
                               size="xs"
-                              @click.stop="openExplorer(donation.explorer_url)"
+                              @click.stop="openExplorer(donation)"
                             />
                           </div>
                         </div>
@@ -318,6 +320,7 @@ import { api } from 'boot/axios'
 
 const $q = useQuasar()
 const donationStore = useDonationStore()
+const TXID_PATTERN = /^[A-Fa-f0-9]{64}$/
 
 // Charity/Nonprofit configuration
 const CHARITY_WALLET = 'bitcoincash:qp3wjpa3tjlj042z2wv7hahsldgwhwy0rq9sywjpyy'
@@ -475,10 +478,34 @@ function copyToClipboard(text) {
   })
 }
 
-function openExplorer(url) {
-  if (url) {
-    window.open(url, '_blank')
+function normalizeTxid(txid) {
+  const value = (txid || '').trim()
+  return TXID_PATTERN.test(value) ? value.toLowerCase() : ''
+}
+
+function isValidTxid(txid) {
+  return normalizeTxid(txid).length > 0
+}
+
+function formatTxidForDisplay(txid) {
+  const normalized = normalizeTxid(txid)
+  return normalized || 'Invalid TXID'
+}
+
+function openExplorer(donation) {
+  const txid = normalizeTxid(donation?.txid)
+  if (!txid) {
+    $q.notify({
+      type: 'warning',
+      message: 'Invalid transaction ID format',
+      position: 'top',
+      timeout: 1500
+    })
+    return
   }
+
+  const url = donation?.explorer_url || `https://chipnet.watchtower.cash/tx/${txid}`
+  window.open(url, '_blank')
 }
 
 async function refreshDonations() {
