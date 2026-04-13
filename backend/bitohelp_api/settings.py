@@ -26,7 +26,7 @@ SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', 'django-insecure-l!$bk3rg!%xwzh
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.environ.get('DJANGO_DEBUG', 'True').lower() in ('true', '1', 'yes')
 
-ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
+ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', '*').split(',')
 
 
 # Application definition
@@ -168,6 +168,10 @@ CORS_ALLOWED_ORIGINS = [
     "http://localhost:9002",
     "http://localhost:8080",
 ] + ([o.strip() for o in _extra_cors.split(',') if o.strip()] if _extra_cors else [])
+
+# In development, also allow any origin so the app works from other devices on the LAN.
+if DEBUG:
+    CORS_ALLOW_ALL_ORIGINS = True
 
 CORS_ALLOW_CREDENTIALS = False
 
