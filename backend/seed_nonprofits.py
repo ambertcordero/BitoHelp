@@ -20,7 +20,7 @@ nonprofits_data = [
     {
         'name': 'Caritas Manila',
         'description': 'Catholic charitable organization serving the poorest communities in Metro Manila',
-        'bch_address': 'bchtest:qp4aadjrpu73d2wxwkxkcrt6gqxgu6a7usxfm96fst',
+        'bch_address': 'bchtest:qzprs3rcaqqad6tjtewe28v93y4z0mlmpchrfxdhrk',
         'website': 'https://caritasmanila.org.ph',
         'email': 'info@caritasmanila.org.ph',
         'category': 'poverty',
