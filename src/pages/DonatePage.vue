@@ -309,11 +309,11 @@ const notify = (payload) => {
 }
 
 const DONATIONS_STORAGE_KEY = 'bitohelp.donations'
-const WALLET_SNAPSHOT_STORAGE_KEY = 'bitohelp.wallet.snapshot'
+const WALLET_SNAPSHOT_STORAGE_KEY = 'cryptocare.wallet.snapshot'
 const WALLET_BALANCE_ADJUST_EVENT = 'bitohelp:wallet-balance-adjust'
 const WALLET_BALANCE_REFRESH_EVENT = 'bitohelp:wallet-balance-refresh'
 const DONATION_SENT_EVENT = 'bitohelp:donation-sent'
-const WALLET_CLIENT_GLOBAL_KEY = '__bitohelpWalletClient__'
+const WALLET_CLIENT_GLOBAL_KEY = '__cryptocareWalletClient__'
 const WALLET_REQUEST_TIMEOUT_MS = 30000
 const PAYTACA_BCH_CHIPNET_WC_LIMITATION_MESSAGE =
   'Paytaca approved the request but did not return a signed BCH chipnet transaction over WalletConnect. No funds were sent. This appears to be a wallet-side issue.'

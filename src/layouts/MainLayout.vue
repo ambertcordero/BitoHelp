@@ -1947,6 +1947,9 @@ const handleConnect = async () => {
   }
 }
 
+// Expose for external callers (e.g. Krypto AI assistant)
+window.__cryptocareConnectWallet__ = handleConnect
+
 // ── Notification system ──
 const CHARITY_WALLET = 'bitcoincash:qp3wjpa3tjlj042z2wv7hahsldgwhwy0rq9sywjpyy'
 const notifications = ref([])

@@ -19,7 +19,7 @@
         </div>
 
         <!-- Messages -->
-        <div ref="messagesContainer" class="krypto-messages">
+        <div ref="messagesContainer" class="krypto-messages" @click="onMessagesClick">
           <div
             v-for="(msg, i) in messages"
             :key="i"
@@ -32,6 +32,21 @@
             <div class="krypto-msg-body">
               <!-- eslint-disable-next-line vue/no-v-html -->
               <div class="krypto-bubble" v-html="formatMessage(msg.content)"></div>
+              <!-- Action buttons (e.g. Connect Wallet, Navigate) -->
+              <div v-if="msg.actions?.length" class="krypto-actions">
+                <q-btn
+                  v-for="(action, ai) in msg.actions"
+                  :key="ai"
+                  dense
+                  no-caps
+                  rounded
+                  :color="action.color || 'green'"
+                  :icon="action.icon"
+                  :label="action.label"
+                  class="krypto-action-btn"
+                  @click="handleAction(action)"
+                />
+              </div>
               <div v-for="(chart, ci) in msg.charts || []" :key="ci" class="krypto-chart-wrap">
                 <canvas :ref="(el) => mountChart(el, `${i}-${ci}`, chart)"></canvas>
               </div>
@@ -92,11 +107,16 @@
 <script setup>
 import { ref, reactive, computed, nextTick, watch, onMounted, onBeforeUnmount } from 'vue'
 import { useQuasar } from 'quasar'
+import { useRouter } from 'vue-router'
 import { api } from 'src/boot/axios'
+import { useDonationStore } from 'src/stores/donation-store'
+import { fetchDonorDonations } from 'src/services/donorAnalytics'
 import KryptoAvatar from 'src/assets/Krypto.png'
 import Chart from 'chart.js/auto'
 
 const $q = useQuasar()
+const router = useRouter()
+const donationStore = useDonationStore()
 const isDark = computed(() => $q.dark.isActive)
 
 const isOpen = ref(false)
@@ -247,6 +267,46 @@ function onBubbleClick(e) {
 const WELCOME_MESSAGE =
   "Hey there! 👋 I'm Krypto, your CrypToCare AI assistant. Ask me anything about donating BCH, our nonprofits, or how the platform works!"
 
+const isWalletConnected = computed(() => Boolean(donationStore.connectedWalletAddress))
+let dataDisclosureShown = false
+
+// ── Intent detection patterns ──
+const DONATION_KEYWORDS = /\b(donat|send\s*(bch|money|funds|crypto)|pay|vault|recurring|contribut|tip|give|transfer)\b/i
+const ANALYTICS_KEYWORDS = /\b(how\s*much|history|donated|total|largest|biggest|analytics|my\s*donation|stats|statistic|spending|summary)\b/i
+const CHART_KEYWORDS = /\b(graph|chart|plot|visuali[sz]|trend|pie|bar\s*chart|line\s*chart|show\s*me.*data)\b/i
+const NAV_KEYWORDS = /\b(where|navigate|go\s*to|take\s*me|open|find|page|link|how\s*do\s*i\s*(get|go|find|visit))\b/i
+
+// ── dApp link map ──
+const LINK_MAP = {
+  home: { path: '/', label: 'Home', icon: 'home' },
+  donate: { path: '/donate', label: 'Donate Page', icon: 'volunteer_activism' },
+  donation: { path: '/donate', label: 'Donate Page', icon: 'volunteer_activism' },
+  charities: { path: '/charities', label: 'Charities', icon: 'groups' },
+  charity: { path: '/charity', label: 'Charity Page', icon: 'favorite' },
+  dashboard: { path: '/dashboard', label: 'Dashboard', icon: 'dashboard' },
+  donor: { path: '/donor', label: 'Donor Page', icon: 'person' },
+  mission: { path: '/mission', label: 'Our Mission', icon: 'flag' },
+  about: { path: '/about', label: 'About Us', icon: 'info' },
+  contact: { path: '/contact', label: 'Contact Us', icon: 'email' },
+  wallet: { path: '/wallet-users', label: 'Wallet Users', icon: 'account_balance_wallet' },
+  connect: { path: null, label: 'Connect Wallet', icon: 'link', action: 'connect-wallet' },
+}
+
+function detectNavTarget(text) {
+  const lower = text.toLowerCase()
+  if (/connect.*wallet|wallet.*connect/i.test(lower)) return 'connect'
+  if (/donat/i.test(lower)) return 'donate'
+  if (/charit/i.test(lower)) return 'charities'
+  if (/dashboard/i.test(lower)) return 'dashboard'
+  if (/donor/i.test(lower)) return 'donor'
+  if (/mission/i.test(lower)) return 'mission'
+  if (/about/i.test(lower)) return 'about'
+  if (/contact/i.test(lower)) return 'contact'
+  if (/wallet/i.test(lower)) return 'wallet'
+  if (/home|main\s*page|landing/i.test(lower)) return 'home'
+  return null
+}
+
 let welcomed = false
 watch(isOpen, (val) => {
   if (val && !welcomed) {
@@ -271,7 +331,12 @@ function formatMessage(text) {
   // Convert markdown-style links [text](url) to <a>
   s = s.replace(/\[([^\]]+)\]\(([^)]+)\)/g, (_m, label, href) => {
     const safeHref = href.replace(/"/g, '&quot;')
-    return `<a href="${safeHref}" class="krypto-link">${label}</a>`
+    // Internal hash routes → use router-friendly href
+    if (safeHref.startsWith('/') || safeHref.startsWith('#/') || safeHref.startsWith('/#/')) {
+      const routePath = safeHref.replace(/^[/#]+/, '/')
+      return `<a href="/#${routePath}" class="krypto-link krypto-internal-link" data-route="${routePath.replace(/"/g, '&quot;')}">${label}</a>`
+    }
+    return `<a href="${safeHref}" class="krypto-link" target="_blank" rel="noopener">${label}</a>`
   })
 
   // Auto-link bare dApp hash routes: /#/something
@@ -299,6 +364,235 @@ function formatMessage(text) {
   return s
 }
 
+// ── Handle clicks on internal links within chat bubbles ──
+function onMessagesClick(e) {
+  const link = e.target.closest('.krypto-internal-link')
+  if (!link) return
+  e.preventDefault()
+  const route = link.dataset.route
+  if (route) router.push(route)
+}
+
+// ── Action button handler ──
+function handleAction(action) {
+  if (action.type === 'connect-wallet') {
+    if (typeof window.__cryptocareConnectWallet__ === 'function') {
+      window.__cryptocareConnectWallet__()
+    } else {
+      pushBotMessage('Wallet connect is not available right now. Please use the wallet toggle button in the navigation bar.')
+    }
+  } else if (action.type === 'navigate') {
+    router.push(action.route)
+  }
+}
+
+function pushBotMessage(content, extras = {}) {
+  messages.value.push({ role: 'assistant', content, ...extras })
+  nextTick(scrollToBottom)
+}
+
+// ── Analytics helpers ──
+async function handleAnalyticsIntent(text) {
+  if (!isWalletConnected.value) {
+    pushBotMessage(
+      "You'll need to connect your wallet first so I can look up your donation activity.",
+      {
+        actions: [
+          { type: 'connect-wallet', label: 'Connect Wallet', icon: 'link', color: 'green' },
+        ],
+      },
+    )
+    return true
+  }
+
+  if (!dataDisclosureShown) {
+    dataDisclosureShown = true
+    pushBotMessage(
+      "🔍 I'm going to look up your donation activity using your connected wallet address.",
+    )
+    await nextTick(scrollToBottom)
+  }
+
+  try {
+    const addr = donationStore.connectedWalletAddress
+    const donations = await fetchDonorDonations({ walletAddress: addr })
+
+    if (!donations.length) {
+      pushBotMessage("I checked your wallet and you don't have any donations recorded yet. Ready to make your first one?", {
+        actions: [
+          { type: 'navigate', route: '/donate', label: 'Go to Donate', icon: 'volunteer_activism', color: 'green' },
+        ],
+      })
+      return true
+    }
+
+    const totalAmount = donations.reduce((sum, d) => sum + (parseFloat(d.amount) || 0), 0)
+    const uniqueCauses = [...new Set(donations.map((d) => d.cause).filter(Boolean))]
+    const latestDonation = donations[0]
+
+    // Check if they want a chart
+    if (CHART_KEYWORDS.test(text)) {
+      return false // let chart handler take over
+    }
+
+    let reply = `Here's a summary of your donation activity:\n\n`
+    reply += `**Total Donated:** ${totalAmount.toFixed(8)} BCH\n`
+    reply += `**Number of Donations:** ${donations.length}\n`
+    reply += `**Causes Supported:** ${uniqueCauses.length > 0 ? uniqueCauses.join(', ') : 'N/A'}\n`
+
+    if (latestDonation) {
+      reply += `**Most Recent:** ${parseFloat(latestDonation.amount).toFixed(8)} BCH`
+      if (latestDonation.cause) reply += ` for ${latestDonation.cause}`
+      const date = latestDonation.created_at || latestDonation.timestamp
+      if (date) reply += ` on ${new Date(date).toLocaleDateString()}`
+    }
+
+    // Largest donation
+    if (/largest|biggest|most/i.test(text)) {
+      const largest = donations.reduce((max, d) =>
+        (parseFloat(d.amount) || 0) > (parseFloat(max.amount) || 0) ? d : max,
+        donations[0]
+      )
+      reply += `\n\n**Largest Donation:** ${parseFloat(largest.amount).toFixed(8)} BCH`
+      if (largest.cause) reply += ` to ${largest.cause}`
+    }
+
+    pushBotMessage(reply)
+    return true
+  } catch (err) {
+    console.error('Krypto analytics error:', err)
+    pushBotMessage("Sorry, I had trouble fetching your donation data. Please try again in a moment. 🔧")
+    return true
+  }
+}
+
+// ── Chart generation from donation data ──
+async function handleChartIntent(text) {
+  if (!isWalletConnected.value) {
+    pushBotMessage(
+      "I need your wallet connected to generate charts from your donation data.",
+      {
+        actions: [
+          { type: 'connect-wallet', label: 'Connect Wallet', icon: 'link', color: 'green' },
+        ],
+      },
+    )
+    return true
+  }
+
+  if (!dataDisclosureShown) {
+    dataDisclosureShown = true
+    pushBotMessage("🔍 I'm going to look up your donation activity using your connected wallet address.")
+    await nextTick(scrollToBottom)
+  }
+
+  try {
+    const addr = donationStore.connectedWalletAddress
+    const donations = await fetchDonorDonations({ walletAddress: addr })
+
+    if (!donations.length) {
+      pushBotMessage("No donation data to chart yet! Make your first donation and come back. 📊", {
+        actions: [
+          { type: 'navigate', route: '/donate', label: 'Go to Donate', icon: 'volunteer_activism', color: 'green' },
+        ],
+      })
+      return true
+    }
+
+    const wantsCause = /cause|charit|organization|categor|pie/i.test(text)
+    const charts = []
+
+    if (wantsCause) {
+      // Donations by cause — pie chart
+      const byCause = {}
+      for (const d of donations) {
+        const cause = d.cause || 'Unknown'
+        byCause[cause] = (byCause[cause] || 0) + (parseFloat(d.amount) || 0)
+      }
+      charts.push({
+        type: 'pie',
+        title: 'Donations by Cause',
+        labels: Object.keys(byCause),
+        datasets: [{ label: 'BCH', data: Object.values(byCause) }],
+      })
+    } else {
+      // Donations over time — line chart
+      const byDate = {}
+      for (const d of donations) {
+        const dateStr = (d.created_at || d.timestamp || '').slice(0, 10)
+        if (!dateStr) continue
+        byDate[dateStr] = (byDate[dateStr] || 0) + (parseFloat(d.amount) || 0)
+      }
+      const sortedDates = Object.keys(byDate).sort()
+      charts.push({
+        type: 'line',
+        title: 'Donations Over Time',
+        labels: sortedDates,
+        datasets: [
+          {
+            label: 'BCH Donated',
+            data: sortedDates.map((d) => byDate[d]),
+            fill: false,
+            tension: 0.3,
+          },
+        ],
+      })
+    }
+
+    pushBotMessage(
+      wantsCause
+        ? "Here's a breakdown of your donations by cause:"
+        : "Here's your donation activity over time:",
+      { charts },
+    )
+    return true
+  } catch (err) {
+    console.error('Krypto chart error:', err)
+    pushBotMessage("Sorry, I couldn't generate the chart right now. Please try again. 🔧")
+    return true
+  }
+}
+
+// ── Navigation intent handler ──
+function handleNavIntent(text) {
+  const target = detectNavTarget(text)
+  if (!target) return false
+
+  const link = LINK_MAP[target]
+  if (!link) return false
+
+  if (link.action === 'connect-wallet') {
+    pushBotMessage("To connect your wallet, click the button below or use the wallet toggle in the navigation bar.", {
+      actions: [
+        { type: 'connect-wallet', label: 'Connect Wallet', icon: 'link', color: 'green' },
+      ],
+    })
+    return true
+  }
+
+  pushBotMessage(`Sure! Here's the link to **${link.label}**:`, {
+    actions: [
+      { type: 'navigate', route: link.path, label: `Open ${link.label}`, icon: link.icon, color: 'green' },
+    ],
+  })
+  return true
+}
+
+// ── Donation intent gate ──
+function handleDonationGate() {
+  if (isWalletConnected.value) return false
+
+  pushBotMessage(
+    "You need to connect your wallet before you can donate. Click below to get started!",
+    {
+      actions: [
+        { type: 'connect-wallet', label: 'Connect Wallet', icon: 'link', color: 'green' },
+      ],
+    },
+  )
+  return true
+}
+
 function onKeyDown(e) {
   if (e.key === 'Enter' && !e.shiftKey) {
     e.preventDefault()
@@ -315,6 +609,46 @@ async function sendMessage() {
   isTyping.value = true
   await nextTick(scrollToBottom)
 
+  // ── Client-side intent handling (before API call) ──
+
+  // 1. Donation intent — wallet gate
+  if (DONATION_KEYWORDS.test(text) && handleDonationGate()) {
+    isTyping.value = false
+    await nextTick(scrollToBottom)
+    return
+  }
+
+  // 2. Chart/graph request
+  if (CHART_KEYWORDS.test(text)) {
+    const handled = await handleChartIntent(text)
+    if (handled) {
+      isTyping.value = false
+      await nextTick(scrollToBottom)
+      return
+    }
+  }
+
+  // 3. Analytics / donation history questions
+  if (ANALYTICS_KEYWORDS.test(text)) {
+    const handled = await handleAnalyticsIntent(text)
+    if (handled) {
+      isTyping.value = false
+      await nextTick(scrollToBottom)
+      return
+    }
+  }
+
+  // 4. Navigation intent
+  if (NAV_KEYWORDS.test(text)) {
+    const handled = handleNavIntent(text)
+    if (handled) {
+      isTyping.value = false
+      await nextTick(scrollToBottom)
+      return
+    }
+  }
+
+  // ── Fall through to backend AI ──
   const history = messages.value.slice(0, -1).map((m) => ({
     role: m.role,
     content: m.content,
@@ -496,6 +830,18 @@ async function sendMessage() {
 }
 .krypto-light .krypto-chart-wrap {
   background: rgba(0, 0, 0, 0.04);
+}
+
+/* Action buttons under messages */
+.krypto-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 6px;
+}
+.krypto-action-btn {
+  font-size: 12px;
+  padding: 4px 12px;
 }
 
 .krypto-bubble {
