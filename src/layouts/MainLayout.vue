@@ -246,7 +246,7 @@
                   :key="notification.id"
                   clickable
                   v-ripple
-                  @click="markAsRead(notification.id); notifSheetOpen = false"
+                  @click="() => { markAsRead(notification.id); notifSheetOpen = false }"
                   :class="{ 'bg-blue-1': !notification.read }"
                 >
                   <q-item-section avatar>

@@ -5,6 +5,19 @@
 # -------------------------------------------------------
 
 services:
+  # ---- PostgreSQL database ----
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    ports:
+      - '5432:5432' # Host 5432 → Container 5432
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    environment:
+      POSTGRES_DB: cryptocare
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+
   # ---- Django REST API ----
   backend:
     build:
@@ -12,8 +25,10 @@ services:
     ports:
       - '8001:8000' # Host 8001 → Container 8000
     volumes:
+      # Bind mount: sync local backend/ code into container for live reload.
+      # Django's runserver auto-restarts on .py file changes.
+      - ./backend:/app
       # Persist the SQLite database between container restarts.
-      # The file must already exist on the host (it ships in the repo).
       - ./backend/db.sqlite3:/app/db.sqlite3
     env_file:
       # Passes OPENAI_API_KEY (and any future secrets) into the container.
@@ -23,6 +38,10 @@ services:
       - DJANGO_DEBUG=True
       - ALLOWED_HOSTS=*
       - CORS_ALLOWED_ORIGINS=http://localhost:9000
+      - DATABASE_URL=postgres://postgres:postgres@db:5432/cryptocare
+    depends_on:
+      db:
+        condition: service_started
 
   # ---- Quasar / Vite frontend ----
   frontend:
@@ -31,6 +50,13 @@ services:
       dockerfile: Dockerfile
     ports:
       - '9000:9000' # Host 9000 → Container 9000
+    volumes:
+      # Bind mount: sync entire project into container for Vite HMR.
+      # File saves in VS Code trigger instant browser refresh.
+      - .:/app
+      # Anonymous volume: preserve container's node_modules (installed during
+      # docker build) so they don't get overwritten by the host's.
+      - /app/node_modules
     environment:
       # VITE_API_URL is a *client-side* env var — the browser, not the
       # container, makes the request, so it must point to the host-published
@@ -40,3 +66,6 @@ services:
       - DOCKER=1
     depends_on:
       - backend
+
+volumes:
+  pgdata:
