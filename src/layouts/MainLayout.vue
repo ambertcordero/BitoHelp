@@ -246,7 +246,12 @@
                   :key="notification.id"
                   clickable
                   v-ripple
-                  @click="() => { markAsRead(notification.id); notifSheetOpen = false }"
+                  @click="
+                    () => {
+                      markAsRead(notification.id)
+                      notifSheetOpen = false
+                    }
+                  "
                   :class="{ 'bg-blue-1': !notification.read }"
                 >
                   <q-item-section avatar>
@@ -678,7 +683,10 @@
                 <span class="network-card__name">Chipnet</span>
                 <span class="network-card__sub">Testnet</span>
               </div>
-              <span v-if="networkStore.isChipnet" class="network-card__dot network-card__dot--blue" />
+              <span
+                v-if="networkStore.isChipnet"
+                class="network-card__dot network-card__dot--blue"
+              />
             </button>
 
             <button
@@ -693,7 +701,10 @@
                 <span class="network-card__name">Mainnet</span>
                 <span class="network-card__sub">Live</span>
               </div>
-              <span v-if="networkStore.isMainnet" class="network-card__dot network-card__dot--amber" />
+              <span
+                v-if="networkStore.isMainnet"
+                class="network-card__dot network-card__dot--amber"
+              />
             </button>
           </div>
         </div>

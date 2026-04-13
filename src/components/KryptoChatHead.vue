@@ -271,10 +271,14 @@ const isWalletConnected = computed(() => Boolean(donationStore.connectedWalletAd
 let dataDisclosureShown = false
 
 // ── Intent detection patterns ──
-const DONATION_KEYWORDS = /\b(donat|send\s*(bch|money|funds|crypto)|pay|vault|recurring|contribut|tip|give|transfer)\b/i
-const ANALYTICS_KEYWORDS = /\b(how\s*much|history|donated|total|largest|biggest|analytics|my\s*donation|stats|statistic|spending|summary)\b/i
-const CHART_KEYWORDS = /\b(graph|chart|plot|visuali[sz]|trend|pie|bar\s*chart|line\s*chart|show\s*me.*data)\b/i
-const NAV_KEYWORDS = /\b(where|navigate|go\s*to|take\s*me|open|find|page|link|how\s*do\s*i\s*(get|go|find|visit))\b/i
+const DONATION_KEYWORDS =
+  /\b(donat|send\s*(bch|money|funds|crypto)|pay|vault|recurring|contribut|tip|give|transfer)\b/i
+const ANALYTICS_KEYWORDS =
+  /\b(how\s*much|history|donated|total|largest|biggest|analytics|my\s*donation|stats|statistic|spending|summary)\b/i
+const CHART_KEYWORDS =
+  /\b(graph|chart|plot|visuali[sz]|trend|pie|bar\s*chart|line\s*chart|show\s*me.*data)\b/i
+const NAV_KEYWORDS =
+  /\b(where|navigate|go\s*to|take\s*me|open|find|page|link|how\s*do\s*i\s*(get|go|find|visit))\b/i
 
 // ── dApp link map ──
 const LINK_MAP = {
@@ -379,7 +383,9 @@ function handleAction(action) {
     if (typeof window.__cryptocareConnectWallet__ === 'function') {
       window.__cryptocareConnectWallet__()
     } else {
-      pushBotMessage('Wallet connect is not available right now. Please use the wallet toggle button in the navigation bar.')
+      pushBotMessage(
+        'Wallet connect is not available right now. Please use the wallet toggle button in the navigation bar.',
+      )
     }
   } else if (action.type === 'navigate') {
     router.push(action.route)
@@ -418,11 +424,20 @@ async function handleAnalyticsIntent(text) {
     const donations = await fetchDonorDonations({ walletAddress: addr })
 
     if (!donations.length) {
-      pushBotMessage("I checked your wallet and you don't have any donations recorded yet. Ready to make your first one?", {
-        actions: [
-          { type: 'navigate', route: '/donate', label: 'Go to Donate', icon: 'volunteer_activism', color: 'green' },
-        ],
-      })
+      pushBotMessage(
+        "I checked your wallet and you don't have any donations recorded yet. Ready to make your first one?",
+        {
+          actions: [
+            {
+              type: 'navigate',
+              route: '/donate',
+              label: 'Go to Donate',
+              icon: 'volunteer_activism',
+              color: 'green',
+            },
+          ],
+        },
+      )
       return true
     }
 
@@ -449,9 +464,9 @@ async function handleAnalyticsIntent(text) {
 
     // Largest donation
     if (/largest|biggest|most/i.test(text)) {
-      const largest = donations.reduce((max, d) =>
-        (parseFloat(d.amount) || 0) > (parseFloat(max.amount) || 0) ? d : max,
-        donations[0]
+      const largest = donations.reduce(
+        (max, d) => ((parseFloat(d.amount) || 0) > (parseFloat(max.amount) || 0) ? d : max),
+        donations[0],
       )
       reply += `\n\n**Largest Donation:** ${parseFloat(largest.amount).toFixed(8)} BCH`
       if (largest.cause) reply += ` to ${largest.cause}`
@@ -461,7 +476,9 @@ async function handleAnalyticsIntent(text) {
     return true
   } catch (err) {
     console.error('Krypto analytics error:', err)
-    pushBotMessage("Sorry, I had trouble fetching your donation data. Please try again in a moment. 🔧")
+    pushBotMessage(
+      'Sorry, I had trouble fetching your donation data. Please try again in a moment. 🔧',
+    )
     return true
   }
 }
@@ -469,20 +486,17 @@ async function handleAnalyticsIntent(text) {
 // ── Chart generation from donation data ──
 async function handleChartIntent(text) {
   if (!isWalletConnected.value) {
-    pushBotMessage(
-      "I need your wallet connected to generate charts from your donation data.",
-      {
-        actions: [
-          { type: 'connect-wallet', label: 'Connect Wallet', icon: 'link', color: 'green' },
-        ],
-      },
-    )
+    pushBotMessage('I need your wallet connected to generate charts from your donation data.', {
+      actions: [{ type: 'connect-wallet', label: 'Connect Wallet', icon: 'link', color: 'green' }],
+    })
     return true
   }
 
   if (!dataDisclosureShown) {
     dataDisclosureShown = true
-    pushBotMessage("🔍 I'm going to look up your donation activity using your connected wallet address.")
+    pushBotMessage(
+      "🔍 I'm going to look up your donation activity using your connected wallet address.",
+    )
     await nextTick(scrollToBottom)
   }
 
@@ -491,9 +505,15 @@ async function handleChartIntent(text) {
     const donations = await fetchDonorDonations({ walletAddress: addr })
 
     if (!donations.length) {
-      pushBotMessage("No donation data to chart yet! Make your first donation and come back. 📊", {
+      pushBotMessage('No donation data to chart yet! Make your first donation and come back. 📊', {
         actions: [
-          { type: 'navigate', route: '/donate', label: 'Go to Donate', icon: 'volunteer_activism', color: 'green' },
+          {
+            type: 'navigate',
+            route: '/donate',
+            label: 'Go to Donate',
+            icon: 'volunteer_activism',
+            color: 'green',
+          },
         ],
       })
       return true
@@ -562,17 +582,26 @@ function handleNavIntent(text) {
   if (!link) return false
 
   if (link.action === 'connect-wallet') {
-    pushBotMessage("To connect your wallet, click the button below or use the wallet toggle in the navigation bar.", {
-      actions: [
-        { type: 'connect-wallet', label: 'Connect Wallet', icon: 'link', color: 'green' },
-      ],
-    })
+    pushBotMessage(
+      'To connect your wallet, click the button below or use the wallet toggle in the navigation bar.',
+      {
+        actions: [
+          { type: 'connect-wallet', label: 'Connect Wallet', icon: 'link', color: 'green' },
+        ],
+      },
+    )
     return true
   }
 
   pushBotMessage(`Sure! Here's the link to **${link.label}**:`, {
     actions: [
-      { type: 'navigate', route: link.path, label: `Open ${link.label}`, icon: link.icon, color: 'green' },
+      {
+        type: 'navigate',
+        route: link.path,
+        label: `Open ${link.label}`,
+        icon: link.icon,
+        color: 'green',
+      },
     ],
   })
   return true
@@ -583,11 +612,9 @@ function handleDonationGate() {
   if (isWalletConnected.value) return false
 
   pushBotMessage(
-    "You need to connect your wallet before you can donate. Click below to get started!",
+    'You need to connect your wallet before you can donate. Click below to get started!',
     {
-      actions: [
-        { type: 'connect-wallet', label: 'Connect Wallet', icon: 'link', color: 'green' },
-      ],
+      actions: [{ type: 'connect-wallet', label: 'Connect Wallet', icon: 'link', color: 'green' }],
     },
   )
   return true
