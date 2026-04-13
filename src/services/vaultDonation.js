@@ -14,16 +14,33 @@ import artifact from '../contracts/VaultDonation.json'
 import { getAddressHash160 } from './bchChipnet.js'
 import { getAddressUtxos } from './electrumClient.js'
 import { api } from '../boot/axios.js'
+import { useNetworkStore } from '../stores/network-store.js'
 
 const VAULT_STORAGE_KEY = 'cryptocare.vaults'
 
 let providerInstance = null
+let providerNetwork = null
 
 const getProvider = () => {
-  if (!providerInstance) {
-    providerInstance = new ElectrumNetworkProvider('chipnet')
+  let network
+  try {
+    const networkStore = useNetworkStore()
+    network = networkStore.electrumNetwork
+  } catch {
+    network = 'chipnet'
+  }
+
+  if (!providerInstance || providerNetwork !== network) {
+    providerInstance = new ElectrumNetworkProvider(network)
+    providerNetwork = network
   }
   return providerInstance
+}
+
+// Allow the network store to reset the singleton when the network changes
+window.__cryptocare_resetElectrumProvider = () => {
+  providerInstance = null
+  providerNetwork = null
 }
 
 const bytesToHex = (bytes) =>
@@ -32,14 +49,14 @@ const bytesToHex = (bytes) =>
     .join('')
 
 /**
- * Instantiate a VaultDonation contract and return its chipnet P2SH20 address.
+ * Instantiate a VaultDonation contract and return its P2SH20 address.
  *
  * @param {Object} params
- * @param {string} params.recipientAddress  — chipnet address of the charity
- * @param {string} params.funderAddress     — chipnet address of the donor
+ * @param {string} params.recipientAddress  — address of the charity
+ * @param {string} params.funderAddress     — address of the donor
  * @param {bigint} params.withdrawalAmount  — satoshis per withdrawal cycle
  * @param {number} params.intervalBlocks    — blocks between withdrawals (1 ≈ 10 min)
- * @returns {{ address: string, contract: Contract, params: Object }}
+ * @returns {{ address: string, contract: Contract, params: Object, network: string }}
  */
 export const createVaultContract = ({
   recipientAddress,
@@ -73,6 +90,7 @@ export const createVaultContract = ({
   return {
     address: contract.address,
     contract,
+    network: providerNetwork || 'chipnet',
     params: {
       recipientHash: bytesToHex(recipientHash),
       funderHash: bytesToHex(funderHash),
@@ -86,11 +104,35 @@ export const createVaultContract = ({
  * Save vault details to localStorage so withdrawals can be triggered later.
  */
 export const saveVaultRecord = (record) => {
-  const existing = getStoredVaults()
+  const existing = getAllStoredVaults()
   localStorage.setItem(VAULT_STORAGE_KEY, JSON.stringify([record, ...existing]))
 }
 
 export const getStoredVaults = () => {
+  try {
+    const raw = localStorage.getItem(VAULT_STORAGE_KEY)
+    if (!raw) return []
+    const parsed = JSON.parse(raw)
+    if (!Array.isArray(parsed)) return []
+
+    // Filter to the active network; legacy vaults without a network field are treated as chipnet
+    let activeNetwork
+    try {
+      const networkStore = useNetworkStore()
+      activeNetwork = networkStore.activeNetwork
+    } catch {
+      activeNetwork = 'chipnet'
+    }
+    return parsed.filter((v) => (v.network || 'chipnet') === activeNetwork)
+  } catch {
+    return []
+  }
+}
+
+/**
+ * Get ALL stored vaults regardless of network (used internally for saving).
+ */
+const getAllStoredVaults = () => {
   try {
     const raw = localStorage.getItem(VAULT_STORAGE_KEY)
     if (!raw) return []
@@ -102,7 +144,7 @@ export const getStoredVaults = () => {
 }
 
 const updateVaultRecord = (donationId, partial) => {
-  const vaults = getStoredVaults()
+  const vaults = getAllStoredVaults()
   const updated = vaults.map((v) =>
     v.donationId === donationId ? { ...v, ...partial, updatedAt: new Date().toISOString() } : v,
   )

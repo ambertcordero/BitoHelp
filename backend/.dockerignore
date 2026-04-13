@@ -1,6 +1,10 @@
+# Ignore items that should not be in the backend build context
+
 venv
-__pycache__
-*.pyc
-*.pyo
+**pycache**
+_.pyc
+_.pyo
 .git
-*.log
+\*.log
+db.sqlite3
+.env

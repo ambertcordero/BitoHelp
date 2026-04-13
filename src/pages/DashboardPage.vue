@@ -3,13 +3,14 @@
     <div class="row" style="min-height: 100vh">
       <div class="col-12 col-md-4 col-lg-3 sidebar-container">
         <div class="accounts-sidebar">
-
           <!-- ── Sidebar Header ─────────────────────────────────── -->
           <div class="sidebar-header">
             <div class="row items-center justify-between no-wrap">
               <div>
                 <div class="sidebar-title">Charity Dashboard</div>
-                <div class="sidebar-subtitle">{{ accounts.length }} active account{{ accounts.length !== 1 ? 's' : '' }}</div>
+                <div class="sidebar-subtitle">
+                  {{ accounts.length }} active account{{ accounts.length !== 1 ? 's' : '' }}
+                </div>
               </div>
               <div class="sidebar-header-icon">
                 <q-icon name="dashboard" color="white" size="20px" />
@@ -45,7 +46,7 @@
               dense
               placeholder="Search accounts…"
               class="sidebar-search"
-              style="border-radius: 8px;"
+              style="border-radius: 8px"
             >
               <template v-slot:prepend>
                 <q-icon name="search" color="grey-5" size="18px" />
@@ -55,21 +56,27 @@
 
           <!-- ── Account Cards ──────────────────────────────────── -->
           <div class="q-px-sm q-pb-md q-pt-sm">
-
             <!-- Skeleton cards while loading -->
             <template v-if="loadingDonations">
-              <div v-for="n in 4" :key="'sk-'+n" class="sidebar-skeleton-card">
-                <div class="row items-center no-wrap q-mb-sm" style="gap: 10px;">
-                  <q-skeleton type="QAvatar" size="38px" style="border-radius: 10px; flex-shrink: 0;" />
-                  <div style="flex: 1; min-width: 0;">
-                    <q-skeleton type="text" width="70%" style="margin-bottom: 5px;" />
+              <div v-for="n in 4" :key="'sk-' + n" class="sidebar-skeleton-card">
+                <div class="row items-center no-wrap q-mb-sm" style="gap: 10px">
+                  <q-skeleton
+                    type="QAvatar"
+                    size="38px"
+                    style="border-radius: 10px; flex-shrink: 0"
+                  />
+                  <div style="flex: 1; min-width: 0">
+                    <q-skeleton type="text" width="70%" style="margin-bottom: 5px" />
                     <q-skeleton type="text" width="50%" />
                   </div>
                 </div>
-                <q-skeleton type="QInput" style="border-radius: 20px; height: 22px; margin-bottom: 10px;" />
-                <div class="row" style="gap: 8px;">
-                  <q-skeleton style="flex: 1; height: 44px; border-radius: 8px;" />
-                  <q-skeleton style="flex: 1; height: 44px; border-radius: 8px;" />
+                <q-skeleton
+                  type="QInput"
+                  style="border-radius: 20px; height: 22px; margin-bottom: 10px"
+                />
+                <div class="row" style="gap: 8px">
+                  <q-skeleton style="flex: 1; height: 44px; border-radius: 8px" />
+                  <q-skeleton style="flex: 1; height: 44px; border-radius: 8px" />
                 </div>
               </div>
             </template>
@@ -87,17 +94,32 @@
               <!-- Top row: avatar + name + due badge -->
               <div class="row items-start no-wrap q-mb-xs">
                 <div class="sidebar-avatar">
-                  <img src="~assets/paytaca.png" alt="wallet" style="width: 24px; height: 24px; object-fit: contain;" />
+                  <img
+                    src="~assets/paytaca.png"
+                    alt="wallet"
+                    style="width: 24px; height: 24px; object-fit: contain"
+                  />
                 </div>
-                <div style="flex: 1; min-width: 0; margin-left: 10px;">
+                <div style="flex: 1; min-width: 0; margin-left: 10px">
                   <div class="sidebar-account-name ellipsis">{{ account.name }}</div>
-                  <div class="sidebar-account-sub ellipsis">{{ account.email || account.contact || 'Anonymous Donor' }}</div>
+                  <div class="sidebar-account-sub ellipsis">
+                    {{ account.email || account.contact || 'Anonymous Donor' }}
+                  </div>
                 </div>
                 <q-badge
-                  v-if="getAccountPayoutInfo(account)?.dueApproval?.length > 0 || getAccountPayoutInfo(account)?.dueSmart?.length > 0"
+                  v-if="
+                    getAccountPayoutInfo(account)?.dueApproval?.length > 0 ||
+                    getAccountPayoutInfo(account)?.dueSmart?.length > 0
+                  "
                   color="orange"
                   rounded
-                  style="font-size: 10px; font-weight: 700; padding: 3px 7px; flex-shrink: 0; margin-top: 2px;"
+                  style="
+                    font-size: 10px;
+                    font-weight: 700;
+                    padding: 3px 7px;
+                    flex-shrink: 0;
+                    margin-top: 2px;
+                  "
                   label="Due"
                 />
               </div>
@@ -106,12 +128,31 @@
               <div class="q-mt-xs" v-if="account.address">
                 <div
                   class="sidebar-address-pill ellipsis"
-                  @click.stop="$q.copyToClipboard(account.address).then(() => $q.notify({ type: 'positive', message: 'Address copied', position: 'top', timeout: 1500 }))"
+                  @click.stop="
+                    $q.copyToClipboard(account.address).then(() =>
+                      $q.notify({
+                        type: 'positive',
+                        message: 'Address copied',
+                        position: 'top',
+                        timeout: 1500,
+                      }),
+                    )
+                  "
                 >
-                  <q-icon name="account_balance_wallet" size="10px" class="q-mr-xs" style="flex-shrink:0;" />
+                  <q-icon
+                    name="account_balance_wallet"
+                    size="10px"
+                    class="q-mr-xs"
+                    style="flex-shrink: 0"
+                  />
                   <span class="sidebar-address-pill-label">BCH:</span>
                   <span class="q-ml-xs">{{ account.address }}</span>
-                  <q-icon name="content_copy" size="10px" class="q-ml-xs sidebar-address-copy-icon" style="flex-shrink:0;" />
+                  <q-icon
+                    name="content_copy"
+                    size="10px"
+                    class="q-ml-xs sidebar-address-copy-icon"
+                    style="flex-shrink: 0"
+                  />
                 </div>
               </div>
 
@@ -119,51 +160,71 @@
               <div class="sidebar-card-divider" />
 
               <!-- BCH stat blocks -->
-              <div class="row q-mt-xs q-mb-sm" style="gap: 8px;">
+              <div class="row q-mt-xs q-mb-sm" style="gap: 8px">
                 <div class="sidebar-stat-block sidebar-stat-block--neutral">
-                  <div class="row items-center no-wrap" style="gap: 4px; margin-bottom: 2px;">
+                  <div class="row items-center no-wrap" style="gap: 4px; margin-bottom: 2px">
                     <q-icon name="currency_bitcoin" size="11px" color="blue-grey-5" />
                     <div class="sidebar-stat-label">Total Received</div>
                   </div>
-                  <div class="sidebar-stat-value">{{ formatCurrency(account.totalReceived ?? account.current) }}</div>
+                  <div class="sidebar-stat-value">
+                    {{ formatCurrency(account.totalReceived ?? account.current) }}
+                  </div>
                 </div>
                 <div class="sidebar-stat-block sidebar-stat-block--positive">
-                  <div class="row items-center no-wrap" style="gap: 4px; margin-bottom: 2px;">
+                  <div class="row items-center no-wrap" style="gap: 4px; margin-bottom: 2px">
                     <q-icon name="receipt_long" size="11px" color="green-7" />
                     <div class="sidebar-stat-label">Transactions</div>
                   </div>
-                  <div class="sidebar-stat-value sidebar-stat-value--positive">{{ account.transactionCount ?? 0 }}</div>
+                  <div class="sidebar-stat-value sidebar-stat-value--positive">
+                    {{ account.transactionCount ?? 0 }}
+                  </div>
                 </div>
               </div>
 
               <!-- Payout action row -->
-              <q-separator class="sidebar-card-sep" style="margin-bottom: 10px;" />
+              <q-separator class="sidebar-card-sep" style="margin-bottom: 10px" />
               <div v-if="getAccountPayoutInfo(account)">
                 <q-btn
                   v-if="getAccountPayoutInfo(account).dueApproval.length > 0"
-                  unelevated color="positive" icon="mark_email_read"
-                  label="Request Withdrawal" size="sm" class="full-width" no-caps
-                  style="font-weight: 700; border-radius: 8px;"
+                  unelevated
+                  color="positive"
+                  icon="mark_email_read"
+                  label="Request Withdrawal"
+                  size="sm"
+                  class="full-width"
+                  no-caps
+                  style="font-weight: 700; border-radius: 8px"
                   @click.stop="handleContractWithdraw(account)"
                 />
                 <q-btn
                   v-else-if="getAccountPayoutInfo(account).dueSmart.length > 0"
-                  unelevated color="positive" icon="account_balance_wallet"
-                  label="Withdraw Now" size="sm" class="full-width" no-caps
-                  style="font-weight: 700; border-radius: 8px;"
+                  unelevated
+                  color="positive"
+                  icon="account_balance_wallet"
+                  label="Withdraw Now"
+                  size="sm"
+                  class="full-width"
+                  no-caps
+                  style="font-weight: 700; border-radius: 8px"
                   @click.stop="handleSmartWithdrawAll(account)"
                 />
                 <div
                   v-else-if="getAccountPayoutInfo(account).upcoming"
-                  class="row items-center no-wrap" style="gap: 6px;"
+                  class="row items-center no-wrap"
+                  style="gap: 6px"
                 >
-                  <q-icon name="schedule" color="blue-6" size="14px" style="flex-shrink: 0;" />
+                  <q-icon name="schedule" color="blue-6" size="14px" style="flex-shrink: 0" />
                   <span class="sidebar-next-text">
                     Next:
-                    {{ new Date(getAccountPayoutInfo(account).upcoming.due_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) }}
+                    {{
+                      new Date(getAccountPayoutInfo(account).upcoming.due_at).toLocaleDateString(
+                        'en-US',
+                        { month: 'short', day: 'numeric', year: 'numeric' },
+                      )
+                    }}
                   </span>
                 </div>
-                <div v-else class="row items-center no-wrap" style="gap: 6px;">
+                <div v-else class="row items-center no-wrap" style="gap: 6px">
                   <q-icon name="check_circle_outline" color="grey-4" size="14px" />
                   <span class="sidebar-no-pending-text">No pending withdrawals</span>
                 </div>
@@ -171,10 +232,14 @@
             </div>
 
             <div class="text-center q-mt-sm">
-              <a href="#" class="view-all-link text-weight-medium" style="text-decoration: none; font-size: 13px;">View all</a>
+              <a
+                href="#"
+                class="view-all-link text-weight-medium"
+                style="text-decoration: none; font-size: 13px"
+                >View all</a
+              >
             </div>
           </div>
-
         </div>
       </div>
 
@@ -210,14 +275,16 @@
               <div class="row items-center justify-between q-mb-md">
                 <div>
                   <div class="text-h6 text-weight-bold">Withdrawal History</div>
-                  <div class="text-caption text-grey-6">All completed cycle payouts for this account</div>
+                  <div class="text-caption text-grey-6">
+                    All completed cycle payouts for this account
+                  </div>
                 </div>
                 <q-chip
                   color="green-2"
                   text-color="green-9"
                   icon="check_circle"
                   :label="`${getAccountSchedule(selectedAccount).executed.length} completed`"
-                  style="font-weight: 700;"
+                  style="font-weight: 700"
                 />
               </div>
 
@@ -225,11 +292,13 @@
               <div
                 v-if="getAccountSchedule(selectedAccount).executed.length === 0"
                 class="text-center q-py-xl"
-                style="border: 2px dashed #e0e0e0; border-radius: 12px;"
+                style="border: 2px dashed #e0e0e0; border-radius: 12px"
               >
                 <q-icon name="history" size="48px" color="grey-4" />
                 <div class="text-grey-6 q-mt-sm text-weight-medium">No withdrawals yet</div>
-                <div class="text-caption text-grey-4 q-mt-xs">Completed cycle payouts will appear here</div>
+                <div class="text-caption text-grey-4 q-mt-xs">
+                  Completed cycle payouts will appear here
+                </div>
               </div>
 
               <!-- History table -->
@@ -246,17 +315,28 @@
               >
                 <template v-slot:body-cell-executed_at="props">
                   <q-td :props="props">
-                    <div class="text-weight-medium" style="font-size: 13px;">
-                      {{ new Date(props.row.executed_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) }}
+                    <div class="text-weight-medium" style="font-size: 13px">
+                      {{
+                        new Date(props.row.executed_at).toLocaleDateString('en-US', {
+                          month: 'short',
+                          day: 'numeric',
+                          year: 'numeric',
+                        })
+                      }}
                     </div>
                     <div class="text-caption text-grey-6">
-                      {{ new Date(props.row.executed_at).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }) }}
+                      {{
+                        new Date(props.row.executed_at).toLocaleTimeString('en-US', {
+                          hour: '2-digit',
+                          minute: '2-digit',
+                        })
+                      }}
                     </div>
                   </q-td>
                 </template>
                 <template v-slot:body-cell-amount="props">
                   <q-td :props="props">
-                    <span class="text-weight-bold text-green-8" style="font-size: 14px;">
+                    <span class="text-weight-bold text-green-8" style="font-size: 14px">
                       {{ (props.row.payout_amount_satoshis / 1e8).toFixed(8) }}
                     </span>
                     <span class="text-caption text-grey-6 q-ml-xs">BCH</span>
@@ -269,13 +349,17 @@
                       color="green-2"
                       text-color="green-9"
                       :label="`${props.row.cycle_number} / ${props.row.total_cycles}`"
-                      style="font-size: 11px; font-weight: 700; border-radius: 6px; height: 22px;"
+                      style="font-size: 11px; font-weight: 700; border-radius: 6px; height: 22px"
                     />
                   </q-td>
                 </template>
                 <template v-slot:body-cell-interval="props">
                   <q-td :props="props" class="text-center">
-                    <q-badge color="blue-2" text-color="blue-9" :label="props.row.interval_label || '—'" />
+                    <q-badge
+                      color="blue-2"
+                      text-color="blue-9"
+                      :label="props.row.interval_label || '—'"
+                    />
                   </q-td>
                 </template>
                 <template v-slot:body-cell-txid="props">
@@ -283,19 +367,23 @@
                     <span
                       v-if="isValidTxid(props.row.txid)"
                       class="text-primary"
-                      style="font-family: monospace; font-size: 12px; cursor: pointer;"
+                      style="font-family: monospace; font-size: 12px; cursor: pointer"
                       @click="copyTxid(props.row.txid)"
                     >
                       {{ formatTxidPreview(props.row.txid, 18) }}
                       <q-icon name="content_copy" size="12px" class="q-ml-xs" />
                     </span>
-                    <span v-else-if="props.row.txid" class="text-warning text-caption text-weight-medium">Invalid TXID</span>
+                    <span
+                      v-else-if="props.row.txid"
+                      class="text-warning text-caption text-weight-medium"
+                      >Invalid TXID</span
+                    >
                     <span v-else class="text-grey-5 text-caption">—</span>
                   </q-td>
                 </template>
                 <template v-slot:body-cell-payout_status="props">
                   <q-td :props="props" class="text-center">
-                    <q-badge color="positive" label="Completed" style="font-weight: 600;" />
+                    <q-badge color="positive" label="Completed" style="font-weight: 600" />
                   </q-td>
                 </template>
 
@@ -303,16 +391,29 @@
                 <template v-slot:item="props">
                   <div class="dash-mobile-card">
                     <div class="dash-mobile-card__header">
-                      <div class="dash-mobile-card__title">{{ props.row.donor_name || 'Anonymous' }}</div>
-                      <q-badge color="positive" label="Completed" style="font-weight: 600;" />
+                      <div class="dash-mobile-card__title">
+                        {{ props.row.donor_name || 'Anonymous' }}
+                      </div>
+                      <q-badge color="positive" label="Completed" style="font-weight: 600" />
                     </div>
                     <div class="dash-mobile-card__body">
                       <div class="dash-mobile-card__row">
                         <span class="dash-mobile-card__label">Date</span>
                         <span class="dash-mobile-card__value">
-                          {{ new Date(props.row.executed_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) }}
-                          <span class="text-grey-6 q-ml-xs" style="font-size: 11px;">
-                            {{ new Date(props.row.executed_at).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }) }}
+                          {{
+                            new Date(props.row.executed_at).toLocaleDateString('en-US', {
+                              month: 'short',
+                              day: 'numeric',
+                              year: 'numeric',
+                            })
+                          }}
+                          <span class="text-grey-6 q-ml-xs" style="font-size: 11px">
+                            {{
+                              new Date(props.row.executed_at).toLocaleTimeString('en-US', {
+                                hour: '2-digit',
+                                minute: '2-digit',
+                              })
+                            }}
                           </span>
                         </span>
                       </div>
@@ -324,13 +425,26 @@
                       </div>
                       <div class="dash-mobile-card__row">
                         <span class="dash-mobile-card__label">Cycle</span>
-                        <q-chip dense color="green-2" text-color="green-9"
+                        <q-chip
+                          dense
+                          color="green-2"
+                          text-color="green-9"
                           :label="`${props.row.cycle_number} / ${props.row.total_cycles}`"
-                          style="font-size: 11px; font-weight: 700; border-radius: 6px; height: 22px;" />
+                          style="
+                            font-size: 11px;
+                            font-weight: 700;
+                            border-radius: 6px;
+                            height: 22px;
+                          "
+                        />
                       </div>
                       <div class="dash-mobile-card__row">
                         <span class="dash-mobile-card__label">Interval</span>
-                        <q-badge color="blue-2" text-color="blue-9" :label="props.row.interval_label || '—'" />
+                        <q-badge
+                          color="blue-2"
+                          text-color="blue-9"
+                          :label="props.row.interval_label || '—'"
+                        />
                       </div>
                       <div v-if="props.row.txid" class="dash-mobile-card__row">
                         <span class="dash-mobile-card__label">TxID</span>
@@ -342,7 +456,9 @@
                           {{ formatTxidPreview(props.row.txid, 16) }}
                           <q-icon name="content_copy" size="11px" class="q-ml-xs" />
                         </span>
-                        <span v-else class="text-warning text-caption text-weight-medium">Invalid TXID</span>
+                        <span v-else class="text-warning text-caption text-weight-medium"
+                          >Invalid TXID</span
+                        >
                       </div>
                     </div>
                   </div>
@@ -351,16 +467,19 @@
             </q-tab-panel>
 
             <q-tab-panel name="details" class="details-panel q-pa-none">
-
               <!-- ── Skeleton detail panel while loading ───────────────── -->
               <template v-if="loadingDonations">
                 <!-- Profile header skeleton -->
                 <div class="detail-skeleton-card q-mb-md">
-                  <div class="row items-center no-wrap" style="gap: 18px; padding: 20px;">
-                    <q-skeleton type="QAvatar" size="72px" style="border-radius: 50%; flex-shrink: 0;" />
-                    <div style="flex: 1;">
-                      <q-skeleton type="text" width="40%" style="margin-bottom: 8px;" />
-                      <q-skeleton type="text" width="25%" style="margin-bottom: 6px;" />
+                  <div class="row items-center no-wrap" style="gap: 18px; padding: 20px">
+                    <q-skeleton
+                      type="QAvatar"
+                      size="72px"
+                      style="border-radius: 50%; flex-shrink: 0"
+                    />
+                    <div style="flex: 1">
+                      <q-skeleton type="text" width="40%" style="margin-bottom: 8px" />
+                      <q-skeleton type="text" width="25%" style="margin-bottom: 6px" />
                       <q-skeleton type="QBadge" width="70px" />
                     </div>
                   </div>
@@ -368,34 +487,34 @@
                 <!-- Two info card skeletons -->
                 <div class="row q-col-gutter-md q-mb-md">
                   <div class="col-12 col-md-6">
-                    <div class="detail-skeleton-card" style="padding: 18px;">
-                      <q-skeleton type="text" width="40%" style="margin-bottom: 14px;" />
-                      <q-skeleton type="QInput" style="margin-bottom: 10px; height: 36px;" />
-                      <q-skeleton type="QInput" style="margin-bottom: 10px; height: 36px;" />
-                      <q-skeleton type="QInput" style="height: 36px;" />
+                    <div class="detail-skeleton-card" style="padding: 18px">
+                      <q-skeleton type="text" width="40%" style="margin-bottom: 14px" />
+                      <q-skeleton type="QInput" style="margin-bottom: 10px; height: 36px" />
+                      <q-skeleton type="QInput" style="margin-bottom: 10px; height: 36px" />
+                      <q-skeleton type="QInput" style="height: 36px" />
                     </div>
                   </div>
                   <div class="col-12 col-md-6">
-                    <div class="detail-skeleton-card" style="padding: 18px;">
-                      <q-skeleton type="text" width="40%" style="margin-bottom: 14px;" />
-                      <q-skeleton type="QInput" style="margin-bottom: 10px; height: 36px;" />
-                      <q-skeleton type="QInput" style="margin-bottom: 10px; height: 36px;" />
-                      <q-skeleton type="QInput" style="height: 36px;" />
+                    <div class="detail-skeleton-card" style="padding: 18px">
+                      <q-skeleton type="text" width="40%" style="margin-bottom: 14px" />
+                      <q-skeleton type="QInput" style="margin-bottom: 10px; height: 36px" />
+                      <q-skeleton type="QInput" style="margin-bottom: 10px; height: 36px" />
+                      <q-skeleton type="QInput" style="height: 36px" />
                     </div>
                   </div>
                 </div>
                 <!-- Chart skeletons -->
                 <div class="row q-col-gutter-md">
                   <div class="col-12 col-md-6">
-                    <div class="detail-skeleton-card" style="padding: 18px;">
-                      <q-skeleton type="text" width="35%" style="margin-bottom: 12px;" />
-                      <q-skeleton style="height: 200px; border-radius: 10px;" />
+                    <div class="detail-skeleton-card" style="padding: 18px">
+                      <q-skeleton type="text" width="35%" style="margin-bottom: 12px" />
+                      <q-skeleton style="height: 200px; border-radius: 10px" />
                     </div>
                   </div>
                   <div class="col-12 col-md-6">
-                    <div class="detail-skeleton-card" style="padding: 18px;">
-                      <q-skeleton type="text" width="35%" style="margin-bottom: 12px;" />
-                      <q-skeleton style="height: 200px; border-radius: 10px;" />
+                    <div class="detail-skeleton-card" style="padding: 18px">
+                      <q-skeleton type="text" width="35%" style="margin-bottom: 12px" />
+                      <q-skeleton style="height: 200px; border-radius: 10px" />
                     </div>
                   </div>
                 </div>
@@ -403,265 +522,540 @@
 
               <!-- ── Profile Header Card ──────────────────────────────── -->
               <template v-else>
-              <q-card flat class="detail-info-card" style="border-radius: 14px; margin-bottom: 16px; overflow: hidden;">
-                <q-card-section class="q-pa-none">
-                  <div class="row no-wrap items-stretch profile-header-row">
-
-                    <!-- Left: Avatar + name + role -->
-                    <div class="row items-center q-pa-lg profile-left-col" style="flex: 0 0 auto; min-width: 260px; border-right: 1px solid #f0f0f0; gap: 18px;">
-                      <!-- Org avatar / logo -->
-                      <div style="flex-shrink: 0;">
-                        <div
-                          v-if="nonprofitDetail?.logo_url"
-                          style="width: 72px; height: 72px; border-radius: 50%; overflow: hidden; border: 3px solid #e8f0fe;"
-                        >
-                          <img :src="nonprofitDetail.logo_url" style="width: 100%; height: 100%; object-fit: cover;" />
-                        </div>
-                        <div
-                          v-else
-                          style="width: 72px; height: 72px; border-radius: 50%; background: linear-gradient(135deg, #1565c0, #0d47a1); display: flex; align-items: center; justify-content: center; border: 3px solid #e8f0fe; flex-shrink: 0;"
-                        >
-                          <span style="font-size: 28px; font-weight: 800; color: white;">
-                            {{ selectedAccount.name?.charAt(0)?.toUpperCase() || 'N' }}
-                          </span>
-                        </div>
-                      </div>
-                      <!-- Name + category -->
-                      <div style="min-width: 0;">
-                        <div style="font-size: 18px; font-weight: 700; color: #1a237e; line-height: 1.2;" class="ellipsis org-name-text">
-                          {{ selectedAccount.name }}
-                        </div>
-                        <div class="q-mt-xs" style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
-                          <span class="org-category-text" style="font-size: 13px; color: #1976d2; font-weight: 600;">
-                            {{ nonprofitDetail?.category || 'Nonprofit' }}
-                          </span>
-                          <span style="color: #bdbdbd;">|</span>
-                          <span class="org-status-text" style="font-size: 12px; color: #9e9e9e;">
-                            {{ nonprofitDetail?.active === false ? 'Inactive' : 'Active Organization' }}
-                          </span>
-                        </div>
-                        <q-chip
-                          v-if="nonprofitDetail?.verified"
-                          dense
-                          color="green-2"
-                          text-color="green-8"
-                          icon="verified"
-                          label="Verified"
-                          style="font-size: 11px; font-weight: 700; margin-top: 8px;"
-                        />
-                        <q-chip
-                          v-else
-                          dense
-                          color="grey-2"
-                          text-color="grey-7"
-                          icon="schedule"
-                          label="Unverified"
-                          style="font-size: 11px; margin-top: 8px;"
-                        />
-                      </div>
-                    </div>
-
-                    <!-- Right: Quick stats grid -->
-                    <div class="row items-center q-px-lg q-py-md profile-stats-col" style="flex: 1; gap: 0; flex-wrap: wrap;">
+                <q-card
+                  flat
+                  class="detail-info-card"
+                  style="border-radius: 14px; margin-bottom: 16px; overflow: hidden"
+                >
+                  <q-card-section class="q-pa-none">
+                    <div class="row no-wrap items-stretch profile-header-row">
+                      <!-- Left: Avatar + name + role -->
                       <div
-                        v-for="stat in [
-                          { label: 'BCH Address', value: selectedAccount.address || '—', mono: true, icon: 'account_balance_wallet' },
-                          { label: 'Website', value: nonprofitDetail?.website || '—', link: nonprofitDetail?.website, icon: 'language' },
-                          { label: 'Email', value: nonprofitDetail?.email || selectedAccount.email || '—', icon: 'mail_outline' },
-                          { label: 'Phone', value: nonprofitDetail?.phone || '—', icon: 'phone' },
-                        ]"
-                        :key="stat.label"
-                        style="min-width: 50%; padding: 10px 16px 10px 0;"
+                        class="row items-center q-pa-lg profile-left-col"
+                        style="
+                          flex: 0 0 auto;
+                          min-width: 260px;
+                          border-right: 1px solid #f0f0f0;
+                          gap: 18px;
+                        "
                       >
-                        <div class="text-caption text-grey-5" style="font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 3px;">
-                          <q-icon :name="stat.icon" size="12px" class="q-mr-xs" />{{ stat.label }}
+                        <!-- Org avatar / logo -->
+                        <div style="flex-shrink: 0">
+                          <div
+                            v-if="nonprofitDetail?.logo_url"
+                            style="
+                              width: 72px;
+                              height: 72px;
+                              border-radius: 50%;
+                              overflow: hidden;
+                              border: 3px solid #e8f0fe;
+                            "
+                          >
+                            <img
+                              :src="nonprofitDetail.logo_url"
+                              style="width: 100%; height: 100%; object-fit: cover"
+                            />
+                          </div>
+                          <div
+                            v-else
+                            style="
+                              width: 72px;
+                              height: 72px;
+                              border-radius: 50%;
+                              background: linear-gradient(135deg, #1565c0, #0d47a1);
+                              display: flex;
+                              align-items: center;
+                              justify-content: center;
+                              border: 3px solid #e8f0fe;
+                              flex-shrink: 0;
+                            "
+                          >
+                            <span style="font-size: 28px; font-weight: 800; color: white">
+                              {{ selectedAccount.name?.charAt(0)?.toUpperCase() || 'N' }}
+                            </span>
+                          </div>
                         </div>
-                        <a
-                          v-if="stat.link"
-                          :href="stat.link"
-                          target="_blank"
-                          style="font-size: 13px; font-weight: 600; color: #1976d2; word-break: break-all; text-decoration: none;"
-                        >{{ stat.value }}</a>
+                        <!-- Name + category -->
+                        <div style="min-width: 0">
+                          <div
+                            style="
+                              font-size: 18px;
+                              font-weight: 700;
+                              color: #1a237e;
+                              line-height: 1.2;
+                            "
+                            class="ellipsis org-name-text"
+                          >
+                            {{ selectedAccount.name }}
+                          </div>
+                          <div
+                            class="q-mt-xs"
+                            style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap"
+                          >
+                            <span
+                              class="org-category-text"
+                              style="font-size: 13px; color: #1976d2; font-weight: 600"
+                            >
+                              {{ nonprofitDetail?.category || 'Nonprofit' }}
+                            </span>
+                            <span style="color: #bdbdbd">|</span>
+                            <span class="org-status-text" style="font-size: 12px; color: #9e9e9e">
+                              {{
+                                nonprofitDetail?.active === false
+                                  ? 'Inactive'
+                                  : 'Active Organization'
+                              }}
+                            </span>
+                          </div>
+                          <q-chip
+                            v-if="nonprofitDetail?.verified"
+                            dense
+                            color="green-2"
+                            text-color="green-8"
+                            icon="verified"
+                            label="Verified"
+                            style="font-size: 11px; font-weight: 700; margin-top: 8px"
+                          />
+                          <q-chip
+                            v-else
+                            dense
+                            color="grey-2"
+                            text-color="grey-7"
+                            icon="schedule"
+                            label="Unverified"
+                            style="font-size: 11px; margin-top: 8px"
+                          />
+                        </div>
+                      </div>
+
+                      <!-- Right: Quick stats grid -->
+                      <div
+                        class="row items-center q-px-lg q-py-md profile-stats-col"
+                        style="flex: 1; gap: 0; flex-wrap: wrap"
+                      >
                         <div
-                          v-else
-                          class="stat-value-text"
-                          :style="{ fontSize: '13px', fontWeight: 600, wordBreak: 'break-all', fontFamily: stat.mono ? 'monospace' : 'inherit' }"
-                        >{{ stat.value }}</div>
+                          v-for="stat in [
+                            {
+                              label: 'BCH Address',
+                              value: selectedAccount.address || '—',
+                              mono: true,
+                              icon: 'account_balance_wallet',
+                            },
+                            {
+                              label: 'Website',
+                              value: nonprofitDetail?.website || '—',
+                              link: nonprofitDetail?.website,
+                              icon: 'language',
+                            },
+                            {
+                              label: 'Email',
+                              value: nonprofitDetail?.email || selectedAccount.email || '—',
+                              icon: 'mail_outline',
+                            },
+                            { label: 'Phone', value: nonprofitDetail?.phone || '—', icon: 'phone' },
+                          ]"
+                          :key="stat.label"
+                          style="min-width: 50%; padding: 10px 16px 10px 0"
+                        >
+                          <div
+                            class="text-caption text-grey-5"
+                            style="
+                              font-size: 11px;
+                              font-weight: 700;
+                              text-transform: uppercase;
+                              letter-spacing: 0.5px;
+                              margin-bottom: 3px;
+                            "
+                          >
+                            <q-icon :name="stat.icon" size="12px" class="q-mr-xs" />{{ stat.label }}
+                          </div>
+                          <a
+                            v-if="stat.link"
+                            :href="stat.link"
+                            target="_blank"
+                            style="
+                              font-size: 13px;
+                              font-weight: 600;
+                              color: #1976d2;
+                              word-break: break-all;
+                              text-decoration: none;
+                            "
+                            >{{ stat.value }}</a
+                          >
+                          <div
+                            v-else
+                            class="stat-value-text"
+                            :style="{
+                              fontSize: '13px',
+                              fontWeight: 600,
+                              wordBreak: 'break-all',
+                              fontFamily: stat.mono ? 'monospace' : 'inherit',
+                            }"
+                          >
+                            {{ stat.value }}
+                          </div>
+                        </div>
                       </div>
                     </div>
+                  </q-card-section>
+                </q-card>
 
-                  </div>
-                </q-card-section>
-              </q-card>
-
-              <!-- ── Two column cards ─────────────────────────────────── -->
-              <div class="row q-col-gutter-md">
-
-                <!-- Wallet & Financial Information -->
-                <div class="col-12 col-md-6">
-                  <q-card flat class="detail-info-card" style="border-radius: 14px; height: 100%;">
-                    <q-card-section class="q-pb-xs">
-                      <div class="row items-center justify-between">
-                        <div class="info-card-title" style="font-size: 14px; font-weight: 700; color: #37474f;">Wallet Information</div>
-                        <q-icon name="account_balance_wallet" color="blue-4" size="20px" />
-                      </div>
-                    </q-card-section>
-                    <q-separator />
-                    <q-card-section class="q-pt-md">
-                      <div class="row q-col-gutter-md">
-
-                        <div class="col-6">
-                          <div class="text-caption text-grey-5" style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">Wallet Type</div>
-                          <div class="field-value-text" style="font-size: 14px; font-weight: 700; color: #212121;">{{ selectedAccount.type || '—' }}</div>
-                        </div>
-
-                        <div class="col-6">
-                          <div class="text-caption text-grey-5" style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">Network Fee Paid</div>
-                          <div class="field-value-text" style="font-size: 14px; font-weight: 700; color: #212121;">{{ selectedAccount.totalFees || '0' }} BCH</div>
-                        </div>
-
-                        <div class="col-12">
-                          <div class="text-caption text-grey-5" style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">BCH Address</div>
-                          <div
-                            class="bch-address-box"
-                            style="font-size: 12px; font-weight: 600; font-family: monospace; color: #1565c0; background: #e8f0fe; border-radius: 6px; padding: 8px 12px; word-break: break-all; cursor: pointer;"
-                            @click="$q.copyToClipboard(selectedAccount.address).then(() => $q.notify({ type: 'positive', message: 'Address copied', position: 'top', timeout: 1500 }))"
-                          >
-                            {{ selectedAccount.address || '—' }}
-                            <q-icon name="content_copy" size="13px" class="q-ml-xs text-blue-8" />
-                          </div>
-                        </div>
-
-                        <div class="col-6">
-                          <div class="text-caption text-grey-5" style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">Total Received</div>
-                          <div class="total-received-value" style="font-size: 18px; font-weight: 800; color: #1565c0;">
-                            {{ formatCurrency(selectedAccount.totalReceived) }}
-                            <span class="bch-unit-label" style="font-size: 12px; font-weight: 600; color: #90a4ae;">BCH</span>
-                          </div>
-                        </div>
-
-                        <div class="col-6">
-                          <div class="text-caption text-grey-5" style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">Available Balance</div>
-                          <div class="available-balance-value" style="font-size: 18px; font-weight: 800; color: #2e7d32;">
-                            {{ formatCurrency(selectedAccount.available) }}
-                            <span class="bch-unit-label" style="font-size: 12px; font-weight: 600; color: #90a4ae;">BCH</span>
-                          </div>
-                        </div>
-
-                      </div>
-                    </q-card-section>
-                  </q-card>
-                </div>
-
-                <!-- Donation Statistics -->
-                <div class="col-12 col-md-6">
-                  <q-card flat class="detail-info-card" style="border-radius: 14px; height: 100%;">
-                    <q-card-section class="q-pb-xs">
-                      <div class="row items-center justify-between">
-                        <div class="info-card-title" style="font-size: 14px; font-weight: 700; color: #37474f;">Donation Statistics</div>
-                        <q-icon name="bar_chart" color="purple-4" size="20px" />
-                      </div>
-                    </q-card-section>
-                    <q-separator />
-                    <q-card-section class="q-pt-md">
-                      <div class="row q-col-gutter-md">
-
-                        <div class="col-6">
-                          <div class="text-caption text-grey-5" style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">Total Donations</div>
-                          <div class="field-value-text" style="font-size: 14px; font-weight: 700; color: #212121;">{{ selectedAccount.transactionCount || 0 }}</div>
-                        </div>
-
-                        <div class="col-6">
-                          <div class="text-caption text-grey-5" style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">Active Since</div>
-                          <div class="field-value-text" style="font-size: 14px; font-weight: 700; color: #212121;">
-                            {{ nonprofitDetail?.created_at ? new Date(nonprofitDetail.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '—' }}
-                          </div>
-                        </div>
-
-                        <div class="col-6">
-                          <div class="text-caption text-grey-5" style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">First Donation</div>
-                          <div class="field-value-text" style="font-size: 14px; font-weight: 700; color: #212121;">{{ selectedAccount.firstDonation || '—' }}</div>
-                        </div>
-
-                        <div class="col-6">
-                          <div class="text-caption text-grey-5" style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">Last Donation</div>
-                          <div class="field-value-text" style="font-size: 14px; font-weight: 700; color: #212121;">{{ selectedAccount.lastDonation || '—' }}</div>
-                        </div>
-
-                        <div class="col-12">
-                          <div class="text-caption text-grey-5" style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px;">Charity Description</div>
-                          <div class="description-box" style="font-size: 13px; color: #546e7a; line-height: 1.6; background: #fafafa; border-radius: 8px; padding: 10px 12px; border: 1px solid #f0f0f0;">
-                            {{ nonprofitDetail?.description || 'No description available.' }}
-                          </div>
-                        </div>
-
-                      </div>
-                    </q-card-section>
-                  </q-card>
-                </div>
-
-              </div>
-
-              <!-- ── Donation Analytics Charts ─────────────────────────── -->
-              <div class="q-mt-lg">
-                <div class="row items-center q-mb-md">
-                  <div class="dash-chart-section-title">Donation Analytics</div>
-                </div>
-
+                <!-- ── Two column cards ─────────────────────────────────── -->
                 <div class="row q-col-gutter-md">
-
-                  <!-- Line: BCH Received Over Time -->
+                  <!-- Wallet & Financial Information -->
                   <div class="col-12 col-md-6">
-                    <q-card flat class="detail-info-card dash-chart-card">
+                    <q-card flat class="detail-info-card" style="border-radius: 14px; height: 100%">
                       <q-card-section class="q-pb-xs">
                         <div class="row items-center justify-between">
-                          <div>
-                            <div class="dash-chart-card-title">Donation Trend</div>
-                            <div class="dash-chart-card-sub">BCH received over time</div>
+                          <div
+                            class="info-card-title"
+                            style="font-size: 14px; font-weight: 700; color: #37474f"
+                          >
+                            Wallet Information
                           </div>
-                          <q-icon name="show_chart" color="blue-4" size="20px" />
+                          <q-icon name="account_balance_wallet" color="blue-4" size="20px" />
                         </div>
                       </q-card-section>
                       <q-separator />
-                      <q-card-section class="q-pa-md">
-                        <div class="dash-chart-canvas">
-                          <LineChart :data="dashLineChartData" :options="dashLineChartOptions" />
+                      <q-card-section class="q-pt-md">
+                        <div class="row q-col-gutter-md">
+                          <div class="col-6">
+                            <div
+                              class="text-caption text-grey-5"
+                              style="
+                                font-size: 11px;
+                                text-transform: uppercase;
+                                letter-spacing: 0.5px;
+                                margin-bottom: 4px;
+                              "
+                            >
+                              Wallet Type
+                            </div>
+                            <div
+                              class="field-value-text"
+                              style="font-size: 14px; font-weight: 700; color: #212121"
+                            >
+                              {{ selectedAccount.type || '—' }}
+                            </div>
+                          </div>
+
+                          <div class="col-6">
+                            <div
+                              class="text-caption text-grey-5"
+                              style="
+                                font-size: 11px;
+                                text-transform: uppercase;
+                                letter-spacing: 0.5px;
+                                margin-bottom: 4px;
+                              "
+                            >
+                              Network Fee Paid
+                            </div>
+                            <div
+                              class="field-value-text"
+                              style="font-size: 14px; font-weight: 700; color: #212121"
+                            >
+                              {{ selectedAccount.totalFees || '0' }} BCH
+                            </div>
+                          </div>
+
+                          <div class="col-12">
+                            <div
+                              class="text-caption text-grey-5"
+                              style="
+                                font-size: 11px;
+                                text-transform: uppercase;
+                                letter-spacing: 0.5px;
+                                margin-bottom: 4px;
+                              "
+                            >
+                              BCH Address
+                            </div>
+                            <div
+                              class="bch-address-box"
+                              style="
+                                font-size: 12px;
+                                font-weight: 600;
+                                font-family: monospace;
+                                color: #1565c0;
+                                background: #e8f0fe;
+                                border-radius: 6px;
+                                padding: 8px 12px;
+                                word-break: break-all;
+                                cursor: pointer;
+                              "
+                              @click="
+                                $q.copyToClipboard(selectedAccount.address).then(() =>
+                                  $q.notify({
+                                    type: 'positive',
+                                    message: 'Address copied',
+                                    position: 'top',
+                                    timeout: 1500,
+                                  }),
+                                )
+                              "
+                            >
+                              {{ selectedAccount.address || '—' }}
+                              <q-icon name="content_copy" size="13px" class="q-ml-xs text-blue-8" />
+                            </div>
+                          </div>
+
+                          <div class="col-6">
+                            <div
+                              class="text-caption text-grey-5"
+                              style="
+                                font-size: 11px;
+                                text-transform: uppercase;
+                                letter-spacing: 0.5px;
+                                margin-bottom: 4px;
+                              "
+                            >
+                              Total Received
+                            </div>
+                            <div
+                              class="total-received-value"
+                              style="font-size: 18px; font-weight: 800; color: #1565c0"
+                            >
+                              {{ formatCurrency(selectedAccount.totalReceived) }}
+                              <span
+                                class="bch-unit-label"
+                                style="font-size: 12px; font-weight: 600; color: #90a4ae"
+                                >BCH</span
+                              >
+                            </div>
+                          </div>
+
+                          <div class="col-6">
+                            <div
+                              class="text-caption text-grey-5"
+                              style="
+                                font-size: 11px;
+                                text-transform: uppercase;
+                                letter-spacing: 0.5px;
+                                margin-bottom: 4px;
+                              "
+                            >
+                              Available Balance
+                            </div>
+                            <div
+                              class="available-balance-value"
+                              style="font-size: 18px; font-weight: 800; color: #2e7d32"
+                            >
+                              {{ formatCurrency(selectedAccount.available) }}
+                              <span
+                                class="bch-unit-label"
+                                style="font-size: 12px; font-weight: 600; color: #90a4ae"
+                                >BCH</span
+                              >
+                            </div>
+                          </div>
                         </div>
                       </q-card-section>
                     </q-card>
                   </div>
 
-                  <!-- Donut: BCH per donation send -->
+                  <!-- Donation Statistics -->
                   <div class="col-12 col-md-6">
-                    <q-card flat class="detail-info-card dash-chart-card">
+                    <q-card flat class="detail-info-card" style="border-radius: 14px; height: 100%">
                       <q-card-section class="q-pb-xs">
                         <div class="row items-center justify-between">
-                          <div>
-                            <div class="dash-chart-card-title">Donations per Send</div>
-                            <div class="dash-chart-card-sub">{{ selectedAccount ? selectedAccount.name + '\'s sends' : 'Select a donor' }}</div>
+                          <div
+                            class="info-card-title"
+                            style="font-size: 14px; font-weight: 700; color: #37474f"
+                          >
+                            Donation Statistics
                           </div>
-                          <q-icon name="donut_large" color="purple-4" size="20px" />
+                          <q-icon name="bar_chart" color="purple-4" size="20px" />
                         </div>
                       </q-card-section>
                       <q-separator />
-                      <q-card-section class="q-pa-md" style="position: relative;">
-                        <div class="dash-chart-canvas">
-                          <DoughnutChart :data="dashDonutChartData" :options="dashDonutChartOptions" />
-                        </div>
-                        <!-- Center total label -->
-                        <div class="dash-donut-center">
-                          <div class="dash-donut-total">{{ dashDonutTotal }}</div>
-                          <div class="dash-donut-label">BCH</div>
+                      <q-card-section class="q-pt-md">
+                        <div class="row q-col-gutter-md">
+                          <div class="col-6">
+                            <div
+                              class="text-caption text-grey-5"
+                              style="
+                                font-size: 11px;
+                                text-transform: uppercase;
+                                letter-spacing: 0.5px;
+                                margin-bottom: 4px;
+                              "
+                            >
+                              Total Donations
+                            </div>
+                            <div
+                              class="field-value-text"
+                              style="font-size: 14px; font-weight: 700; color: #212121"
+                            >
+                              {{ selectedAccount.transactionCount || 0 }}
+                            </div>
+                          </div>
+
+                          <div class="col-6">
+                            <div
+                              class="text-caption text-grey-5"
+                              style="
+                                font-size: 11px;
+                                text-transform: uppercase;
+                                letter-spacing: 0.5px;
+                                margin-bottom: 4px;
+                              "
+                            >
+                              Active Since
+                            </div>
+                            <div
+                              class="field-value-text"
+                              style="font-size: 14px; font-weight: 700; color: #212121"
+                            >
+                              {{
+                                nonprofitDetail?.created_at
+                                  ? new Date(nonprofitDetail.created_at).toLocaleDateString(
+                                      'en-US',
+                                      { month: 'short', day: 'numeric', year: 'numeric' },
+                                    )
+                                  : '—'
+                              }}
+                            </div>
+                          </div>
+
+                          <div class="col-6">
+                            <div
+                              class="text-caption text-grey-5"
+                              style="
+                                font-size: 11px;
+                                text-transform: uppercase;
+                                letter-spacing: 0.5px;
+                                margin-bottom: 4px;
+                              "
+                            >
+                              First Donation
+                            </div>
+                            <div
+                              class="field-value-text"
+                              style="font-size: 14px; font-weight: 700; color: #212121"
+                            >
+                              {{ selectedAccount.firstDonation || '—' }}
+                            </div>
+                          </div>
+
+                          <div class="col-6">
+                            <div
+                              class="text-caption text-grey-5"
+                              style="
+                                font-size: 11px;
+                                text-transform: uppercase;
+                                letter-spacing: 0.5px;
+                                margin-bottom: 4px;
+                              "
+                            >
+                              Last Donation
+                            </div>
+                            <div
+                              class="field-value-text"
+                              style="font-size: 14px; font-weight: 700; color: #212121"
+                            >
+                              {{ selectedAccount.lastDonation || '—' }}
+                            </div>
+                          </div>
+
+                          <div class="col-12">
+                            <div
+                              class="text-caption text-grey-5"
+                              style="
+                                font-size: 11px;
+                                text-transform: uppercase;
+                                letter-spacing: 0.5px;
+                                margin-bottom: 6px;
+                              "
+                            >
+                              Charity Description
+                            </div>
+                            <div
+                              class="description-box"
+                              style="
+                                font-size: 13px;
+                                color: #546e7a;
+                                line-height: 1.6;
+                                background: #fafafa;
+                                border-radius: 8px;
+                                padding: 10px 12px;
+                                border: 1px solid #f0f0f0;
+                              "
+                            >
+                              {{ nonprofitDetail?.description || 'No description available.' }}
+                            </div>
+                          </div>
                         </div>
                       </q-card-section>
                     </q-card>
                   </div>
-
                 </div>
-              </div>
 
-              </template><!-- end v-else (not loading) -->
+                <!-- ── Donation Analytics Charts ─────────────────────────── -->
+                <div class="q-mt-lg">
+                  <div class="row items-center q-mb-md">
+                    <div class="dash-chart-section-title">Donation Analytics</div>
+                  </div>
 
+                  <div class="row q-col-gutter-md">
+                    <!-- Line: BCH Received Over Time -->
+                    <div class="col-12 col-md-6">
+                      <q-card flat class="detail-info-card dash-chart-card">
+                        <q-card-section class="q-pb-xs">
+                          <div class="row items-center justify-between">
+                            <div>
+                              <div class="dash-chart-card-title">Donation Trend</div>
+                              <div class="dash-chart-card-sub">BCH received over time</div>
+                            </div>
+                            <q-icon name="show_chart" color="blue-4" size="20px" />
+                          </div>
+                        </q-card-section>
+                        <q-separator />
+                        <q-card-section class="q-pa-md">
+                          <div class="dash-chart-canvas">
+                            <LineChart :data="dashLineChartData" :options="dashLineChartOptions" />
+                          </div>
+                        </q-card-section>
+                      </q-card>
+                    </div>
+
+                    <!-- Donut: BCH per donation send -->
+                    <div class="col-12 col-md-6">
+                      <q-card flat class="detail-info-card dash-chart-card">
+                        <q-card-section class="q-pb-xs">
+                          <div class="row items-center justify-between">
+                            <div>
+                              <div class="dash-chart-card-title">Donations per Send</div>
+                              <div class="dash-chart-card-sub">
+                                {{
+                                  selectedAccount
+                                    ? selectedAccount.name + "'s sends"
+                                    : 'Select a donor'
+                                }}
+                              </div>
+                            </div>
+                            <q-icon name="donut_large" color="purple-4" size="20px" />
+                          </div>
+                        </q-card-section>
+                        <q-separator />
+                        <q-card-section class="q-pa-md" style="position: relative">
+                          <div class="dash-chart-canvas">
+                            <DoughnutChart
+                              :data="dashDonutChartData"
+                              :options="dashDonutChartOptions"
+                            />
+                          </div>
+                          <!-- Center total label -->
+                          <div class="dash-donut-center">
+                            <div class="dash-donut-total">{{ dashDonutTotal }}</div>
+                            <div class="dash-donut-label">BCH</div>
+                          </div>
+                        </q-card-section>
+                      </q-card>
+                    </div>
+                  </div>
+                </div> </template
+              ><!-- end v-else (not loading) -->
             </q-tab-panel>
 
             <q-tab-panel name="pending">
@@ -669,14 +1063,16 @@
               <div class="row items-center justify-between q-mb-md">
                 <div>
                   <div class="text-h6 text-weight-bold">Scheduled Withdrawals</div>
-                  <div class="text-caption text-grey-6">Full cycle schedule for each active contract</div>
+                  <div class="text-caption text-grey-6">
+                    Full cycle schedule for each active contract
+                  </div>
                 </div>
                 <q-chip
                   color="orange-2"
                   text-color="orange-9"
                   icon="pending_actions"
                   :label="`${pendingScheduleGroups.length} contract${pendingScheduleGroups.length !== 1 ? 's' : ''}`"
-                  style="font-weight: 700;"
+                  style="font-weight: 700"
                 />
               </div>
 
@@ -687,37 +1083,49 @@
               >
                 <q-icon name="pending_actions" size="48px" color="grey-4" />
                 <div class="text-grey-6 q-mt-sm text-weight-medium">No scheduled withdrawals</div>
-                <div class="text-caption text-grey-4 q-mt-xs">Active contract cycles will appear here once set up</div>
+                <div class="text-caption text-grey-4 q-mt-xs">
+                  Active contract cycles will appear here once set up
+                </div>
               </div>
 
               <!-- Contract schedule groups -->
               <div v-else>
-                <div
-                  v-for="group in pendingScheduleGroups"
-                  :key="group.donationId"
-                  class="q-mb-xl"
-                >
+                <div v-for="group in pendingScheduleGroups" :key="group.donationId" class="q-mb-xl">
                   <!-- Contract header card -->
                   <div
                     class="contract-header-card"
                     :style="{
                       background: group.hasDue
-                        ? ($q.dark.isActive ? 'linear-gradient(135deg, #2a1e00 0%, #2d2100 100%)' : 'linear-gradient(135deg, #fff8e1 0%, #fff3cd 100%)')
-                        : ($q.dark.isActive ? 'linear-gradient(135deg, #0d1a3d 0%, #151435 100%)' : 'linear-gradient(135deg, #e8f0fe 0%, #ede7f6 100%)'),
+                        ? $q.dark.isActive
+                          ? 'linear-gradient(135deg, #2a1e00 0%, #2d2100 100%)'
+                          : 'linear-gradient(135deg, #fff8e1 0%, #fff3cd 100%)'
+                        : $q.dark.isActive
+                          ? 'linear-gradient(135deg, #0d1a3d 0%, #151435 100%)'
+                          : 'linear-gradient(135deg, #e8f0fe 0%, #ede7f6 100%)',
                       borderRadius: '12px',
                       padding: '16px 20px',
                       marginBottom: '10px',
                       border: group.hasDue
-                        ? ($q.dark.isActive ? '1px solid #7a5400' : '1px solid #ffcc02')
-                        : ($q.dark.isActive ? '1px solid #2e3f6e' : '1px solid #c5d8ff'),
+                        ? $q.dark.isActive
+                          ? '1px solid #7a5400'
+                          : '1px solid #ffcc02'
+                        : $q.dark.isActive
+                          ? '1px solid #2e3f6e'
+                          : '1px solid #c5d8ff',
                     }"
                   >
                     <div class="row items-center justify-between no-wrap">
-                      <div style="min-width: 0; flex: 1;">
-                        <div class="ellipsis contract-donor-name" style="font-size: 16px; font-weight: 700; color: #1a237e;">
+                      <div style="min-width: 0; flex: 1">
+                        <div
+                          class="ellipsis contract-donor-name"
+                          style="font-size: 16px; font-weight: 700; color: #1a237e"
+                        >
                           {{ group.donorName }}
                         </div>
-                        <div class="text-caption q-mt-xs contract-meta-caption" style="color: #546e7a;">
+                        <div
+                          class="text-caption q-mt-xs contract-meta-caption"
+                          style="color: #546e7a"
+                        >
                           <q-icon name="schedule" size="13px" />
                           <span class="q-ml-xs">{{ group.intervalLabel }} interval</span>
                           &nbsp;&middot;&nbsp;
@@ -725,7 +1133,10 @@
                           <span class="q-ml-xs">{{ group.amountBch }} BCH per cycle</span>
                           &nbsp;&middot;&nbsp;
                           <q-icon name="repeat" size="13px" />
-                          <span class="q-ml-xs">{{ group.cyclesRemaining }} of {{ group.totalCycles }} cycles remaining</span>
+                          <span class="q-ml-xs"
+                            >{{ group.cyclesRemaining }} of {{ group.totalCycles }} cycles
+                            remaining</span
+                          >
                         </div>
                       </div>
                       <div class="q-ml-md row items-center q-gutter-sm">
@@ -735,7 +1146,7 @@
                           :text-color="group.hasDue ? 'orange-9' : 'blue-9'"
                           :label="group.hasDue ? 'Due Now' : 'On Schedule'"
                           :icon="group.hasDue ? 'warning' : 'event'"
-                          style="font-weight: 700;"
+                          style="font-weight: 700"
                         />
                         <q-badge
                           v-if="group.payoutMode === 'smart'"
@@ -770,37 +1181,85 @@
                       class="gt-sm row items-center cycle-row"
                       :style="{
                         padding: '11px 18px',
-                        borderBottom: idx < group.cycles.length - 1
-                          ? ($q.dark.isActive ? '1px solid #1e2d50' : '1px solid #f0f4f8')
-                          : 'none',
-                        background: cycle.status === 'due'
-                          ? ($q.dark.isActive ? '#1f1a00' : '#fffde7')
-                          : (idx % 2 === 0
-                            ? ($q.dark.isActive ? '#0f1629' : '#ffffff')
-                            : ($q.dark.isActive ? '#111d3a' : '#fafbfc')),
+                        borderBottom:
+                          idx < group.cycles.length - 1
+                            ? $q.dark.isActive
+                              ? '1px solid #1e2d50'
+                              : '1px solid #f0f4f8'
+                            : 'none',
+                        background:
+                          cycle.status === 'due'
+                            ? $q.dark.isActive
+                              ? '#1f1a00'
+                              : '#fffde7'
+                            : idx % 2 === 0
+                              ? $q.dark.isActive
+                                ? '#0f1629'
+                                : '#ffffff'
+                              : $q.dark.isActive
+                                ? '#111d3a'
+                                : '#fafbfc',
                         transition: 'background 0.2s',
                       }"
                     >
                       <div class="col-2">
                         <q-chip
                           dense
-                          :color="cycle.status === 'due' ? 'orange-3' : cycle.status === 'next' ? 'blue-3' : 'blue-grey-2'"
-                          :text-color="cycle.status === 'due' ? 'orange-10' : cycle.status === 'next' ? 'blue-10' : 'blue-grey-8'"
+                          :color="
+                            cycle.status === 'due'
+                              ? 'orange-3'
+                              : cycle.status === 'next'
+                                ? 'blue-3'
+                                : 'blue-grey-2'
+                          "
+                          :text-color="
+                            cycle.status === 'due'
+                              ? 'orange-10'
+                              : cycle.status === 'next'
+                                ? 'blue-10'
+                                : 'blue-grey-8'
+                          "
                           :label="`#${cycle.cycleNumber}`"
-                          style="font-size: 11px; font-weight: 800; border-radius: 6px; height: 22px;"
+                          style="
+                            font-size: 11px;
+                            font-weight: 800;
+                            border-radius: 6px;
+                            height: 22px;
+                          "
                         />
                       </div>
                       <div class="col-4">
-                        <div class="cycle-date-text" style="font-size: 13px; font-weight: 600; color: #263238;">
-                          {{ cycle.dueAt.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) }}
+                        <div
+                          class="cycle-date-text"
+                          style="font-size: 13px; font-weight: 600; color: #263238"
+                        >
+                          {{
+                            cycle.dueAt.toLocaleDateString('en-US', {
+                              month: 'short',
+                              day: 'numeric',
+                              year: 'numeric',
+                            })
+                          }}
                         </div>
-                        <div class="cycle-time-text" style="font-size: 11px; color: #9e9e9e;">
-                          {{ cycle.dueAt.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }) }}
+                        <div class="cycle-time-text" style="font-size: 11px; color: #9e9e9e">
+                          {{
+                            cycle.dueAt.toLocaleTimeString('en-US', {
+                              hour: '2-digit',
+                              minute: '2-digit',
+                            })
+                          }}
                         </div>
                       </div>
                       <div class="col-3 text-right">
-                        <div class="cycle-amount-text" style="font-size: 13px; font-weight: 700; color: #1565c0;">{{ cycle.amountBch }}</div>
-                        <div class="cycle-bch-label" style="font-size: 10px; color: #90a4ae;">BCH</div>
+                        <div
+                          class="cycle-amount-text"
+                          style="font-size: 13px; font-weight: 700; color: #1565c0"
+                        >
+                          {{ cycle.amountBch }}
+                        </div>
+                        <div class="cycle-bch-label" style="font-size: 10px; color: #90a4ae">
+                          BCH
+                        </div>
                       </div>
                       <div class="col-3 text-center">
                         <div class="row justify-center items-center q-gutter-xs">
@@ -811,12 +1270,35 @@
                             label="Withdraw"
                             size="xs"
                             no-caps
-                            style="font-weight: 700; min-width: 80px;"
-                            @click="handleSmartWithdraw({ duePayoutId: cycle.payoutId, amount: parseFloat(cycle.amountBch), donorName: group.donorName, nonprofit: selectedAccount.nonprofitId })"
+                            style="font-weight: 700; min-width: 80px"
+                            @click="
+                              handleSmartWithdraw({
+                                duePayoutId: cycle.payoutId,
+                                amount: parseFloat(cycle.amountBch),
+                                donorName: group.donorName,
+                                nonprofit: selectedAccount.nonprofitId,
+                              })
+                            "
                           />
-                          <q-badge v-else-if="cycle.status === 'due'" color="orange" label="Due Now" style="font-weight: 700;" />
-                          <q-badge v-else-if="cycle.status === 'next'" color="blue" text-color="white" label="Next" style="font-weight: 600;" />
-                          <q-badge v-else-if="cycle.status === 'upcoming'" color="blue-grey-3" text-color="blue-grey-8" label="Upcoming" />
+                          <q-badge
+                            v-else-if="cycle.status === 'due'"
+                            color="orange"
+                            label="Due Now"
+                            style="font-weight: 700"
+                          />
+                          <q-badge
+                            v-else-if="cycle.status === 'next'"
+                            color="blue"
+                            text-color="white"
+                            label="Next"
+                            style="font-weight: 600"
+                          />
+                          <q-badge
+                            v-else-if="cycle.status === 'upcoming'"
+                            color="blue-grey-3"
+                            text-color="blue-grey-8"
+                            label="Upcoming"
+                          />
                           <q-badge v-else color="grey-3" text-color="grey-8" label="Scheduled" />
                         </div>
                       </div>
@@ -832,21 +1314,65 @@
                       <div class="cycle-mobile-card__top">
                         <q-chip
                           dense
-                          :color="cycle.status === 'due' ? 'orange-3' : cycle.status === 'next' ? 'blue-3' : 'blue-grey-2'"
-                          :text-color="cycle.status === 'due' ? 'orange-10' : cycle.status === 'next' ? 'blue-10' : 'blue-grey-8'"
+                          :color="
+                            cycle.status === 'due'
+                              ? 'orange-3'
+                              : cycle.status === 'next'
+                                ? 'blue-3'
+                                : 'blue-grey-2'
+                          "
+                          :text-color="
+                            cycle.status === 'due'
+                              ? 'orange-10'
+                              : cycle.status === 'next'
+                                ? 'blue-10'
+                                : 'blue-grey-8'
+                          "
                           :label="`Cycle #${cycle.cycleNumber}`"
-                          style="font-size: 11px; font-weight: 800; border-radius: 6px; height: 22px;"
+                          style="
+                            font-size: 11px;
+                            font-weight: 800;
+                            border-radius: 6px;
+                            height: 22px;
+                          "
                         />
                         <div class="row items-center q-gutter-xs">
                           <q-btn
                             v-if="cycle.status === 'due' && cycle.payoutId"
-                            unelevated color="positive" label="Withdraw" size="xs" no-caps
-                            style="font-weight: 700;"
-                            @click="handleSmartWithdraw({ duePayoutId: cycle.payoutId, amount: parseFloat(cycle.amountBch), donorName: group.donorName, nonprofit: selectedAccount.nonprofitId })"
+                            unelevated
+                            color="positive"
+                            label="Withdraw"
+                            size="xs"
+                            no-caps
+                            style="font-weight: 700"
+                            @click="
+                              handleSmartWithdraw({
+                                duePayoutId: cycle.payoutId,
+                                amount: parseFloat(cycle.amountBch),
+                                donorName: group.donorName,
+                                nonprofit: selectedAccount.nonprofitId,
+                              })
+                            "
                           />
-                          <q-badge v-else-if="cycle.status === 'due'" color="orange" label="Due Now" style="font-weight: 700;" />
-                          <q-badge v-else-if="cycle.status === 'next'" color="blue" text-color="white" label="Next" style="font-weight: 600;" />
-                          <q-badge v-else-if="cycle.status === 'upcoming'" color="blue-grey-3" text-color="blue-grey-8" label="Upcoming" />
+                          <q-badge
+                            v-else-if="cycle.status === 'due'"
+                            color="orange"
+                            label="Due Now"
+                            style="font-weight: 700"
+                          />
+                          <q-badge
+                            v-else-if="cycle.status === 'next'"
+                            color="blue"
+                            text-color="white"
+                            label="Next"
+                            style="font-weight: 600"
+                          />
+                          <q-badge
+                            v-else-if="cycle.status === 'upcoming'"
+                            color="blue-grey-3"
+                            text-color="blue-grey-8"
+                            label="Upcoming"
+                          />
                           <q-badge v-else color="grey-3" text-color="grey-8" label="Scheduled" />
                         </div>
                       </div>
@@ -854,13 +1380,27 @@
                         <div class="cycle-mobile-card__row">
                           <span class="cycle-mobile-card__label">Date</span>
                           <span class="cycle-mobile-card__value cycle-date-text">
-                            {{ cycle.dueAt.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) }}
-                            <span class="cycle-time-text q-ml-xs">{{ cycle.dueAt.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }) }}</span>
+                            {{
+                              cycle.dueAt.toLocaleDateString('en-US', {
+                                month: 'short',
+                                day: 'numeric',
+                                year: 'numeric',
+                              })
+                            }}
+                            <span class="cycle-time-text q-ml-xs">{{
+                              cycle.dueAt.toLocaleTimeString('en-US', {
+                                hour: '2-digit',
+                                minute: '2-digit',
+                              })
+                            }}</span>
                           </span>
                         </div>
                         <div class="cycle-mobile-card__row">
                           <span class="cycle-mobile-card__label">Amount</span>
-                          <span class="cycle-mobile-card__value cycle-amount-text text-weight-bold">{{ cycle.amountBch }} <span style="font-size: 10px; color: #90a4ae;">BCH</span></span>
+                          <span class="cycle-mobile-card__value cycle-amount-text text-weight-bold"
+                            >{{ cycle.amountBch }}
+                            <span style="font-size: 10px; color: #90a4ae">BCH</span></span
+                          >
                         </div>
                       </div>
                     </div>
@@ -999,11 +1539,19 @@
                 <template v-slot:item="props">
                   <div class="dash-mobile-card">
                     <div class="dash-mobile-card__header">
-                      <div class="dash-mobile-card__title">{{ props.row.donorName || props.row.description || 'Transaction' }}</div>
+                      <div class="dash-mobile-card__title">
+                        {{ props.row.donorName || props.row.description || 'Transaction' }}
+                      </div>
                       <q-badge
-                        :color="props.row.status === 'completed' ? 'positive' : props.row.status === 'pending' ? 'warning' : 'negative'"
+                        :color="
+                          props.row.status === 'completed'
+                            ? 'positive'
+                            : props.row.status === 'pending'
+                              ? 'warning'
+                              : 'negative'
+                        "
                         :label="props.row.status"
-                        style="font-weight: 600; text-transform: capitalize;"
+                        style="font-weight: 600; text-transform: capitalize"
                       />
                     </div>
                     <div class="dash-mobile-card__body">
@@ -1013,7 +1561,9 @@
                       </div>
                       <div class="dash-mobile-card__row">
                         <span class="dash-mobile-card__label">Amount</span>
-                        <span class="dash-mobile-card__value text-weight-bold">{{ formatCurrency(props.row.amount) }} BCH</span>
+                        <span class="dash-mobile-card__value text-weight-bold"
+                          >{{ formatCurrency(props.row.amount) }} BCH</span
+                        >
                       </div>
                       <div v-if="props.row.type" class="dash-mobile-card__row">
                         <span class="dash-mobile-card__label">Type</span>
@@ -1021,14 +1571,20 @@
                       </div>
                       <div v-if="props.row.description" class="dash-mobile-card__row">
                         <span class="dash-mobile-card__label">Message</span>
-                        <span class="dash-mobile-card__value dash-mobile-card__desc">{{ props.row.description }}</span>
+                        <span class="dash-mobile-card__value dash-mobile-card__desc">{{
+                          props.row.description
+                        }}</span>
                       </div>
                     </div>
                     <div class="dash-mobile-card__footer">
                       <q-btn
-                        flat dense no-caps
-                        icon="receipt_long" label="Details"
-                        size="sm" color="primary"
+                        flat
+                        dense
+                        no-caps
+                        icon="receipt_long"
+                        label="Details"
+                        size="sm"
+                        color="primary"
                         @click="viewTransactionDetails(props.row)"
                       />
                     </div>
@@ -1041,8 +1597,19 @@
       </div>
     </div>
 
-    <q-dialog v-model="withdrawDialog" persistent :position="$q.screen.lt.sm ? 'bottom' : 'standard'">
-      <q-card class="withdraw-dialog-card" :style="$q.screen.lt.sm ? 'width: 100vw; max-width: 100vw; border-radius: 16px 16px 0 0;' : 'min-width: 400px; max-width: 500px;'">
+    <q-dialog
+      v-model="withdrawDialog"
+      persistent
+      :position="$q.screen.lt.sm ? 'bottom' : 'standard'"
+    >
+      <q-card
+        class="withdraw-dialog-card"
+        :style="
+          $q.screen.lt.sm
+            ? 'width: 100vw; max-width: 100vw; border-radius: 16px 16px 0 0;'
+            : 'min-width: 400px; max-width: 500px;'
+        "
+      >
         <q-card-section class="row items-center q-pb-none">
           <div class="text-h6">Withdraw Funds</div>
           <q-space />
@@ -1122,8 +1689,10 @@
 
         <q-card-actions
           :align="$q.screen.lt.sm ? 'stretch' : 'right'"
-          :class="$q.screen.lt.sm ? 'column q-px-md q-pb-md withdraw-dialog-actions' : 'q-px-md q-pb-md'"
-          style="gap: 8px;"
+          :class="
+            $q.screen.lt.sm ? 'column q-px-md q-pb-md withdraw-dialog-actions' : 'q-px-md q-pb-md'
+          "
+          style="gap: 8px"
         >
           <q-btn flat label="Cancel" color="grey-7" v-close-popup />
           <q-btn
@@ -1143,7 +1712,6 @@
          ═══════════════════════════════════════════════════════════ -->
     <q-dialog v-model="txDetailDialog.open" :position="$q.screen.lt.sm ? 'bottom' : 'standard'">
       <q-card class="tx-detail-dialog">
-
         <!-- Header -->
         <div class="tx-detail-header">
           <div class="row items-center justify-between no-wrap">
@@ -1151,7 +1719,14 @@
               <div class="tx-detail-title">Donation Details</div>
               <div class="tx-detail-sub">CrypToCare Charity Dashboard</div>
             </div>
-            <q-btn flat round dense icon="close" @click="txDetailDialog.open = false" class="tx-close-btn" />
+            <q-btn
+              flat
+              round
+              dense
+              icon="close"
+              @click="txDetailDialog.open = false"
+              class="tx-close-btn"
+            />
           </div>
         </div>
 
@@ -1160,7 +1735,13 @@
           <q-badge
             :color="txDetailDialog.statusColor"
             :label="txDetailDialog.data?.status?.toUpperCase()"
-            style="font-size: 12px; font-weight: 700; padding: 5px 14px; border-radius: 6px; letter-spacing: 0.5px;"
+            style="
+              font-size: 12px;
+              font-weight: 700;
+              padding: 5px 14px;
+              border-radius: 6px;
+              letter-spacing: 0.5px;
+            "
           />
         </q-card-section>
 
@@ -1172,14 +1753,20 @@
               <div class="tx-detail-value" :style="row.style">{{ row.value }}</div>
             </div>
             <div class="tx-detail-row tx-detail-row--amount">
-              <div class="tx-detail-label" style="font-weight: 700;">Amount</div>
-              <div class="tx-detail-value" style="font-size: 18px; font-weight: 800; color: #4caf50;">
+              <div class="tx-detail-label" style="font-weight: 700">Amount</div>
+              <div
+                class="tx-detail-value"
+                style="font-size: 18px; font-weight: 800; color: #4caf50"
+              >
                 {{ txDetailDialog.formattedAmount }} {{ txDetailDialog.data?.type }}
               </div>
             </div>
             <div class="tx-detail-row" v-if="isValidTxid(txDetailDialog.data?.txid)">
               <div class="tx-detail-label">Transaction ID</div>
-              <div class="tx-detail-value" style="font-family: monospace; font-size: 11px; word-break: break-all;">
+              <div
+                class="tx-detail-value"
+                style="font-family: monospace; font-size: 11px; word-break: break-all"
+              >
                 {{ normalizeTxid(txDetailDialog.data.txid) }}
               </div>
             </div>
@@ -1193,12 +1780,19 @@
           <div v-if="isValidTxid(txDetailDialog.data?.txid)" class="text-center q-mt-md">
             <q-btn
               class="tx-detail-explorer-btn"
-              unelevated color="primary" icon="open_in_new"
-              :label="txDetailDialog.data?.explorerUrl ? 'View on Blockchain Explorer' : 'Explorer Link Unavailable'"
+              unelevated
+              color="primary"
+              icon="open_in_new"
+              :label="
+                txDetailDialog.data?.explorerUrl
+                  ? 'View on Blockchain Explorer'
+                  : 'Explorer Link Unavailable'
+              "
               :disable="!txDetailDialog.data?.explorerUrl"
               no-caps
-              :href="txDetailDialog.data?.explorerUrl || undefined" target="_blank"
-              style="border-radius: 8px;"
+              :href="txDetailDialog.data?.explorerUrl || undefined"
+              target="_blank"
+              style="border-radius: 8px"
             />
             <div v-if="!txDetailDialog.data?.explorerUrl" class="text-caption text-grey-6 q-mt-xs">
               This TXID is format-valid but has no verified on-chain explorer URL yet.
@@ -1208,12 +1802,22 @@
           <!-- Note -->
           <div class="tx-detail-note q-mt-md">
             <q-icon name="info_outline" size="14px" class="q-mr-xs" />
-            <span>This donation is recorded on the Bitcoin Cash blockchain and can be verified through the transaction hash.</span>
+            <span
+              >This donation is recorded on the Bitcoin Cash blockchain and can be verified through
+              the transaction hash.</span
+            >
           </div>
         </q-card-section>
 
         <q-card-actions align="right" class="q-px-md q-pb-md tx-detail-actions">
-          <q-btn unelevated color="primary" label="Close" no-caps style="border-radius: 8px; min-width: 90px;" @click="txDetailDialog.open = false" />
+          <q-btn
+            unelevated
+            color="primary"
+            label="Close"
+            no-caps
+            style="border-radius: 8px; min-width: 90px"
+            @click="txDetailDialog.open = false"
+          />
         </q-card-actions>
       </q-card>
     </q-dialog>
@@ -1221,31 +1825,53 @@
     <!-- ═══════════════════════════════════════════════════════════
          Professional Withdraw Confirm Dialog
          ═══════════════════════════════════════════════════════════ -->
-    <q-dialog v-model="withdrawConfirmDialog.open" persistent :position="$q.screen.lt.sm ? 'bottom' : 'standard'">
-      <q-card class="withdraw-confirm-card" :style="$q.screen.lt.sm ? 'width:100vw;max-width:100vw;min-width:unset;border-radius:16px 16px 0 0;' : ''">
-
+    <q-dialog
+      v-model="withdrawConfirmDialog.open"
+      persistent
+      :position="$q.screen.lt.sm ? 'bottom' : 'standard'"
+    >
+      <q-card
+        class="withdraw-confirm-card"
+        :style="
+          $q.screen.lt.sm
+            ? 'width:100vw;max-width:100vw;min-width:unset;border-radius:16px 16px 0 0;'
+            : ''
+        "
+      >
         <!-- ── Gradient Header ──────────────────────────────────── -->
         <div
           :style="{
-            background: withdrawConfirmDialog.mode === 'inbox_approval'
-              ? 'linear-gradient(135deg, #f57c00 0%, #e64a19 100%)'
-              : 'linear-gradient(135deg, #1565c0 0%, #0d47a1 100%)',
+            background:
+              withdrawConfirmDialog.mode === 'inbox_approval'
+                ? 'linear-gradient(135deg, #f57c00 0%, #e64a19 100%)'
+                : 'linear-gradient(135deg, #1565c0 0%, #0d47a1 100%)',
             padding: '20px 24px',
           }"
         >
           <div class="row items-center no-wrap">
             <div class="wcd-header-icon-circle">
               <q-icon
-                :name="withdrawConfirmDialog.mode === 'inbox_approval' ? 'mark_email_read' : 'account_balance_wallet'"
+                :name="
+                  withdrawConfirmDialog.mode === 'inbox_approval'
+                    ? 'mark_email_read'
+                    : 'account_balance_wallet'
+                "
                 color="white"
                 size="22px"
               />
             </div>
-            <div style="flex: 1; min-width: 0;">
-              <div class="text-white text-weight-bold" style="font-size: 17px; line-height: 1.2;">
-                {{ withdrawConfirmDialog.mode === 'inbox_approval' ? 'Request Withdrawal Approval' : 'Confirm Withdrawal' }}
+            <div style="flex: 1; min-width: 0">
+              <div class="text-white text-weight-bold" style="font-size: 17px; line-height: 1.2">
+                {{
+                  withdrawConfirmDialog.mode === 'inbox_approval'
+                    ? 'Request Withdrawal Approval'
+                    : 'Confirm Withdrawal'
+                }}
               </div>
-              <div class="text-white ellipsis" style="opacity: 0.78; font-size: 12.5px; margin-top: 2px;">
+              <div
+                class="text-white ellipsis"
+                style="opacity: 0.78; font-size: 12.5px; margin-top: 2px"
+              >
                 {{ withdrawConfirmDialog.accountName }}
               </div>
             </div>
@@ -1265,7 +1891,6 @@
         <!-- ── Summary Stats Row ────────────────────────────────── -->
         <div :class="$q.screen.lt.sm ? 'q-px-sm q-pt-md q-pb-sm' : 'q-px-lg q-pt-lg q-pb-sm'">
           <div class="row q-col-gutter-sm">
-
             <!-- Total BCH -->
             <div class="col-4">
               <div class="wcd-stat-box wcd-stat-box--blue">
@@ -1298,10 +1923,11 @@
                 <div class="wcd-stat-value wcd-stat-value--orange">
                   {{ fmtDialogDate(new Date()) }}
                 </div>
-                <div class="wcd-stat-unit wcd-stat-unit--orange">{{ fmtDialogTime(new Date()) }}</div>
+                <div class="wcd-stat-unit wcd-stat-unit--orange">
+                  {{ fmtDialogTime(new Date()) }}
+                </div>
               </div>
             </div>
-
           </div>
         </div>
 
@@ -1309,7 +1935,6 @@
         <div :class="$q.screen.lt.sm ? 'q-px-sm q-pb-sm' : 'q-px-lg q-pb-sm'">
           <div class="wcd-table-heading">Payout Details</div>
           <div class="wcd-table-wrapper">
-
             <!-- Desktop: table header -->
             <div v-if="!$q.screen.lt.sm" class="row wcd-table-header">
               <div class="col-5 wcd-col-label">Donor</div>
@@ -1325,15 +1950,23 @@
                 :key="payout.id"
                 class="row items-center wcd-table-row"
                 :style="{
-                  borderBottom: idx < withdrawConfirmDialog.payouts.length - 1
-                    ? ($q.dark.isActive ? '1px solid #1e2d50' : '1px solid #f0f4f8')
-                    : 'none',
-                  background: idx % 2 === 0
-                    ? ($q.dark.isActive ? '#0f1629' : '#ffffff')
-                    : ($q.dark.isActive ? '#111d3a' : '#fafbfc'),
+                  borderBottom:
+                    idx < withdrawConfirmDialog.payouts.length - 1
+                      ? $q.dark.isActive
+                        ? '1px solid #1e2d50'
+                        : '1px solid #f0f4f8'
+                      : 'none',
+                  background:
+                    idx % 2 === 0
+                      ? $q.dark.isActive
+                        ? '#0f1629'
+                        : '#ffffff'
+                      : $q.dark.isActive
+                        ? '#111d3a'
+                        : '#fafbfc',
                 }"
               >
-                <div class="col-5" style="min-width: 0;">
+                <div class="col-5" style="min-width: 0">
                   <div class="ellipsis wcd-donor-name">{{ payout.donorName }}</div>
                   <div class="ellipsis wcd-donor-email">{{ payout.donorEmail || '—' }}</div>
                 </div>
@@ -1347,7 +1980,7 @@
                     :label="`${payout.cycleNumber} / ${payout.totalCycles}`"
                     color="blue-2"
                     text-color="blue-9"
-                    style="font-size: 10px; font-weight: 700; border-radius: 6px; height: 20px;"
+                    style="font-size: 10px; font-weight: 700; border-radius: 6px; height: 20px"
                   />
                 </div>
                 <div class="col text-right">
@@ -1364,20 +1997,28 @@
                 :key="payout.id"
                 class="wcd-mobile-row"
                 :style="{
-                  borderBottom: idx < withdrawConfirmDialog.payouts.length - 1
-                    ? ($q.dark.isActive ? '1px solid #1e2d50' : '1px solid #f0f4f8')
-                    : 'none',
-                  background: idx % 2 === 0
-                    ? ($q.dark.isActive ? '#0f1629' : '#ffffff')
-                    : ($q.dark.isActive ? '#111d3a' : '#fafbfc'),
+                  borderBottom:
+                    idx < withdrawConfirmDialog.payouts.length - 1
+                      ? $q.dark.isActive
+                        ? '1px solid #1e2d50'
+                        : '1px solid #f0f4f8'
+                      : 'none',
+                  background:
+                    idx % 2 === 0
+                      ? $q.dark.isActive
+                        ? '#0f1629'
+                        : '#ffffff'
+                      : $q.dark.isActive
+                        ? '#111d3a'
+                        : '#fafbfc',
                 }"
               >
                 <div class="row items-start justify-between no-wrap">
-                  <div style="min-width: 0; flex: 1;">
+                  <div style="min-width: 0; flex: 1">
                     <div class="ellipsis wcd-donor-name">{{ payout.donorName }}</div>
                     <div class="ellipsis wcd-donor-email">{{ payout.donorEmail || '—' }}</div>
                   </div>
-                  <div class="text-right" style="flex-shrink: 0; margin-left: 10px;">
+                  <div class="text-right" style="flex-shrink: 0; margin-left: 10px">
                     <div class="wcd-payout-amount">{{ payout.amountBch }}</div>
                     <div class="wcd-payout-bch">BCH</div>
                   </div>
@@ -1388,7 +2029,13 @@
                     :label="`Cycle ${payout.cycleNumber} / ${payout.totalCycles}`"
                     color="blue-2"
                     text-color="blue-9"
-                    style="font-size: 10px; font-weight: 700; border-radius: 6px; height: 20px; margin: 0;"
+                    style="
+                      font-size: 10px;
+                      font-weight: 700;
+                      border-radius: 6px;
+                      height: 20px;
+                      margin: 0;
+                    "
                   />
                   <div class="text-right">
                     <div class="wcd-due-date">{{ fmtDialogDateShort(new Date(payout.dueAt)) }}</div>
@@ -1397,7 +2044,6 @@
                 </div>
               </div>
             </template>
-
           </div>
         </div>
 
@@ -1408,19 +2054,28 @@
             v-if="withdrawConfirmDialog.mode === 'inbox_approval'"
             class="wcd-notice wcd-notice--approval"
           >
-            <q-icon name="mail_outline" color="orange-8" size="16px" style="margin-top: 1px; flex-shrink: 0;" />
+            <q-icon
+              name="mail_outline"
+              color="orange-8"
+              size="16px"
+              style="margin-top: 1px; flex-shrink: 0"
+            />
             <div class="wcd-notice-text wcd-notice-text--approval">
-              <strong>Approval Required</strong> — An email will be sent to each donor asking them to approve this scheduled withdrawal. Funds will only move once they confirm.
+              <strong>Approval Required</strong> — An email will be sent to each donor asking them
+              to approve this scheduled withdrawal. Funds will only move once they confirm.
             </div>
           </div>
           <!-- smart notice -->
-          <div
-            v-else
-            class="wcd-notice wcd-notice--smart"
-          >
-            <q-icon name="bolt" color="green-8" size="16px" style="margin-top: 1px; flex-shrink: 0;" />
+          <div v-else class="wcd-notice wcd-notice--smart">
+            <q-icon
+              name="bolt"
+              color="green-8"
+              size="16px"
+              style="margin-top: 1px; flex-shrink: 0"
+            />
             <div class="wcd-notice-text wcd-notice-text--smart">
-              <strong>Smart Withdrawal</strong> — This payout will execute automatically on the Bitcoin Cash blockchain. This action cannot be undone.
+              <strong>Smart Withdrawal</strong> — This payout will execute automatically on the
+              Bitcoin Cash blockchain. This action cannot be undone.
             </div>
           </div>
         </div>
@@ -1431,7 +2086,7 @@
         <q-card-actions
           :align="$q.screen.lt.sm ? 'stretch' : 'right'"
           :class="$q.screen.lt.sm ? 'column-reverse q-pa-md' : 'q-pa-md'"
-          style="gap: 8px;"
+          style="gap: 8px"
         >
           <q-btn
             flat
@@ -1444,20 +2099,26 @@
           />
           <q-btn
             unelevated
-            :label="withdrawConfirmDialog.mode === 'inbox_approval' ? 'Send Approval Emails' : 'Confirm Withdrawal'"
+            :label="
+              withdrawConfirmDialog.mode === 'inbox_approval'
+                ? 'Send Approval Emails'
+                : 'Confirm Withdrawal'
+            "
             :color="withdrawConfirmDialog.mode === 'inbox_approval' ? 'deep-orange' : 'positive'"
             no-caps
             :class="$q.screen.lt.sm ? 'full-width' : ''"
-            :style="$q.screen.lt.sm ? 'font-weight: 600; letter-spacing: 0.3px;' : 'min-width: 168px; font-weight: 600; letter-spacing: 0.3px;'"
+            :style="
+              $q.screen.lt.sm
+                ? 'font-weight: 600; letter-spacing: 0.3px;'
+                : 'min-width: 168px; font-weight: 600; letter-spacing: 0.3px;'
+            "
             :loading="withdrawConfirmDialog.loading"
             :icon="withdrawConfirmDialog.mode === 'inbox_approval' ? 'send' : 'check_circle'"
             @click="executeWithdrawConfirm"
           />
         </q-card-actions>
-
       </q-card>
     </q-dialog>
-
   </q-page>
 </template>
 
@@ -1476,7 +2137,7 @@ import {
   Title,
   Tooltip,
   Legend,
-  Filler
+  Filler,
 } from 'chart.js'
 
 ChartJS.register(
@@ -1489,16 +2150,17 @@ ChartJS.register(
   Title,
   Tooltip,
   Legend,
-  Filler
+  Filler,
 )
 import { api } from 'boot/axios'
+import { useNetworkStore } from 'src/stores/network-store'
 import bchImg from 'src/assets/bch.png'
 import projectImg from 'src/assets/project.png'
 import transactionImg from 'src/assets/transaction.png'
 
 const $q = useQuasar()
+const networkStore = useNetworkStore()
 const TXID_PATTERN = /^[A-Fa-f0-9]{64}$/
-const CHIPNET_EXPLORER_BASE_URL = 'https://chipnet.bchexplorer.info'
 
 // Map of nonprofitId → sidebar button state
 const nonprofitPayoutsMap = ref({})
@@ -1522,7 +2184,9 @@ function onWalletChange() {
   isConnected.value = localStorage.getItem('cryptocare.wallet.connected') === '1'
 }
 onMounted(() => window.addEventListener('cryptocare:wallet-connection-changed', onWalletChange))
-onUnmounted(() => window.removeEventListener('cryptocare:wallet-connection-changed', onWalletChange))
+onUnmounted(() =>
+  window.removeEventListener('cryptocare:wallet-connection-changed', onWalletChange),
+)
 
 const loadingDonations = ref(false)
 const apiDonations = ref([])
@@ -1564,7 +2228,7 @@ const withdrawConfirmDialog = ref({
   open: false,
   mode: 'smart', // 'smart' | 'inbox_approval'
   accountName: '',
-  payouts: [],   // [{ id, donorName, donorEmail, amountBch, cycleNumber, totalCycles, dueAt }]
+  payouts: [], // [{ id, donorName, donorEmail, amountBch, cycleNumber, totalCycles, dueAt }]
   totalBch: '0',
   loading: false,
   onConfirm: null,
@@ -1572,10 +2236,8 @@ const withdrawConfirmDialog = ref({
 
 const fmtDialogDate = (d) =>
   d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
-const fmtDialogDateShort = (d) =>
-  d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
-const fmtDialogTime = (d) =>
-  d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })
+const fmtDialogDateShort = (d) => d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+const fmtDialogTime = (d) => d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })
 
 const accounts = ref([])
 
@@ -1767,22 +2429,22 @@ const createWithdrawalAccounts = () => {
     return {
       id: groupKey,
       nonprofitId: data.nonprofitId,
-    name: data.name,
-    number: data.email || data.contact || '',
-    address: data.address,
-    current: data.total,
-    available: data.pending,
-    type: 'Paytaca',
-    totalFees: 0,
-    charityName: data.donations[0]?.cause || '',
-    email: data.email,
-    contact: data.contact,
-    totalReceived: data.total,
-    firstDonation: firstTs ? new Date(firstTs).toLocaleDateString() : 'N/A',
-    lastDonation: lastTs ? new Date(lastTs).toLocaleDateString() : 'N/A',
-    transactionCount: data.donations.length,
-    donations: data.donations,
-    cards: [],
+      name: data.name,
+      number: data.email || data.contact || '',
+      address: data.address,
+      current: data.total,
+      available: data.pending,
+      type: 'Paytaca',
+      totalFees: 0,
+      charityName: data.donations[0]?.cause || '',
+      email: data.email,
+      contact: data.contact,
+      totalReceived: data.total,
+      firstDonation: firstTs ? new Date(firstTs).toLocaleDateString() : 'N/A',
+      lastDonation: lastTs ? new Date(lastTs).toLocaleDateString() : 'N/A',
+      transactionCount: data.donations.length,
+      donations: data.donations,
+      cards: [],
     }
   })
 
@@ -1856,8 +2518,10 @@ const fetchPayoutsForNonprofit = async (nonprofitId) => {
     })
 
     Object.entries(latestExecutedByDonation).forEach(([donationId, payout]) => {
-      const txid = String(payout.txid || '').trim().toLowerCase()
-      const explorerUrl = txid ? `${CHIPNET_EXPLORER_BASE_URL}/tx/${txid}` : ''
+      const txid = String(payout.txid || '')
+        .trim()
+        .toLowerCase()
+      const explorerUrl = txid ? `${networkStore.explorerBaseUrl}/tx/${txid}` : ''
       const stamp = (list) => {
         const row = list.value.find((t) => String(t.id) === String(donationId))
         if (!row) return
@@ -1884,7 +2548,6 @@ const getAccountSchedule = (account) => {
   return allPayoutsMap.value[account.nonprofitId] ?? { pending: [], executed: [] }
 }
 
-
 onMounted(() => {
   fetchDonations()
   const saved = localStorage.getItem('withdrawnDonations')
@@ -1906,34 +2569,39 @@ const statusFilter = ref('All')
 const typeFilter = ref('All')
 
 // ── Dashboard Analytics Charts ────────────────────────────────────────────────
-const dashChartTextColor = computed(() => $q.dark.isActive ? 'rgba(255,255,255,0.65)' : '#546e7a')
-const dashChartGridColor  = computed(() => $q.dark.isActive ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.07)')
+const dashChartTextColor = computed(() => ($q.dark.isActive ? 'rgba(255,255,255,0.65)' : '#546e7a'))
+const dashChartGridColor = computed(() =>
+  $q.dark.isActive ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.07)',
+)
 
 // Line chart: BCH received over time for the selected donor
 const dashLineChartData = computed(() => {
-  const donorDonationIds = new Set(
-    (selectedAccount.value?.donations ?? []).map(d => d.id)
-  )
+  const donorDonationIds = new Set((selectedAccount.value?.donations ?? []).map((d) => d.id))
   const sorted = [...allTransactions.value]
-    .filter(t => t.status === 'completed' && (donorDonationIds.size === 0 || donorDonationIds.has(t.id)))
+    .filter(
+      (t) =>
+        t.status === 'completed' && (donorDonationIds.size === 0 || donorDonationIds.has(t.id)),
+    )
     .sort((a, b) => new Date(a.date) - new Date(b.date))
     .slice(-15)
   return {
-    labels: sorted.map(t => {
+    labels: sorted.map((t) => {
       const d = new Date(t.date)
       return isNaN(d) ? t.date : d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
     }),
-    datasets: [{
-      label: 'BCH Received',
-      data: sorted.map(t => parseFloat(t.amount || 0)),
-      borderColor: '#1976d2',
-      backgroundColor: $q.dark.isActive ? 'rgba(25,118,210,0.18)' : 'rgba(25,118,210,0.1)',
-      borderWidth: 2,
-      pointBackgroundColor: '#1976d2',
-      pointRadius: 4,
-      fill: true,
-      tension: 0.4
-    }]
+    datasets: [
+      {
+        label: 'BCH Received',
+        data: sorted.map((t) => parseFloat(t.amount || 0)),
+        borderColor: '#1976d2',
+        backgroundColor: $q.dark.isActive ? 'rgba(25,118,210,0.18)' : 'rgba(25,118,210,0.1)',
+        borderWidth: 2,
+        pointBackgroundColor: '#1976d2',
+        pointRadius: 4,
+        fill: true,
+        tension: 0.4,
+      },
+    ],
   }
 })
 const dashLineChartOptions = computed(() => ({
@@ -1941,51 +2609,62 @@ const dashLineChartOptions = computed(() => ({
   maintainAspectRatio: false,
   plugins: {
     legend: { display: false },
-    tooltip: { callbacks: { label: ctx => ` ${ctx.parsed.y.toFixed(4)} BCH` } }
+    tooltip: { callbacks: { label: (ctx) => ` ${ctx.parsed.y.toFixed(4)} BCH` } },
   },
   scales: {
     x: {
       grid: { color: dashChartGridColor.value },
-      ticks: { color: dashChartTextColor.value, font: { size: 10 } }
+      ticks: { color: dashChartTextColor.value, font: { size: 10 } },
     },
     y: {
       grid: { color: dashChartGridColor.value },
-      ticks: { color: dashChartTextColor.value, font: { size: 10 }, callback: v => v + ' BCH' },
-      beginAtZero: true
-    }
-  }
+      ticks: { color: dashChartTextColor.value, font: { size: 10 }, callback: (v) => v + ' BCH' },
+      beginAtZero: true,
+    },
+  },
 }))
 
 // Donut chart: BCH per individual donation send for the selected donor
-const DASH_COLORS = ['#1976d2','#7b1fa2','#2e7d32','#e65100','#c62828','#00838f','#37474f','#f57f17','#00695c','#4527a0']
+const DASH_COLORS = [
+  '#1976d2',
+  '#7b1fa2',
+  '#2e7d32',
+  '#e65100',
+  '#c62828',
+  '#00838f',
+  '#37474f',
+  '#f57f17',
+  '#00695c',
+  '#4527a0',
+]
 const dashDonutChartData = computed(() => {
-  const donorDonationIds = new Set(
-    (selectedAccount.value?.donations ?? []).map(d => d.id)
-  )
+  const donorDonationIds = new Set((selectedAccount.value?.donations ?? []).map((d) => d.id))
   const sends = [...allTransactions.value]
-    .filter(t => donorDonationIds.size === 0 || donorDonationIds.has(t.id))
+    .filter((t) => donorDonationIds.size === 0 || donorDonationIds.has(t.id))
     .sort((a, b) => new Date(a.date) - new Date(b.date))
   return {
-    labels: sends.map(t => {
+    labels: sends.map((t) => {
       const d = new Date(t.date)
-      return isNaN(d) ? t.date : d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: '2-digit' })
+      return isNaN(d)
+        ? t.date
+        : d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: '2-digit' })
     }),
-    datasets: [{
-      label: 'BCH Sent',
-      data: sends.map(t => parseFloat(parseFloat(t.amount || 0).toFixed(4))),
-      backgroundColor: sends.map((_, i) => DASH_COLORS[i % DASH_COLORS.length] + 'cc'),
-      borderColor: sends.map((_, i) => DASH_COLORS[i % DASH_COLORS.length]),
-      borderWidth: 2,
-      hoverOffset: 8,
-    }]
+    datasets: [
+      {
+        label: 'BCH Sent',
+        data: sends.map((t) => parseFloat(parseFloat(t.amount || 0).toFixed(4))),
+        backgroundColor: sends.map((_, i) => DASH_COLORS[i % DASH_COLORS.length] + 'cc'),
+        borderColor: sends.map((_, i) => DASH_COLORS[i % DASH_COLORS.length]),
+        borderWidth: 2,
+        hoverOffset: 8,
+      },
+    ],
   }
 })
 const dashDonutTotal = computed(() => {
-  const donorDonationIds = new Set(
-    (selectedAccount.value?.donations ?? []).map(d => d.id)
-  )
+  const donorDonationIds = new Set((selectedAccount.value?.donations ?? []).map((d) => d.id))
   return allTransactions.value
-    .filter(t => donorDonationIds.size === 0 || donorDonationIds.has(t.id))
+    .filter((t) => donorDonationIds.size === 0 || donorDonationIds.has(t.id))
     .reduce((sum, t) => sum + parseFloat(t.amount || 0), 0)
     .toFixed(4)
 })
@@ -2002,22 +2681,35 @@ const dashDonutChartOptions = computed(() => ({
         font: { size: 10 },
         boxWidth: 10,
         padding: 8,
-      }
+      },
     },
     tooltip: {
       callbacks: {
-        label: ctx => ` ${ctx.parsed.toFixed(4)} BCH (${((ctx.parsed / parseFloat(dashDonutTotal.value)) * 100).toFixed(1)}%)`
-      }
-    }
-  }
+        label: (ctx) =>
+          ` ${ctx.parsed.toFixed(4)} BCH (${((ctx.parsed / parseFloat(dashDonutTotal.value)) * 100).toFixed(1)}%)`,
+      },
+    },
+  },
 }))
 // ─────────────────────────────────────────────────────────────────────────────
 
 // Columns for executed withdrawals history table
 const executedColumns = [
-  { name: 'executed_at', label: 'Date Executed', field: 'executed_at', align: 'left', sortable: true },
+  {
+    name: 'executed_at',
+    label: 'Date Executed',
+    field: 'executed_at',
+    align: 'left',
+    sortable: true,
+  },
   { name: 'donor_name', label: 'Donor', field: 'donor_name', align: 'left' },
-  { name: 'amount', label: 'Amount', field: 'payout_amount_satoshis', align: 'right', sortable: true },
+  {
+    name: 'amount',
+    label: 'Amount',
+    field: 'payout_amount_satoshis',
+    align: 'right',
+    sortable: true,
+  },
   { name: 'cycle', label: 'Cycle', field: 'cycle_number', align: 'center' },
   { name: 'interval', label: 'Interval', field: 'interval_label', align: 'center' },
   { name: 'txid', label: 'Transaction ID', field: 'txid', align: 'left' },
@@ -2063,13 +2755,13 @@ const pendingScheduleGroups = computed(() => {
     }
 
     // status: due (past) → next (first future) → upcoming (second future) → scheduled (rest)
-    const futureCycles = pg.cycles.filter(c => c.status !== 'due').length
+    const futureCycles = pg.cycles.filter((c) => c.status !== 'due').length
     let status = 'scheduled'
     if (isDue) status = 'due'
     else if (futureCycles === 0) status = 'next'
     else if (futureCycles === 1) status = 'upcoming'
 
-    pg.cyclesRemaining = pg.cycles.filter(c => c.status !== 'due').length + (isDue ? 0 : 1)
+    pg.cyclesRemaining = pg.cycles.filter((c) => c.status !== 'due').length + (isDue ? 0 : 1)
 
     pg.cycles.push({
       cycleNumber: p.cycle_number,
@@ -2082,7 +2774,7 @@ const pendingScheduleGroups = computed(() => {
 
   // Recalculate cyclesRemaining after all records are processed
   Object.values(groups).forEach((g) => {
-    g.cyclesRemaining = g.cycles.filter(c => c.status !== 'due').length
+    g.cyclesRemaining = g.cycles.filter((c) => c.status !== 'due').length
   })
 
   return Object.values(groups)
@@ -2095,7 +2787,13 @@ const transactionColumns = [
   { name: 'type', label: 'Type', field: 'type', align: 'center' },
   { name: 'amount', label: 'Amount', field: 'amount', align: 'right', sortable: true },
   { name: 'status', label: 'Status', field: 'status', align: 'center' },
-  { name: 'actions', label: 'Actions', field: 'actions', align: 'center', style: 'min-width: 120px' },
+  {
+    name: 'actions',
+    label: 'Actions',
+    field: 'actions',
+    align: 'center',
+    style: 'min-width: 120px',
+  },
 ]
 
 const transactions = ref([])
@@ -2176,7 +2874,7 @@ const getExplorerUrlForDonation = (donation) => {
   const normalized = normalizeTxid(donation?.txid)
   const provided = (donation?.explorer_url || '').trim()
   if (!normalized || !provided) return ''
-  const expected = `${CHIPNET_EXPLORER_BASE_URL}/tx/${normalized}`
+  const expected = `${networkStore.explorerBaseUrl}/tx/${normalized}`
   return provided.toLowerCase() === expected.toLowerCase() ? expected : ''
 }
 
@@ -2250,7 +2948,9 @@ const handleSmartWithdraw = (row) => {
     ],
     loading: false,
     onConfirm: async () => {
-      const txid = isValidTxid(row.txid) ? normalizeTxid(row.txid) : generateFallbackTxid(`tx-${row.id}`)
+      const txid = isValidTxid(row.txid)
+        ? normalizeTxid(row.txid)
+        : generateFallbackTxid(`tx-${row.id}`)
       await api.post(`payouts/${row.duePayoutId}/execute/`, { txid })
       row.txid = txid
       withdrawnDonations.value.add(row.id)
@@ -2524,11 +3224,18 @@ const refreshTransactions = async () => {
 
 const viewTransactionDetails = (transaction) => {
   const transactionDate = new Date(transaction.date).toLocaleDateString('en-US', {
-    year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
   })
   const statusColor =
-    transaction.status === 'completed' ? 'positive' :
-    transaction.status === 'pending' ? 'warning' : 'negative'
+    transaction.status === 'completed'
+      ? 'positive'
+      : transaction.status === 'pending'
+        ? 'warning'
+        : 'negative'
 
   const rows = [
     { label: 'Donation Date', value: transactionDate },
@@ -2536,11 +3243,29 @@ const viewTransactionDetails = (transaction) => {
     { label: 'Donor Email', value: transaction.donorEmail || 'N/A' },
     { label: 'Donor Contact', value: transaction.donorContact || 'N/A' },
     ...(transaction.contract && transaction.contract !== 'N/A'
-      ? [{ label: 'Contract', value: transaction.contract, style: 'color: #1976d2; font-weight: 600;' }] : []),
+      ? [
+          {
+            label: 'Contract',
+            value: transaction.contract,
+            style: 'color: #1976d2; font-weight: 600;',
+          },
+        ]
+      : []),
     ...(transaction.interval && transaction.interval !== 'N/A'
-      ? [{ label: 'Interval', value: transaction.interval, style: 'color: #1976d2; font-weight: 600;' }] : []),
+      ? [
+          {
+            label: 'Interval',
+            value: transaction.interval,
+            style: 'color: #1976d2; font-weight: 600;',
+          },
+        ]
+      : []),
     { label: 'Message', value: transaction.description || 'No message' },
-    { label: 'Wallet Type', value: transaction.type?.toUpperCase(), style: 'color: #4caf50; font-weight: 600;' },
+    {
+      label: 'Wallet Type',
+      value: transaction.type?.toUpperCase(),
+      style: 'color: #4caf50; font-weight: 600;',
+    },
   ]
 
   txDetailDialog.value = {
@@ -2557,16 +3282,14 @@ const viewTransactionDetails = (transaction) => {
 .dashboard-page {
   overflow-x: hidden;
   min-height: 100vh;
-  background:
-    linear-gradient(135deg, #f0f4ff 0%, #f7f4ff 50%, #f0f9ff 100%);
+  background: linear-gradient(135deg, #f0f4ff 0%, #f7f4ff 50%, #f0f9ff 100%);
   background-attachment: fixed;
 }
 
 .body--dark .dashboard-page {
   background:
     radial-gradient(ellipse at 15% 30%, rgba(60, 90, 180, 0.35) 0%, transparent 55%),
-    radial-gradient(ellipse at 85% 70%, rgba(100, 60, 180, 0.3) 0%, transparent 55%),
-    #0f1117;
+    radial-gradient(ellipse at 85% 70%, rgba(100, 60, 180, 0.3) 0%, transparent 55%), #0f1117;
 }
 
 .sidebar-container {
@@ -2587,7 +3310,7 @@ const viewTransactionDetails = (transaction) => {
   background: rgba(255, 255, 255, 0.6);
   backdrop-filter: blur(18px);
   -webkit-backdrop-filter: blur(18px);
-  border-left: 1.5px solid rgba(21, 101, 192, 0.10);
+  border-left: 1.5px solid rgba(21, 101, 192, 0.1);
 }
 
 .body--dark .main-content {
@@ -2823,7 +3546,9 @@ const viewTransactionDetails = (transaction) => {
 
   &:hover {
     background: rgba(21, 101, 192, 0.13);
-    .sidebar-address-copy-icon { opacity: 1; }
+    .sidebar-address-copy-icon {
+      opacity: 1;
+    }
   }
 }
 .body--dark .sidebar-address-pill {
@@ -2854,7 +3579,7 @@ const viewTransactionDetails = (transaction) => {
 
 .body--dark .sidebar-account-card {
   background: rgba(30, 36, 60, 0.75);
-  border-color: rgba(255, 255, 255, 0.10);
+  border-color: rgba(255, 255, 255, 0.1);
   box-shadow:
     0 1px 3px rgba(0, 0, 0, 0.25),
     0 4px 14px rgba(0, 0, 0, 0.22);
@@ -3066,7 +3791,9 @@ const viewTransactionDetails = (transaction) => {
   background: rgba(255, 255, 255, 0.72);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
 
   &:hover {
     border-color: #1565c0 !important;
@@ -3955,13 +4682,25 @@ const viewTransactionDetails = (transaction) => {
   letter-spacing: 0.6px;
   margin-top: 4px;
 }
-.wcd-stat-label--blue { color: #1a56db; }
-.wcd-stat-label--green { color: #1e6b3a; }
-.wcd-stat-label--orange { color: #c45e0a; }
+.wcd-stat-label--blue {
+  color: #1a56db;
+}
+.wcd-stat-label--green {
+  color: #1e6b3a;
+}
+.wcd-stat-label--orange {
+  color: #c45e0a;
+}
 
-.body--dark .wcd-stat-label--blue { color: #7ecbff; }
-.body--dark .wcd-stat-label--green { color: #81c995; }
-.body--dark .wcd-stat-label--orange { color: #ffb74d; }
+.body--dark .wcd-stat-label--blue {
+  color: #7ecbff;
+}
+.body--dark .wcd-stat-label--green {
+  color: #81c995;
+}
+.body--dark .wcd-stat-label--orange {
+  color: #ffb74d;
+}
 
 /* Stat values */
 .wcd-stat-value {
@@ -3970,26 +4709,53 @@ const viewTransactionDetails = (transaction) => {
   margin-top: 2px;
   line-height: 1;
 }
-.wcd-stat-value--blue { color: #1a56db; }
-.wcd-stat-value--green { color: #1e6b3a; }
-.wcd-stat-value--orange { font-size: 12px; font-weight: 800; color: #c45e0a; line-height: 1.2; }
+.wcd-stat-value--blue {
+  color: #1a56db;
+}
+.wcd-stat-value--green {
+  color: #1e6b3a;
+}
+.wcd-stat-value--orange {
+  font-size: 12px;
+  font-weight: 800;
+  color: #c45e0a;
+  line-height: 1.2;
+}
 
-.body--dark .wcd-stat-value--blue { color: #7ecbff; }
-.body--dark .wcd-stat-value--green { color: #81c995; }
-.body--dark .wcd-stat-value--orange { color: #ffb74d; }
+.body--dark .wcd-stat-value--blue {
+  color: #7ecbff;
+}
+.body--dark .wcd-stat-value--green {
+  color: #81c995;
+}
+.body--dark .wcd-stat-value--orange {
+  color: #ffb74d;
+}
 
 /* Stat units */
 .wcd-stat-unit {
   font-size: 11px;
   margin-top: 1px;
 }
-.wcd-stat-unit--blue { color: #6b8cc7; }
-.wcd-stat-unit--green { color: #5a9970; }
-.wcd-stat-unit--orange { color: #c07940; }
+.wcd-stat-unit--blue {
+  color: #6b8cc7;
+}
+.wcd-stat-unit--green {
+  color: #5a9970;
+}
+.wcd-stat-unit--orange {
+  color: #c07940;
+}
 
-.body--dark .wcd-stat-unit--blue { color: #5a7a9e; }
-.body--dark .wcd-stat-unit--green { color: #4a7a5e; }
-.body--dark .wcd-stat-unit--orange { color: #8a6240; }
+.body--dark .wcd-stat-unit--blue {
+  color: #5a7a9e;
+}
+.body--dark .wcd-stat-unit--green {
+  color: #4a7a5e;
+}
+.body--dark .wcd-stat-unit--orange {
+  color: #8a6240;
+}
 
 /* Table heading label */
 .wcd-table-heading {
@@ -4000,7 +4766,9 @@ const viewTransactionDetails = (transaction) => {
   letter-spacing: 0.7px;
   margin-bottom: 8px;
 }
-.body--dark .wcd-table-heading { color: #5a7a9e; }
+.body--dark .wcd-table-heading {
+  color: #5a7a9e;
+}
 
 /* Table wrapper */
 .wcd-table-wrapper {
@@ -4031,7 +4799,9 @@ const viewTransactionDetails = (transaction) => {
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
-.body--dark .wcd-col-label { color: #5a7a9e; }
+.body--dark .wcd-col-label {
+  color: #5a7a9e;
+}
 
 /* Table rows */
 .wcd-table-row {
@@ -4053,8 +4823,12 @@ const viewTransactionDetails = (transaction) => {
   font-size: 11px;
   color: #9e9e9e;
 }
-.body--dark .wcd-donor-name { color: #c8d8f0; }
-.body--dark .wcd-donor-email { color: #5a7a9e; }
+.body--dark .wcd-donor-name {
+  color: #c8d8f0;
+}
+.body--dark .wcd-donor-email {
+  color: #5a7a9e;
+}
 
 /* Payout amount */
 .wcd-payout-amount {
@@ -4066,8 +4840,12 @@ const viewTransactionDetails = (transaction) => {
   font-size: 10px;
   color: #90a4ae;
 }
-.body--dark .wcd-payout-amount { color: #7ecbff; }
-.body--dark .wcd-payout-bch { color: #5a7a9e; }
+.body--dark .wcd-payout-amount {
+  color: #7ecbff;
+}
+.body--dark .wcd-payout-bch {
+  color: #5a7a9e;
+}
 
 /* Due date / time */
 .wcd-due-date {
@@ -4079,8 +4857,12 @@ const viewTransactionDetails = (transaction) => {
   font-size: 10px;
   color: #9e9e9e;
 }
-.body--dark .wcd-due-date { color: #ffb74d; }
-.body--dark .wcd-due-time { color: #5a7a9e; }
+.body--dark .wcd-due-date {
+  color: #ffb74d;
+}
+.body--dark .wcd-due-time {
+  color: #5a7a9e;
+}
 
 /* Notice boxes */
 .wcd-notice {
@@ -4113,11 +4895,19 @@ const viewTransactionDetails = (transaction) => {
   font-size: 12px;
   line-height: 1.5;
 }
-.wcd-notice-text--approval { color: #6d4c00; }
-.wcd-notice-text--smart { color: #1b5e20; }
+.wcd-notice-text--approval {
+  color: #6d4c00;
+}
+.wcd-notice-text--smart {
+  color: #1b5e20;
+}
 
-.body--dark .wcd-notice-text--approval { color: #ffe082; }
-.body--dark .wcd-notice-text--smart { color: #a5d6a7; }
+.body--dark .wcd-notice-text--approval {
+  color: #ffe082;
+}
+.body--dark .wcd-notice-text--smart {
+  color: #a5d6a7;
+}
 
 /* ── Dashboard mobile cards (All Donations + Transaction Status) ── */
 .transactions-table {
@@ -4142,7 +4932,7 @@ const viewTransactionDetails = (transaction) => {
   align-items: center;
   justify-content: space-between;
   padding: 11px 14px 8px;
-  border-bottom: 1.5px solid rgba(21, 101, 192, 0.10);
+  border-bottom: 1.5px solid rgba(21, 101, 192, 0.1);
   gap: 8px;
 }
 
@@ -4219,10 +5009,18 @@ const viewTransactionDetails = (transaction) => {
 .body--dark .dash-mobile-card__header {
   border-bottom-color: rgba(93, 156, 245, 0.14);
 }
-.body--dark .dash-mobile-card__title { color: #90caf9; }
-.body--dark .dash-mobile-card__label { color: rgba(255, 255, 255, 0.45); }
-.body--dark .dash-mobile-card__value { color: rgba(255, 255, 255, 0.85); }
-.body--dark .dash-mobile-card__footer { border-top-color: rgba(93, 156, 245, 0.10); }
+.body--dark .dash-mobile-card__title {
+  color: #90caf9;
+}
+.body--dark .dash-mobile-card__label {
+  color: rgba(255, 255, 255, 0.45);
+}
+.body--dark .dash-mobile-card__value {
+  color: rgba(255, 255, 255, 0.85);
+}
+.body--dark .dash-mobile-card__footer {
+  border-top-color: rgba(93, 156, 245, 0.1);
+}
 
 /* ── Pending cycles — mobile card ─────────────────────────────── */
 .cycle-mobile-card {
@@ -4231,8 +5029,12 @@ const viewTransactionDetails = (transaction) => {
   background: #ffffff;
   transition: background 0.2s;
 }
-.cycle-mobile-card:last-child { border-bottom: none; }
-.cycle-mobile-card--due { background: #fffde7; }
+.cycle-mobile-card:last-child {
+  border-bottom: none;
+}
+.cycle-mobile-card--due {
+  background: #fffde7;
+}
 
 .cycle-mobile-card__top {
   display: flex;
@@ -4275,8 +5077,12 @@ const viewTransactionDetails = (transaction) => {
   background: #0f1629;
   border-bottom-color: #1e2d50;
 }
-.body--dark .cycle-mobile-card--due { background: #1f1a00; }
-.body--dark .cycle-mobile-card__label { color: #5a7a9e; }
+.body--dark .cycle-mobile-card--due {
+  background: #1f1a00;
+}
+.body--dark .cycle-mobile-card__label {
+  color: #5a7a9e;
+}
 
 /* ── Profile Header Card: Mobile Responsive ──────────────────────── */
 @media (max-width: 599px) {

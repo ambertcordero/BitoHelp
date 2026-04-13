@@ -9,6 +9,17 @@ export function isValidBCHAddress(address) {
   return cashAddrRegex.test(address) || legacyRegex.test(address)
 }
 
+/**
+ * Validate an address for a specific network prefix.
+ * @param {string} address
+ * @param {'bitcoincash'|'bchtest'} prefix
+ */
+export function isValidBCHAddressForPrefix(address, prefix) {
+  if (!address || typeof address !== 'string') return false
+  const cashAddrRegex = new RegExp(`^${prefix}:[qpzry9x8gf2tvdw0s3jn54khce6mua7l]{42}$`, 'i')
+  return cashAddrRegex.test(address)
+}
+
 export function formatBCH(satoshis) {
   const bch = satoshis / 100000000
   return bch.toFixed(8) + ' BCH'
@@ -68,6 +79,7 @@ export function validateDonationAmount(amount) {
 
 export default {
   isValidBCHAddress,
+  isValidBCHAddressForPrefix,
   formatBCH,
   bchToSatoshis,
   satoshisToBCH,
