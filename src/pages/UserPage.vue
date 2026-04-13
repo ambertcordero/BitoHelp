@@ -371,6 +371,7 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { useDonationStore } from '../stores/donation-store'
+import { useNetworkStore } from '../stores/network-store'
 import { useQuasar } from 'quasar'
 
 const $q = useQuasar()
@@ -462,11 +463,13 @@ const getTimeAgo = (date) => {
   return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`
 }
 
+const networkStore = useNetworkStore()
+
 const openExplorer = (tx) => {
   if (tx.explorerUrl) {
     window.open(tx.explorerUrl, '_blank')
   } else if (tx.txid) {
-    window.open(`https://chipnet.watchtower.cash/tx/${tx.txid}`, '_blank')
+    window.open(`${networkStore.explorerBaseUrl}/tx/${tx.txid}`, '_blank')
   }
 }
 

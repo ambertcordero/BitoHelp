@@ -39,13 +39,13 @@ export function shortenAddress(address, prefixLength = 10, suffixLength = 8) {
 }
 
 export function getExplorerUrl(txid, isTestnet = false) {
-  if (isTestnet) return `https://chipnet.watchtower.cash/tx/${txid}`
-  return `https://watchtower.cash/tx/${txid}`
+  const base = isTestnet ? 'https://chipnet.bchexplorer.info' : 'https://bchexplorer.info'
+  return `${base}/tx/${txid}`
 }
 
 export function getAddressExplorerUrl(address, isTestnet = false) {
-  if (isTestnet) return `https://chipnet.watchtower.cash/address/${address}`
-  return `https://watchtower.cash/address/${address}`
+  const base = isTestnet ? 'https://chipnet.bchexplorer.info' : 'https://bchexplorer.info'
+  return `${base}/address/${address}`
 }
 
 export function calculateTxFee(inputCount = 1, outputCount = 2, feeRate = 1) {

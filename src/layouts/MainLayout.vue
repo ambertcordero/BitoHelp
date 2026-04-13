@@ -247,8 +247,10 @@
                   clickable
                   v-ripple
                   @click="
-                    markAsRead(notification.id)
-                    notifSheetOpen = false
+                    () => {
+                      markAsRead(notification.id)
+                      notifSheetOpen = false
+                    }
                   "
                   :class="{ 'bg-blue-1': !notification.read }"
                 >
