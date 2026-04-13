@@ -4,8 +4,8 @@ Write-Host "🚀 Starting CrypToCare Development Servers..." -ForegroundColor Gr
 Write-Host ""
 
 # Start Django Backend
-Write-Host "Starting Django Backend on http://localhost:8000..." -ForegroundColor Cyan
-Start-Process powershell -ArgumentList "-NoExit", "-Command", "cd '$PSScriptRoot\backend'; if (Test-Path '.\venv\Scripts\Activate.ps1') { .\venv\Scripts\Activate.ps1 }; python manage.py runserver"
+Write-Host "Starting Django Backend on http://localhost:8001..." -ForegroundColor Cyan
+Start-Process powershell -ArgumentList "-NoExit", "-Command", "cd '$PSScriptRoot\backend'; if (Test-Path '.\venv\Scripts\Activate.ps1') { .\venv\Scripts\Activate.ps1 }; python manage.py runserver 0.0.0.0:8001"
 
 Start-Sleep -Seconds 2
 

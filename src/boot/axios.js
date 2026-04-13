@@ -1,6 +1,8 @@
 import { defineBoot } from '#q-app/wrappers'
 import axios from 'axios'
 
+// In development the backend typically runs on :8001 of the same host.
+// In production VITE_API_URL must be set (e.g. via Render env vars).
 const defaultApiUrl =
   typeof window !== 'undefined'
     ? `${window.location.protocol}//${window.location.hostname}:8001/api/`
