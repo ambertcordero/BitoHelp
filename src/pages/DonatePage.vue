@@ -315,7 +315,7 @@ const WALLET_BALANCE_ADJUST_EVENT = 'bitohelp:wallet-balance-adjust'
 const WALLET_BALANCE_REFRESH_EVENT = 'bitohelp:wallet-balance-refresh'
 const DONATION_SENT_EVENT = 'bitohelp:donation-sent'
 const WALLET_CLIENT_GLOBAL_KEY = '__cryptocareWalletClient__'
-const WALLET_REQUEST_TIMEOUT_MS = 30000
+const WALLET_REQUEST_TIMEOUT_MS = 60000
 const PAYTACA_BCH_CHIPNET_WC_LIMITATION_MESSAGE =
   'Paytaca approved the request but did not return a signed BCH chipnet transaction over WalletConnect. No funds were sent. This appears to be a wallet-side issue.'
 
@@ -798,13 +798,14 @@ const executeWalletRequest = async (walletClient, chainId, method, candidatePara
         console.info('[BitoHelp][donation-request:start]', { method, chainId, params })
       }
 
-      // Capture request ID in parallel (not blocking) — needed for history fallback.
+      // Capture request ID — needed for history fallback on relay timeout.
       let capturedRequestId = null
-      if (typeof walletClient?.waitForRequestSent === 'function') {
-        walletClient.waitForRequestSent(method, 8000).then((rec) => {
-          capturedRequestId = rec?.id ?? null
-        })
-      }
+      const requestIdPromise =
+        typeof walletClient?.waitForRequestSent === 'function'
+          ? walletClient.waitForRequestSent(method, 8000).then((rec) => {
+              capturedRequestId = rec?.id ?? null
+            })
+          : Promise.resolve()
 
       // Fire the request immediately — relay timeout races from this point.
       const requestPromise = walletClient.request({ chainId, request: { method, params } })
@@ -819,6 +820,9 @@ const executeWalletRequest = async (walletClient, chainId, method, candidatePara
         ])
       } catch (relayError) {
         if (relayError?.message !== 'RELAY_TIMEOUT') throw relayError
+
+        // Ensure we have the request ID before polling history
+        await requestIdPromise
 
         // Relay timed out delivering the response. The WalletConnect SDK stores
         // responses in its local history even when relay delivery fails — poll it.
@@ -866,6 +870,10 @@ const executeWalletRequest = async (walletClient, chainId, method, candidatePara
       return response
     } catch (error) {
       lastError = error
+      // Relay-level transport failures affect all variants equally — stop retrying
+      if (error?.message?.includes('relay did not deliver') || error?.message === 'RELAY_TIMEOUT') {
+        break
+      }
     }
   }
   throw lastError || new Error(`Wallet did not accept ${method} request.`)
@@ -1497,7 +1505,29 @@ const submitDonation = async () => {
         : 'Donation sent successfully!',
     }
 
+    // Capture donor info before resetting form
+    const donorName = form.value.name
+    const donorEmail = form.value.email
+    const donorContact = form.value.contact
+
     resetForm()
+
+    // Sync donor contact info to WalletUser profile (fire-and-forget)
+    if (activeAccount) {
+      api
+        .post('users/connect/', {
+          wallet_address: activeAccount,
+          display_name: donorName || '',
+          email: donorEmail || '',
+          contact: donorContact || '',
+        })
+        .catch((err) => {
+          if (import.meta.env.DEV) {
+            console.warn('[BitoHelp][wallet-user-sync] Failed to update profile:', err)
+          }
+        })
+    }
+
     router.push('/donor')
   } catch (error) {
     const failureMessage = getErrorMessage(

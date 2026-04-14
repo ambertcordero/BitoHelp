@@ -27,9 +27,22 @@ def wallet_connect(request):
     if not raw_address:
         return Response({'error': 'wallet_address is required'}, status=status.HTTP_400_BAD_REQUEST)
 
+    defaults = {'last_connected_at': timezone.now()}
+
+    display_name = serializer.validated_data.get('display_name', '').strip()
+    email = serializer.validated_data.get('email', '').strip()
+    contact = serializer.validated_data.get('contact', '').strip()
+
+    if display_name:
+        defaults['display_name'] = display_name
+    if email:
+        defaults['email'] = email
+    if contact:
+        defaults['contact'] = contact
+
     user, created = WalletUser.objects.update_or_create(
         wallet_address=raw_address,
-        defaults={'last_connected_at': timezone.now()},
+        defaults=defaults,
     )
 
     return Response(WalletUserSerializer(user).data, status=status.HTTP_200_OK)

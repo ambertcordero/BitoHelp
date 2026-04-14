@@ -4,8 +4,8 @@ Write-Host "🚀 Starting CrypToCare Development Servers..." -ForegroundColor Gr
 Write-Host ""
 
 # Start Django Backend
-Write-Host "Starting Django Backend on http://localhost:8000..." -ForegroundColor Cyan
-Start-Process powershell -ArgumentList "-NoExit", "-Command", "cd '$PSScriptRoot\backend'; if (Test-Path '.\venv\Scripts\Activate.ps1') { .\venv\Scripts\Activate.ps1 }; python manage.py runserver 0.0.0.0:8000"
+Write-Host "Starting Django Backend on http://localhost:8001..." -ForegroundColor Cyan
+Start-Process powershell -ArgumentList "-NoExit", "-Command", "cd '$PSScriptRoot\backend'; if (Test-Path '.\venv\Scripts\Activate.ps1') { .\venv\Scripts\Activate.ps1 }; python manage.py runserver 0.0.0.0:8001"
 
 Start-Sleep -Seconds 2
 
@@ -17,8 +17,8 @@ Write-Host ""
 Write-Host "✅ Both servers are starting!" -ForegroundColor Green
 Write-Host ""
 Write-Host "Frontend: http://localhost:9000" -ForegroundColor Yellow
-Write-Host "Backend:  http://localhost:8000" -ForegroundColor Yellow
-Write-Host "Admin:    http://localhost:8000/admin" -ForegroundColor Yellow
+Write-Host "Backend:  http://localhost:8001" -ForegroundColor Yellow
+Write-Host "Admin:    http://localhost:8001/admin" -ForegroundColor Yellow
 Write-Host ""
 Write-Host "Press any key to continue..." -ForegroundColor Gray
 $null = $Host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown")

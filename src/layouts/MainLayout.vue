@@ -962,7 +962,17 @@ const syncWalletClientBridge = () => {
   const getHistoryRecord = async (id) => {
     if (!signClient || id === undefined || id === null) return null
     try {
-      return await signClient.core.history.get(activeTopic, id)
+      // Try the records map directly (most reliable across SDK versions)
+      const records = signClient.core.history?.records
+      if (records) {
+        const record = typeof records.get === 'function' ? records.get(id) : records[id]
+        if (record) return record
+      }
+      // Fallback: single-arg .get(id)
+      if (typeof signClient.core.history?.get === 'function') {
+        return await signClient.core.history.get(id)
+      }
+      return null
     } catch {
       return null
     }

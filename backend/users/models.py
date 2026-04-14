@@ -8,6 +8,8 @@ class WalletUser(models.Model):
     """
     wallet_address = models.CharField(max_length=255, unique=True, db_index=True)
     display_name = models.CharField(max_length=255, blank=True)
+    email = models.EmailField(blank=True, default='')
+    contact = models.CharField(max_length=50, blank=True, default='')
     avatar_url = models.URLField(blank=True)
     last_connected_at = models.DateTimeField(auto_now=True)
     created_at = models.DateTimeField(auto_now_add=True)

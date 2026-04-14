@@ -3,8 +3,8 @@ echo.
 echo Starting CrypToCare Development Servers...
 echo.
 
-echo Starting Django Backend on http://localhost:8000...
-start cmd /k "cd backend && venv\Scripts\activate.bat && python manage.py runserver 0.0.0.0:8000"
+echo Starting Django Backend on http://localhost:8001...
+start cmd /k "cd backend && venv\Scripts\activate.bat && python manage.py runserver 0.0.0.0:8001"
 
 timeout /t 2 /nobreak >nul
 
@@ -15,7 +15,7 @@ echo.
 echo Both servers are starting!
 echo.
 echo Frontend: http://localhost:9000
-echo Backend:  http://localhost:8000
-echo Admin:    http://localhost:8000/admin
+echo Backend:  http://localhost:8001
+echo Admin:    http://localhost:8001/admin
 echo.
 pause

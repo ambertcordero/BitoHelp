@@ -130,7 +130,7 @@ def send_approval_email(approval, raw_token):
     Send an email with Gmail ConfirmAction (Schema.org) JSON-LD so the donor
     can approve the payout with a single tap inside Gmail.
     """
-    base_url = getattr(settings, 'SITE_BASE_URL', 'http://localhost:8000')
+    base_url = getattr(settings, 'SITE_BASE_URL', 'http://localhost:8001')
     action_url = f'{base_url}/api/payouts/approve/{raw_token}/'
 
     sats = approval.payout_amount_satoshis
