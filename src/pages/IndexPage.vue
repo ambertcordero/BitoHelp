@@ -15,7 +15,17 @@
 
           <div class="hero-buttons q-mt-lg">
             <q-btn
-              v-if="isConnected"
+              v-if="isConnected && isNonprofit"
+              label="View Donations"
+              color="positive"
+              size="lg"
+              unelevated
+              class="hero-btn"
+              icon="dashboard"
+              to="/dashboard"
+            />
+            <q-btn
+              v-if="isConnected && !isNonprofit && !checkingRole"
               label="Start Donating"
               color="primary"
               size="lg"
@@ -907,12 +917,46 @@
 
 <script setup>
 import { ref, onMounted, onUnmounted } from 'vue'
+import { api } from 'boot/axios'
 
 const isConnected = ref(localStorage.getItem('cryptocare.wallet.connected') === '1')
+const isNonprofit = ref(false)
+const checkingRole = ref(false)
+
+const checkWalletRole = async () => {
+  if (!isConnected.value) {
+    isNonprofit.value = false
+    return
+  }
+  try {
+    checkingRole.value = true
+    const snapshot = JSON.parse(localStorage.getItem('cryptocare.wallet.snapshot') || '{}')
+    const address = snapshot?.address || ''
+    if (!address) {
+      isNonprofit.value = false
+      return
+    }
+    const response = await api.get('nonprofits/')
+    const nonprofits = response.data?.results || response.data || []
+    const normalizedAddress = address.toLowerCase().trim()
+    isNonprofit.value = nonprofits.some(
+      (np) => np.bch_address?.toLowerCase().trim() === normalizedAddress,
+    )
+  } catch {
+    isNonprofit.value = false
+  } finally {
+    checkingRole.value = false
+  }
+}
+
 function onWalletChange() {
   isConnected.value = localStorage.getItem('cryptocare.wallet.connected') === '1'
+  checkWalletRole()
 }
-onMounted(() => window.addEventListener('cryptocare:wallet-connection-changed', onWalletChange))
+onMounted(() => {
+  window.addEventListener('cryptocare:wallet-connection-changed', onWalletChange)
+  checkWalletRole()
+})
 onUnmounted(() => window.removeEventListener('cryptocare:wallet-connection-changed', onWalletChange))
 
 const testimonials = [

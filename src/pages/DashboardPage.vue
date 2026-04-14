@@ -2474,12 +2474,14 @@ ChartJS.register(
   Filler,
 )
 import { api } from 'boot/axios'
+import { useRouter } from 'vue-router'
 import { useNetworkStore } from 'src/stores/network-store'
 import bchImg from 'src/assets/bch.png'
 import projectImg from 'src/assets/project.png'
 import transactionImg from 'src/assets/transaction.png'
 
 const $q = useQuasar()
+const router = useRouter()
 const networkStore = useNetworkStore()
 const TXID_PATTERN = /^[A-Fa-f0-9]{64}$/
 
@@ -2544,6 +2546,10 @@ const CATEGORY_LABELS = {
 const isConnected = ref(localStorage.getItem('cryptocare.wallet.connected') === '1')
 function onWalletChange() {
   isConnected.value = localStorage.getItem('cryptocare.wallet.connected') === '1'
+  if (!isConnected.value) {
+    router.replace('/')
+    return
+  }
   fetchNonprofitByWallet()
 }
 onMounted(() => window.addEventListener('cryptocare:wallet-connection-changed', onWalletChange))

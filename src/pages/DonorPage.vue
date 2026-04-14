@@ -1352,6 +1352,7 @@
 
 <script setup>
 import { ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue'
+import { useRouter } from 'vue-router'
 import {
   Line as LineChart,
   Bar as BarChart,
@@ -2409,14 +2410,23 @@ const loadWalletData = async () => {
   build3dScatter()
 }
 
+const router = useRouter()
+
+const onWalletDisconnectGuard = () => {
+  const connected = localStorage.getItem(WALLET_SNAPSHOT_STORAGE_KEY)  
+  if (!connected || !JSON.parse(connected)?.connected) router.replace('/')
+}
+
 onMounted(async () => {
   window.addEventListener(WALLET_CONNECTED_EVENT, handleWalletConnectionChanged)
+  window.addEventListener(WALLET_CONNECTED_EVENT, onWalletDisconnectGuard)
   await loadWalletData()
   console.log('DonorPage mounted')
 })
 
 onUnmounted(() => {
   window.removeEventListener(WALLET_CONNECTED_EVENT, handleWalletConnectionChanged)
+  window.removeEventListener(WALLET_CONNECTED_EVENT, onWalletDisconnectGuard)
 })
 </script>
 

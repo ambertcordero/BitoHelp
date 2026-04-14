@@ -264,7 +264,8 @@
 </template>
 
 <script setup>
-import { computed, onMounted, ref, watch } from 'vue'
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
+import { useRouter } from 'vue-router'
 import { Notify, useQuasar } from 'quasar'
 import {
   broadcastRawTransaction,
@@ -615,9 +616,22 @@ const onVaultWithdrawCycle = ({ txid: cycleTxid, amount, drained, cycleNumber })
   notify({ type: 'positive', message: msg })
 }
 
+const router = useRouter()
+
+// ── Wallet disconnect guard ────────────────────────────────────────────────────
+const onWalletDisconnectGuard = () => {
+  const connected = localStorage.getItem('cryptocare.wallet.connected') === '1'
+  if (!connected) router.replace('/')
+}
+
 onMounted(() => {
   fetchNonprofits()
   fetchCryptoToPhpRates()
+  window.addEventListener('cryptocare:wallet-connection-changed', onWalletDisconnectGuard)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('cryptocare:wallet-connection-changed', onWalletDisconnectGuard)
 })
 
 // --- Wallet helpers ---
@@ -1484,6 +1498,7 @@ const submitDonation = async () => {
     }
 
     resetForm()
+    router.push('/donor')
   } catch (error) {
     const failureMessage = getErrorMessage(
       error,
