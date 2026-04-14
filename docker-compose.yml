@@ -17,13 +17,18 @@ services:
       POSTGRES_DB: cryptocare
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U postgres']
+      interval: 3s
+      timeout: 3s
+      retries: 10
 
   # ---- Django REST API ----
   backend:
     build:
       context: ./backend
     ports:
-      - '8000:8001' # Host 8000 → Container 8000
+      - '8000:8000' # Host 8000 → Container 8000
     volumes:
       # Bind mount: sync local backend/ code into container for live reload.
       # Django's runserver auto-restarts on .py file changes.
@@ -41,7 +46,7 @@ services:
       - DATABASE_URL=postgres://postgres:postgres@db:5432/cryptocare
     depends_on:
       db:
-        condition: service_started
+        condition: service_healthy
 
   # ---- Quasar / Vite frontend ----
   frontend:
@@ -60,8 +65,8 @@ services:
     environment:
       # VITE_API_URL is a *client-side* env var — the browser, not the
       # container, makes the request, so it must point to the host-published
-      # port (localhost:8001), NOT the Docker service name.
-      - VITE_API_URL=http://localhost:8001/api/
+      # port (localhost:8000), NOT the Docker service name.
+      - VITE_API_URL=http://localhost:8000/api/
       # DOCKER=1 tells quasar.config.js to bind the dev server to 0.0.0.0
       - DOCKER=1
     depends_on:

@@ -686,14 +686,10 @@ async function sendMessage() {
     const msg = { role: 'assistant', content: data.reply }
     if (data.charts?.length) msg.charts = data.charts
     messages.value.push(msg)
-  } catch (err) {
-    const isNetworkError =
-      err?.code === 'ERR_NETWORK' || err?.code === 'ECONNABORTED' || !err?.response
+  } catch {
     messages.value.push({
       role: 'assistant',
-      content: isNetworkError
-        ? "Krypto's backend is unreachable right now. Please make sure the API server is running, or check your **VITE_API_URL** configuration. 🔌"
-        : "Oops! I'm having trouble connecting right now. Please try again in a moment. 🔧",
+      content: "Oops! I'm having trouble connecting right now. Please try again in a moment. 🔧",
     })
   } finally {
     isTyping.value = false

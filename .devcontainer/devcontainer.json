@@ -21,11 +21,11 @@
   // Git is pre-installed in the base image
 
   // ---- Port forwarding ----
-  // 9000 = Quasar dev server, 8001 = Django dev server
-  "forwardPorts": [9000, 8001],
+  // 9000 = Quasar dev server, 8000 = Django dev server
+  "forwardPorts": [9000, 8000],
   "portsAttributes": {
     "9000": { "label": "Frontend (Quasar)" },
-    "8001": { "label": "Backend (Django)" }
+    "8000": { "label": "Backend (Django)" }
   },
 
   // ---- Post-create setup ----
@@ -65,7 +65,7 @@
 //   1. Docker builds the .devcontainer/Dockerfile (Node 20 + Python 3)
 //   2. postCreateCommand installs all frontend (pnpm) and backend (pip) deps
 //   3. VS Code installs recommended extensions for Vue/JS/Python development
-//   4. Ports 9000 (frontend) and 8001 (backend) are forwarded to the host
+//   4. Ports 9000 (frontend) and 8000 (backend) are forwarded to the host
 //
 // Usage:
 //   - Install "Dev Containers" extension in VS Code (ms-vscode-remote.remote-containers)
@@ -94,14 +94,14 @@
   // --------------------------------------------------------------------------
   "forwardPorts": [
     9000, // Quasar dev server (frontend)
-    8001  // Django dev server (backend)
+    8000  // Django dev server (backend)
   ],
   "portsAttributes": {
     "9000": {
       "label": "Frontend (Quasar)",
       "onAutoForward": "openBrowser"
     },
-    "8001": {
+    "8000": {
       "label": "Backend (Django)",
       "onAutoForward": "silent"
     }
@@ -146,7 +146,7 @@
   // Environment variables available inside the dev container
   // --------------------------------------------------------------------------
   "containerEnv": {
-    "VITE_API_URL": "http://localhost:8001/api/",
+    "VITE_API_URL": "http://localhost:8000/api/",
     "DJANGO_DEBUG": "True",
     "ALLOWED_HOSTS": "localhost,127.0.0.1"
   },

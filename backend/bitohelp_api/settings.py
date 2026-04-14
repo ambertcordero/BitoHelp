@@ -223,4 +223,4 @@ DEFAULT_FROM_EMAIL = 'cryp2care@gmail.com'
 PAYOUT_FROM_EMAIL = 'cryp2care@gmail.com'
 
 # Site base URL for email links
-SITE_BASE_URL = os.environ.get('SITE_BASE_URL', 'http://localhost:8001')
+SITE_BASE_URL = os.environ.get('SITE_BASE_URL', 'http://localhost:8000')

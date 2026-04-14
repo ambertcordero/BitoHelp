@@ -59,4 +59,4 @@ RUN if ! command -v python &> /dev/null; then ln -s $(which python3) /usr/local/
 WORKDIR /workspace
 
 # Expose ports for frontend dev server and Django backend
-EXPOSE 9000 8001
+EXPOSE 9000 8000
