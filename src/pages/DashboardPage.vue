@@ -10,7 +10,14 @@
                 <div class="sidebar-title">
                   <template v-if="nonprofitProfile">
                     {{ nonprofitProfile.name }}
-                    <q-icon v-if="nonprofitProfile.verified" name="verified" color="green-4" size="16px" class="q-ml-xs" style="vertical-align: middle" />
+                    <q-icon
+                      v-if="nonprofitProfile.verified"
+                      name="verified"
+                      color="green-4"
+                      size="16px"
+                      class="q-ml-xs"
+                      style="vertical-align: middle"
+                    />
                   </template>
                   <template v-else>Charity Dashboard</template>
                 </div>
@@ -19,8 +26,20 @@
                 </div>
               </div>
               <div class="sidebar-header-icon">
-                <div v-if="nonprofitProfile?.logo_url" style="width: 36px; height: 36px; border-radius: 50%; overflow: hidden; border: 2px solid rgba(255,255,255,0.3)">
-                  <img :src="nonprofitProfile.logo_url" style="width: 100%; height: 100%; object-fit: cover" />
+                <div
+                  v-if="nonprofitProfile?.logo_url"
+                  style="
+                    width: 36px;
+                    height: 36px;
+                    border-radius: 50%;
+                    overflow: hidden;
+                    border: 2px solid rgba(255, 255, 255, 0.3);
+                  "
+                >
+                  <img
+                    :src="nonprofitProfile.logo_url"
+                    style="width: 100%; height: 100%; object-fit: cover"
+                  />
                 </div>
                 <q-icon v-else name="dashboard" color="white" size="20px" />
               </div>
@@ -1432,7 +1451,11 @@
               <template v-if="loadingProfile">
                 <div class="detail-skeleton-card q-mb-md">
                   <div class="row items-center no-wrap" style="gap: 18px; padding: 20px">
-                    <q-skeleton type="QAvatar" size="72px" style="border-radius: 50%; flex-shrink: 0" />
+                    <q-skeleton
+                      type="QAvatar"
+                      size="72px"
+                      style="border-radius: 50%; flex-shrink: 0"
+                    />
                     <div style="flex: 1">
                       <q-skeleton type="text" width="40%" style="margin-bottom: 8px" />
                       <q-skeleton type="text" width="25%" style="margin-bottom: 6px" />
@@ -1462,51 +1485,176 @@
 
               <template v-else>
                 <!-- Profile Header Card -->
-                <q-card flat class="detail-info-card" style="border-radius: 14px; margin-bottom: 16px; overflow: hidden">
+                <q-card
+                  flat
+                  class="detail-info-card"
+                  style="border-radius: 14px; margin-bottom: 16px; overflow: hidden"
+                >
                   <q-card-section class="q-pa-none">
                     <div class="row no-wrap items-stretch profile-header-row">
                       <!-- Left: Logo + name + category -->
-                      <div class="row items-center q-pa-lg profile-left-col" style="flex: 0 0 auto; min-width: 260px; border-right: 1px solid #f0f0f0; gap: 18px">
+                      <div
+                        class="row items-center q-pa-lg profile-left-col"
+                        style="
+                          flex: 0 0 auto;
+                          min-width: 260px;
+                          border-right: 1px solid #f0f0f0;
+                          gap: 18px;
+                        "
+                      >
                         <div style="flex-shrink: 0">
-                          <div v-if="nonprofitProfile.logo_url" style="width: 72px; height: 72px; border-radius: 50%; overflow: hidden; border: 3px solid #e8f0fe">
-                            <img :src="nonprofitProfile.logo_url" style="width: 100%; height: 100%; object-fit: cover" />
+                          <div
+                            v-if="nonprofitProfile.logo_url"
+                            style="
+                              width: 72px;
+                              height: 72px;
+                              border-radius: 50%;
+                              overflow: hidden;
+                              border: 3px solid #e8f0fe;
+                            "
+                          >
+                            <img
+                              :src="nonprofitProfile.logo_url"
+                              style="width: 100%; height: 100%; object-fit: cover"
+                            />
                           </div>
-                          <div v-else style="width: 72px; height: 72px; border-radius: 50%; background: linear-gradient(135deg, #1565c0, #0d47a1); display: flex; align-items: center; justify-content: center; border: 3px solid #e8f0fe; flex-shrink: 0">
+                          <div
+                            v-else
+                            style="
+                              width: 72px;
+                              height: 72px;
+                              border-radius: 50%;
+                              background: linear-gradient(135deg, #1565c0, #0d47a1);
+                              display: flex;
+                              align-items: center;
+                              justify-content: center;
+                              border: 3px solid #e8f0fe;
+                              flex-shrink: 0;
+                            "
+                          >
                             <span style="font-size: 28px; font-weight: 800; color: white">
                               {{ nonprofitProfile.name?.charAt(0)?.toUpperCase() || 'N' }}
                             </span>
                           </div>
                         </div>
                         <div style="min-width: 0">
-                          <div style="font-size: 18px; font-weight: 700; color: #1a237e; line-height: 1.2" class="ellipsis org-name-text">
+                          <div
+                            style="
+                              font-size: 18px;
+                              font-weight: 700;
+                              color: #1a237e;
+                              line-height: 1.2;
+                            "
+                            class="ellipsis org-name-text"
+                          >
                             {{ nonprofitProfile.name }}
                           </div>
-                          <div class="q-mt-xs" style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap">
-                            <span class="org-category-text" style="font-size: 13px; color: #1976d2; font-weight: 600">
-                              {{ CATEGORY_LABELS[nonprofitProfile.category] || nonprofitProfile.category }}
+                          <div
+                            class="q-mt-xs"
+                            style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap"
+                          >
+                            <span
+                              class="org-category-text"
+                              style="font-size: 13px; color: #1976d2; font-weight: 600"
+                            >
+                              {{
+                                CATEGORY_LABELS[nonprofitProfile.category] ||
+                                nonprofitProfile.category
+                              }}
                             </span>
                             <span style="color: #bdbdbd">|</span>
                             <span class="org-status-text" style="font-size: 12px; color: #9e9e9e">
-                              {{ nonprofitProfile.active === false ? 'Inactive' : 'Active Organization' }}
+                              {{
+                                nonprofitProfile.active === false
+                                  ? 'Inactive'
+                                  : 'Active Organization'
+                              }}
                             </span>
                           </div>
-                          <q-chip v-if="nonprofitProfile.verified" dense color="green-2" text-color="green-8" icon="verified" label="Verified" style="font-size: 11px; font-weight: 700; margin-top: 8px" />
-                          <q-chip v-else dense color="grey-2" text-color="grey-7" icon="schedule" label="Unverified" style="font-size: 11px; margin-top: 8px" />
+                          <q-chip
+                            v-if="nonprofitProfile.verified"
+                            dense
+                            color="green-2"
+                            text-color="green-8"
+                            icon="verified"
+                            label="Verified"
+                            style="font-size: 11px; font-weight: 700; margin-top: 8px"
+                          />
+                          <q-chip
+                            v-else
+                            dense
+                            color="grey-2"
+                            text-color="grey-7"
+                            icon="schedule"
+                            label="Unverified"
+                            style="font-size: 11px; margin-top: 8px"
+                          />
                         </div>
                       </div>
                       <!-- Right: Quick stats -->
-                      <div class="row items-center q-px-lg q-py-md profile-stats-col" style="flex: 1; gap: 0; flex-wrap: wrap">
-                        <div v-for="stat in [
-                          { label: 'BCH Address', value: nonprofitProfile.bch_address || '—', mono: true, icon: 'account_balance_wallet' },
-                          { label: 'Website', value: nonprofitProfile.website || '—', link: nonprofitProfile.website, icon: 'language' },
-                          { label: 'Email', value: nonprofitProfile.email || '—', icon: 'mail_outline' },
-                          { label: 'Phone', value: nonprofitProfile.phone || '—', icon: 'phone' },
-                        ]" :key="stat.label" style="min-width: 50%; padding: 10px 16px 10px 0">
-                          <div class="text-caption text-grey-5" style="font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 3px">
+                      <div
+                        class="row items-center q-px-lg q-py-md profile-stats-col"
+                        style="flex: 1; gap: 0; flex-wrap: wrap"
+                      >
+                        <div
+                          v-for="stat in [
+                            {
+                              label: 'BCH Address',
+                              value: nonprofitProfile.bch_address || '—',
+                              mono: true,
+                              icon: 'account_balance_wallet',
+                            },
+                            {
+                              label: 'Website',
+                              value: nonprofitProfile.website || '—',
+                              link: nonprofitProfile.website,
+                              icon: 'language',
+                            },
+                            {
+                              label: 'Email',
+                              value: nonprofitProfile.email || '—',
+                              icon: 'mail_outline',
+                            },
+                            { label: 'Phone', value: nonprofitProfile.phone || '—', icon: 'phone' },
+                          ]"
+                          :key="stat.label"
+                          style="min-width: 50%; padding: 10px 16px 10px 0"
+                        >
+                          <div
+                            class="text-caption text-grey-5"
+                            style="
+                              font-size: 11px;
+                              font-weight: 700;
+                              text-transform: uppercase;
+                              letter-spacing: 0.5px;
+                              margin-bottom: 3px;
+                            "
+                          >
                             <q-icon :name="stat.icon" size="12px" class="q-mr-xs" />{{ stat.label }}
                           </div>
-                          <a v-if="stat.link" :href="stat.link" target="_blank" style="font-size: 13px; font-weight: 600; color: #1976d2; word-break: break-all; text-decoration: none">{{ stat.value }}</a>
-                          <div v-else class="stat-value-text" :style="{ fontSize: '13px', fontWeight: 600, wordBreak: 'break-all', fontFamily: stat.mono ? 'monospace' : 'inherit' }">
+                          <a
+                            v-if="stat.link"
+                            :href="stat.link"
+                            target="_blank"
+                            style="
+                              font-size: 13px;
+                              font-weight: 600;
+                              color: #1976d2;
+                              word-break: break-all;
+                              text-decoration: none;
+                            "
+                            >{{ stat.value }}</a
+                          >
+                          <div
+                            v-else
+                            class="stat-value-text"
+                            :style="{
+                              fontSize: '13px',
+                              fontWeight: 600,
+                              wordBreak: 'break-all',
+                              fontFamily: stat.mono ? 'monospace' : 'inherit',
+                            }"
+                          >
                             {{ stat.value }}
                           </div>
                         </div>
@@ -1522,7 +1670,12 @@
                     <q-card flat class="detail-info-card" style="border-radius: 14px; height: 100%">
                       <q-card-section class="q-pb-xs">
                         <div class="row items-center justify-between">
-                          <div class="info-card-title" style="font-size: 14px; font-weight: 700; color: #37474f">Organization Information</div>
+                          <div
+                            class="info-card-title"
+                            style="font-size: 14px; font-weight: 700; color: #37474f"
+                          >
+                            Organization Information
+                          </div>
                           <q-icon name="business" color="blue-4" size="20px" />
                         </div>
                       </q-card-section>
@@ -1530,37 +1683,182 @@
                       <q-card-section class="q-pt-md">
                         <div class="row q-col-gutter-md">
                           <div class="col-6">
-                            <div class="text-caption text-grey-5" style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px">Organization Name</div>
-                            <div class="field-value-text" style="font-size: 14px; font-weight: 700; color: #212121">{{ nonprofitProfile.name }}</div>
+                            <div
+                              class="text-caption text-grey-5"
+                              style="
+                                font-size: 11px;
+                                text-transform: uppercase;
+                                letter-spacing: 0.5px;
+                                margin-bottom: 4px;
+                              "
+                            >
+                              Organization Name
+                            </div>
+                            <div
+                              class="field-value-text"
+                              style="font-size: 14px; font-weight: 700; color: #212121"
+                            >
+                              {{ nonprofitProfile.name }}
+                            </div>
                           </div>
                           <div class="col-6">
-                            <div class="text-caption text-grey-5" style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px">Category</div>
-                            <div class="field-value-text" style="font-size: 14px; font-weight: 700; color: #212121">{{ CATEGORY_LABELS[nonprofitProfile.category] || nonprofitProfile.category }}</div>
+                            <div
+                              class="text-caption text-grey-5"
+                              style="
+                                font-size: 11px;
+                                text-transform: uppercase;
+                                letter-spacing: 0.5px;
+                                margin-bottom: 4px;
+                              "
+                            >
+                              Category
+                            </div>
+                            <div
+                              class="field-value-text"
+                              style="font-size: 14px; font-weight: 700; color: #212121"
+                            >
+                              {{
+                                CATEGORY_LABELS[nonprofitProfile.category] ||
+                                nonprofitProfile.category
+                              }}
+                            </div>
                           </div>
                           <div class="col-12">
-                            <div class="text-caption text-grey-5" style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px">BCH Wallet Address</div>
-                            <div class="bch-address-box" style="font-size: 12px; font-weight: 600; font-family: monospace; color: #1565c0; background: #e8f0fe; border-radius: 6px; padding: 8px 12px; word-break: break-all; cursor: pointer" @click="$q.copyToClipboard(nonprofitProfile.bch_address).then(() => $q.notify({ type: 'positive', message: 'Address copied', position: 'top', timeout: 1500 }))">
+                            <div
+                              class="text-caption text-grey-5"
+                              style="
+                                font-size: 11px;
+                                text-transform: uppercase;
+                                letter-spacing: 0.5px;
+                                margin-bottom: 4px;
+                              "
+                            >
+                              BCH Wallet Address
+                            </div>
+                            <div
+                              class="bch-address-box"
+                              style="
+                                font-size: 12px;
+                                font-weight: 600;
+                                font-family: monospace;
+                                color: #1565c0;
+                                background: #e8f0fe;
+                                border-radius: 6px;
+                                padding: 8px 12px;
+                                word-break: break-all;
+                                cursor: pointer;
+                              "
+                              @click="
+                                $q
+                                  .copyToClipboard(nonprofitProfile.bch_address)
+                                  .then(() =>
+                                    $q.notify({
+                                      type: 'positive',
+                                      message: 'Address copied',
+                                      position: 'top',
+                                      timeout: 1500,
+                                    }),
+                                  )
+                              "
+                            >
                               {{ nonprofitProfile.bch_address }}
                               <q-icon name="content_copy" size="13px" class="q-ml-xs text-blue-8" />
                             </div>
                           </div>
                           <div class="col-6">
-                            <div class="text-caption text-grey-5" style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px">Website</div>
-                            <a v-if="nonprofitProfile.website" :href="nonprofitProfile.website" target="_blank" style="font-size: 14px; font-weight: 600; color: #1976d2; text-decoration: none">{{ nonprofitProfile.website }}</a>
-                            <div v-else class="field-value-text" style="font-size: 14px; font-weight: 700; color: #212121">—</div>
+                            <div
+                              class="text-caption text-grey-5"
+                              style="
+                                font-size: 11px;
+                                text-transform: uppercase;
+                                letter-spacing: 0.5px;
+                                margin-bottom: 4px;
+                              "
+                            >
+                              Website
+                            </div>
+                            <a
+                              v-if="nonprofitProfile.website"
+                              :href="nonprofitProfile.website"
+                              target="_blank"
+                              style="
+                                font-size: 14px;
+                                font-weight: 600;
+                                color: #1976d2;
+                                text-decoration: none;
+                              "
+                              >{{ nonprofitProfile.website }}</a
+                            >
+                            <div
+                              v-else
+                              class="field-value-text"
+                              style="font-size: 14px; font-weight: 700; color: #212121"
+                            >
+                              —
+                            </div>
                           </div>
                           <div class="col-6">
-                            <div class="text-caption text-grey-5" style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px">Email</div>
-                            <div class="field-value-text" style="font-size: 14px; font-weight: 700; color: #212121">{{ nonprofitProfile.email || '—' }}</div>
+                            <div
+                              class="text-caption text-grey-5"
+                              style="
+                                font-size: 11px;
+                                text-transform: uppercase;
+                                letter-spacing: 0.5px;
+                                margin-bottom: 4px;
+                              "
+                            >
+                              Email
+                            </div>
+                            <div
+                              class="field-value-text"
+                              style="font-size: 14px; font-weight: 700; color: #212121"
+                            >
+                              {{ nonprofitProfile.email || '—' }}
+                            </div>
                           </div>
                           <div class="col-6">
-                            <div class="text-caption text-grey-5" style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px">Phone</div>
-                            <div class="field-value-text" style="font-size: 14px; font-weight: 700; color: #212121">{{ nonprofitProfile.phone || '—' }}</div>
+                            <div
+                              class="text-caption text-grey-5"
+                              style="
+                                font-size: 11px;
+                                text-transform: uppercase;
+                                letter-spacing: 0.5px;
+                                margin-bottom: 4px;
+                              "
+                            >
+                              Phone
+                            </div>
+                            <div
+                              class="field-value-text"
+                              style="font-size: 14px; font-weight: 700; color: #212121"
+                            >
+                              {{ nonprofitProfile.phone || '—' }}
+                            </div>
                           </div>
                           <div class="col-6">
-                            <div class="text-caption text-grey-5" style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px">Member Since</div>
-                            <div class="field-value-text" style="font-size: 14px; font-weight: 700; color: #212121">
-                              {{ nonprofitProfile.created_at ? new Date(nonprofitProfile.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '—' }}
+                            <div
+                              class="text-caption text-grey-5"
+                              style="
+                                font-size: 11px;
+                                text-transform: uppercase;
+                                letter-spacing: 0.5px;
+                                margin-bottom: 4px;
+                              "
+                            >
+                              Member Since
+                            </div>
+                            <div
+                              class="field-value-text"
+                              style="font-size: 14px; font-weight: 700; color: #212121"
+                            >
+                              {{
+                                nonprofitProfile.created_at
+                                  ? new Date(nonprofitProfile.created_at).toLocaleDateString(
+                                      'en-US',
+                                      { month: 'short', day: 'numeric', year: 'numeric' },
+                                    )
+                                  : '—'
+                              }}
                             </div>
                           </div>
                         </div>
@@ -1573,7 +1871,12 @@
                     <q-card flat class="detail-info-card" style="border-radius: 14px; height: 100%">
                       <q-card-section class="q-pb-xs">
                         <div class="row items-center justify-between">
-                          <div class="info-card-title" style="font-size: 14px; font-weight: 700; color: #37474f">Donation Overview</div>
+                          <div
+                            class="info-card-title"
+                            style="font-size: 14px; font-weight: 700; color: #37474f"
+                          >
+                            Donation Overview
+                          </div>
                           <q-icon name="bar_chart" color="purple-4" size="20px" />
                         </div>
                       </q-card-section>
@@ -1581,28 +1884,122 @@
                       <q-card-section class="q-pt-md">
                         <div class="row q-col-gutter-md">
                           <div class="col-6">
-                            <div class="text-caption text-grey-5" style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px">Total Received</div>
-                            <div class="total-received-value" style="font-size: 18px; font-weight: 800; color: #1565c0">
+                            <div
+                              class="text-caption text-grey-5"
+                              style="
+                                font-size: 11px;
+                                text-transform: uppercase;
+                                letter-spacing: 0.5px;
+                                margin-bottom: 4px;
+                              "
+                            >
+                              Total Received
+                            </div>
+                            <div
+                              class="total-received-value"
+                              style="font-size: 18px; font-weight: 800; color: #1565c0"
+                            >
                               {{ parseFloat(nonprofitProfile.total_received_bch || 0).toFixed(8) }}
-                              <span class="bch-unit-label" style="font-size: 12px; font-weight: 600; color: #90a4ae">BCH</span>
+                              <span
+                                class="bch-unit-label"
+                                style="font-size: 12px; font-weight: 600; color: #90a4ae"
+                                >BCH</span
+                              >
                             </div>
                           </div>
                           <div class="col-6">
-                            <div class="text-caption text-grey-5" style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px">Total Donations</div>
-                            <div class="field-value-text" style="font-size: 18px; font-weight: 800; color: #2e7d32">{{ nonprofitProfile.donation_count || 0 }}</div>
+                            <div
+                              class="text-caption text-grey-5"
+                              style="
+                                font-size: 11px;
+                                text-transform: uppercase;
+                                letter-spacing: 0.5px;
+                                margin-bottom: 4px;
+                              "
+                            >
+                              Total Donations
+                            </div>
+                            <div
+                              class="field-value-text"
+                              style="font-size: 18px; font-weight: 800; color: #2e7d32"
+                            >
+                              {{ nonprofitProfile.donation_count || 0 }}
+                            </div>
                           </div>
                           <div class="col-6">
-                            <div class="text-caption text-grey-5" style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px">Unique Donors</div>
-                            <div class="field-value-text" style="font-size: 14px; font-weight: 700; color: #212121">{{ nonprofitProfile.unique_donor_count || 0 }}</div>
+                            <div
+                              class="text-caption text-grey-5"
+                              style="
+                                font-size: 11px;
+                                text-transform: uppercase;
+                                letter-spacing: 0.5px;
+                                margin-bottom: 4px;
+                              "
+                            >
+                              Unique Donors
+                            </div>
+                            <div
+                              class="field-value-text"
+                              style="font-size: 14px; font-weight: 700; color: #212121"
+                            >
+                              {{ nonprofitProfile.unique_donor_count || 0 }}
+                            </div>
                           </div>
                           <div class="col-6">
-                            <div class="text-caption text-grey-5" style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px">Verification</div>
-                            <q-chip v-if="nonprofitProfile.verified" dense color="green-2" text-color="green-8" icon="verified" label="Verified" style="font-size: 11px; font-weight: 700" />
-                            <q-chip v-else dense color="grey-2" text-color="grey-7" icon="schedule" label="Unverified" style="font-size: 11px" />
+                            <div
+                              class="text-caption text-grey-5"
+                              style="
+                                font-size: 11px;
+                                text-transform: uppercase;
+                                letter-spacing: 0.5px;
+                                margin-bottom: 4px;
+                              "
+                            >
+                              Verification
+                            </div>
+                            <q-chip
+                              v-if="nonprofitProfile.verified"
+                              dense
+                              color="green-2"
+                              text-color="green-8"
+                              icon="verified"
+                              label="Verified"
+                              style="font-size: 11px; font-weight: 700"
+                            />
+                            <q-chip
+                              v-else
+                              dense
+                              color="grey-2"
+                              text-color="grey-7"
+                              icon="schedule"
+                              label="Unverified"
+                              style="font-size: 11px"
+                            />
                           </div>
                           <div class="col-12">
-                            <div class="text-caption text-grey-5" style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px">Description</div>
-                            <div class="description-box" style="font-size: 13px; color: #546e7a; line-height: 1.6; background: #fafafa; border-radius: 8px; padding: 10px 12px; border: 1px solid #f0f0f0">
+                            <div
+                              class="text-caption text-grey-5"
+                              style="
+                                font-size: 11px;
+                                text-transform: uppercase;
+                                letter-spacing: 0.5px;
+                                margin-bottom: 6px;
+                              "
+                            >
+                              Description
+                            </div>
+                            <div
+                              class="description-box"
+                              style="
+                                font-size: 13px;
+                                color: #546e7a;
+                                line-height: 1.6;
+                                background: #fafafa;
+                                border-radius: 8px;
+                                padding: 10px 12px;
+                                border: 1px solid #f0f0f0;
+                              "
+                            >
                               {{ nonprofitProfile.description || 'No description available.' }}
                             </div>
                           </div>
@@ -1619,13 +2016,27 @@
                       <div class="text-h6 text-weight-bold">Received Donations</div>
                       <div class="text-caption text-grey-6">All donations received from donors</div>
                     </div>
-                    <q-chip color="blue-2" text-color="blue-9" icon="volunteer_activism" :label="`${nonprofitProfile.donations?.length || 0} donation${(nonprofitProfile.donations?.length || 0) !== 1 ? 's' : ''}`" style="font-weight: 700" />
+                    <q-chip
+                      color="blue-2"
+                      text-color="blue-9"
+                      icon="volunteer_activism"
+                      :label="`${nonprofitProfile.donations?.length || 0} donation${(nonprofitProfile.donations?.length || 0) !== 1 ? 's' : ''}`"
+                      style="font-weight: 700"
+                    />
                   </div>
 
-                  <div v-if="!nonprofitProfile.donations?.length" class="text-center q-py-xl" style="border: 2px dashed #e0e0e0; border-radius: 12px">
+                  <div
+                    v-if="!nonprofitProfile.donations?.length"
+                    class="text-center q-py-xl"
+                    style="border: 2px dashed #e0e0e0; border-radius: 12px"
+                  >
                     <q-icon name="volunteer_activism" size="48px" color="grey-4" />
-                    <div class="text-grey-6 q-mt-sm text-weight-medium">No donations received yet</div>
-                    <div class="text-caption text-grey-4 q-mt-xs">Donations will appear here once donors contribute</div>
+                    <div class="text-grey-6 q-mt-sm text-weight-medium">
+                      No donations received yet
+                    </div>
+                    <div class="text-caption text-grey-4 q-mt-xs">
+                      Donations will appear here once donors contribute
+                    </div>
                   </div>
 
                   <q-table
@@ -1642,10 +2053,21 @@
                     <template v-slot:body-cell-timestamp="props">
                       <q-td :props="props">
                         <div class="text-weight-medium" style="font-size: 13px">
-                          {{ new Date(props.row.timestamp).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) }}
+                          {{
+                            new Date(props.row.timestamp).toLocaleDateString('en-US', {
+                              month: 'short',
+                              day: 'numeric',
+                              year: 'numeric',
+                            })
+                          }}
                         </div>
                         <div class="text-caption text-grey-6">
-                          {{ new Date(props.row.timestamp).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }) }}
+                          {{
+                            new Date(props.row.timestamp).toLocaleTimeString('en-US', {
+                              hour: '2-digit',
+                              minute: '2-digit',
+                            })
+                          }}
                         </div>
                       </q-td>
                     </template>
@@ -1669,13 +2091,23 @@
                     </template>
                     <template v-slot:body-cell-interval="props">
                       <q-td :props="props" class="text-center">
-                        <q-badge v-if="props.row.interval" color="blue-2" text-color="blue-9" :label="props.row.interval" />
+                        <q-badge
+                          v-if="props.row.interval"
+                          color="blue-2"
+                          text-color="blue-9"
+                          :label="props.row.interval"
+                        />
                         <span v-else class="text-grey-6">One-time</span>
                       </q-td>
                     </template>
                     <template v-slot:body-cell-txid="props">
                       <q-td :props="props">
-                        <span v-if="isValidTxid(props.row.txid)" class="text-primary" style="font-family: monospace; font-size: 12px; cursor: pointer" @click="copyTxid(props.row.txid)">
+                        <span
+                          v-if="isValidTxid(props.row.txid)"
+                          class="text-primary"
+                          style="font-family: monospace; font-size: 12px; cursor: pointer"
+                          @click="copyTxid(props.row.txid)"
+                        >
                           {{ formatTxidPreview(props.row.txid, 18) }}
                           <q-icon name="content_copy" size="12px" class="q-ml-xs" />
                         </span>
@@ -1687,14 +2119,22 @@
                     <template v-slot:item="props">
                       <div class="dash-mobile-card">
                         <div class="dash-mobile-card__header">
-                          <div class="dash-mobile-card__title">{{ props.row.donor_name || 'Anonymous' }}</div>
+                          <div class="dash-mobile-card__title">
+                            {{ props.row.donor_name || 'Anonymous' }}
+                          </div>
                           <q-badge color="primary" :label="props.row.coin || 'BCH'" />
                         </div>
                         <div class="dash-mobile-card__body">
                           <div class="dash-mobile-card__row">
                             <span class="dash-mobile-card__label">Date</span>
                             <span class="dash-mobile-card__value">
-                              {{ new Date(props.row.timestamp).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) }}
+                              {{
+                                new Date(props.row.timestamp).toLocaleDateString('en-US', {
+                                  month: 'short',
+                                  day: 'numeric',
+                                  year: 'numeric',
+                                })
+                              }}
                             </span>
                           </div>
                           <div class="dash-mobile-card__row">
@@ -1705,18 +2145,27 @@
                           </div>
                           <div class="dash-mobile-card__row">
                             <span class="dash-mobile-card__label">Cause</span>
-                            <span class="dash-mobile-card__value">{{ props.row.cause || '—' }}</span>
+                            <span class="dash-mobile-card__value">{{
+                              props.row.cause || '—'
+                            }}</span>
                           </div>
                           <div class="dash-mobile-card__row">
                             <span class="dash-mobile-card__label">Interval</span>
                             <span class="dash-mobile-card__value">
-                              <q-badge v-if="props.row.interval" color="blue-7" :label="props.row.interval" />
+                              <q-badge
+                                v-if="props.row.interval"
+                                color="blue-7"
+                                :label="props.row.interval"
+                              />
                               <span v-else class="text-grey-6">One-time</span>
                             </span>
                           </div>
                           <div v-if="isValidTxid(props.row.txid)" class="dash-mobile-card__row">
                             <span class="dash-mobile-card__label">TxID</span>
-                            <span class="text-primary dash-mobile-card__txid" @click="copyTxid(props.row.txid)">
+                            <span
+                              class="text-primary dash-mobile-card__txid"
+                              @click="copyTxid(props.row.txid)"
+                            >
                               {{ formatTxidPreview(props.row.txid, 16) }}
                               <q-icon name="content_copy" size="11px" class="q-ml-xs" />
                             </span>
@@ -1728,7 +2177,6 @@
                 </div>
               </template>
             </q-tab-panel>
-
           </q-tab-panels>
         </div>
 
@@ -2512,7 +2960,7 @@ const getConnectedWalletAddress = () => {
     const raw = localStorage.getItem(WALLET_SNAPSHOT_KEY)
     if (!raw) return ''
     const parsed = JSON.parse(raw)
-    return parsed?.connected ? (parsed.address || '') : ''
+    return parsed?.connected ? parsed.address || '' : ''
   } catch {
     return ''
   }

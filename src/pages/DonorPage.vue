@@ -127,16 +127,14 @@
                 <div
                   class="sidebar-address-pill ellipsis"
                   @click.stop="
-                    $q
-                      .copyToClipboard(wallet.address)
-                      .then(() =>
-                        $q.notify({
-                          type: 'positive',
-                          message: 'Donor address copied',
-                          position: 'top',
-                          timeout: 1500,
-                        }),
-                      )
+                    $q.copyToClipboard(wallet.address).then(() =>
+                      $q.notify({
+                        type: 'positive',
+                        message: 'Donor address copied',
+                        position: 'top',
+                        timeout: 1500,
+                      }),
+                    )
                   "
                 >
                   <q-icon name="person" size="10px" class="q-mr-xs" style="flex-shrink: 0" />
@@ -413,16 +411,14 @@
                           <div
                             class="detail-address-field"
                             @click="
-                              $q
-                                .copyToClipboard(selectedWallet.fullNumber)
-                                .then(() =>
-                                  $q.notify({
-                                    type: 'positive',
-                                    message: 'Address copied',
-                                    position: 'top',
-                                    timeout: 1500,
-                                  }),
-                                )
+                              $q.copyToClipboard(selectedWallet.fullNumber).then(() =>
+                                $q.notify({
+                                  type: 'positive',
+                                  message: 'Address copied',
+                                  position: 'top',
+                                  timeout: 1500,
+                                }),
+                              )
                             "
                           >
                             {{ selectedWallet.fullNumber }}
@@ -435,16 +431,14 @@
                           <div
                             class="detail-address-field"
                             @click="
-                              $q
-                                .copyToClipboard(selectedWallet.iban)
-                                .then(() =>
-                                  $q.notify({
-                                    type: 'positive',
-                                    message: 'Address copied',
-                                    position: 'top',
-                                    timeout: 1500,
-                                  }),
-                                )
+                              $q.copyToClipboard(selectedWallet.iban).then(() =>
+                                $q.notify({
+                                  type: 'positive',
+                                  message: 'Address copied',
+                                  position: 'top',
+                                  timeout: 1500,
+                                }),
+                              )
                             "
                           >
                             {{ selectedWallet.iban }}
@@ -1063,16 +1057,14 @@
                     v-if="d.txid"
                     class="recipient-history-txid"
                     @click="
-                      $q
-                        .copyToClipboard(d.txid)
-                        .then(() =>
-                          $q.notify({
-                            type: 'positive',
-                            message: 'TxID copied',
-                            position: 'top',
-                            timeout: 1200,
-                          }),
-                        )
+                      $q.copyToClipboard(d.txid).then(() =>
+                        $q.notify({
+                          type: 'positive',
+                          message: 'TxID copied',
+                          position: 'top',
+                          timeout: 1200,
+                        }),
+                      )
                     "
                   >
                     TXID: {{ d.txid }}
@@ -2413,7 +2405,7 @@ const loadWalletData = async () => {
 const router = useRouter()
 
 const onWalletDisconnectGuard = () => {
-  const connected = localStorage.getItem(WALLET_SNAPSHOT_STORAGE_KEY)  
+  const connected = localStorage.getItem(WALLET_SNAPSHOT_STORAGE_KEY)
   if (!connected || !JSON.parse(connected)?.connected) router.replace('/')
 }
 

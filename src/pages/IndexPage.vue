@@ -957,7 +957,9 @@ onMounted(() => {
   window.addEventListener('cryptocare:wallet-connection-changed', onWalletChange)
   checkWalletRole()
 })
-onUnmounted(() => window.removeEventListener('cryptocare:wallet-connection-changed', onWalletChange))
+onUnmounted(() =>
+  window.removeEventListener('cryptocare:wallet-connection-changed', onWalletChange),
+)
 
 const testimonials = [
   {
