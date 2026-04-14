@@ -23,10 +23,9 @@ services:
     build:
       context: ./backend
     ports:
-      - '8000:8001' # Host 8001 → Container 8000
+      - '8000:8001' # Host 8000 → Container 8000
     volumes:
-      # Bind mount: sync lo
-      cal backend/ code into container for live reload.
+      # Bind mount: sync local backend/ code into container for live reload.
       # Django's runserver auto-restarts on .py file changes.
       - ./backend:/app
       # Persist the SQLite database between container restarts.
