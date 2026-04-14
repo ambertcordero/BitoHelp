@@ -3,7 +3,7 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from django_filters.rest_framework import DjangoFilterBackend
 from .models import Nonprofit
-from .serializers import NonprofitSerializer, NonprofitListSerializer
+from .serializers import NonprofitSerializer, NonprofitListSerializer, NonprofitProfileSerializer
 
 class NonprofitViewSet(viewsets.ModelViewSet):
     queryset = Nonprofit.objects.filter(active=True)
@@ -32,4 +32,18 @@ class NonprofitViewSet(viewsets.ModelViewSet):
         
         donations = Donation.objects.filter(nonprofit=nonprofit)
         serializer = DonationSerializer(donations, many=True)
+        return Response(serializer.data)
+
+    @action(detail=False, methods=['get'], url_path='by-wallet')
+    def by_wallet(self, request):
+        address = request.query_params.get('address', '').strip()
+        if not address:
+            return Response({'detail': 'address query parameter is required.'}, status=400)
+        nonprofit = Nonprofit.objects.filter(bch_address__iexact=address).first()
+        if not nonprofit:
+            return Response(
+                {'detail': 'No nonprofit found for this wallet address.'},
+                status=404,
+            )
+        serializer = NonprofitProfileSerializer(nonprofit)
         return Response(serializer.data)
