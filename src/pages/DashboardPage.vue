@@ -3767,6 +3767,7 @@ const executeWithdrawConfirm = async () => {
     await withdrawConfirmDialog.value.onConfirm()
     withdrawConfirmDialog.value.open = false
   } catch (err) {
+    console.error(err);
     $q.notify({
       type: 'negative',
       message: 'Operation failed',

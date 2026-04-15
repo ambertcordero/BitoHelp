@@ -279,7 +279,7 @@ import {
   normalizeAddress,
   selectInputsAndBuildPlan,
 } from '../services/bchChipnet'
-import { createVaultContract, saveVaultRecord, startAutoWithdraw } from '../services/vaultDonation'
+import { createVaultContract, saveVaultRecord, updateVaultRecord, startAutoWithdraw } from '../services/vaultDonation'
 import { useNetworkStore } from '../stores/network-store'
 import { api } from 'boot/axios'
 import { CASHSCRIPT_CONTRACT_PATH } from '../contracts/recurringDonation'
@@ -384,6 +384,7 @@ const coinOptions = [
 ]
 
 const intervalOptions = [
+  { label: '0 mins', value: '0min' },
   { label: '10 mins', value: '10min' },
   { label: 'Weekly (coming soon)', value: 'weekly', disable: true },
   { label: 'Monthly (coming soon)', value: 'monthly', disable: true },
@@ -392,6 +393,7 @@ const intervalOptions = [
 ]
 
 const INTERVAL_BLOCKS = {
+  '0min': 0,
   '10min': 1,
   weekly: 1008,
   monthly: 4320,
@@ -399,7 +401,7 @@ const INTERVAL_BLOCKS = {
   yearly: 52560,
 }
 
-const isIntervalSupported = (key) => key === '10min'
+const isIntervalSupported = (key) => key === '10min' || key === '0min'
 
 // --- API nonprofits (for address lookup) ---
 const nonprofits = ref([])
@@ -1206,7 +1208,7 @@ const submitDonation = async () => {
   const depositCoin = Number.parseFloat(String(form.value.deposit ?? '').trim())
   const withdrawalCoin = Number.parseFloat(String(form.value.withdrawal ?? '').trim())
   const selectedInterval = form.value.interval
-  const intervalBlocks = INTERVAL_BLOCKS[selectedInterval] || 1
+  const intervalBlocks = INTERVAL_BLOCKS[selectedInterval] ?? 1
   const walletSnapshot = getWalletSnapshot()
   const walletClient = getWalletClient()
   const activeAccount = walletClient?.address || walletSnapshot?.address || ''
@@ -1455,6 +1457,7 @@ const submitDonation = async () => {
       })
       if (donationRes?.data?.id) {
         updateDonationRecord(donationId, { apiDonationId: donationRes?.data?.id });
+        updateVaultRecord(donationId, { apiDonationId: donationRes?.data?.id });
       }
 
       // Schedule all payout cycles in the backend so the dashboard

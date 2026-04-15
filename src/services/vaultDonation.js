@@ -209,7 +209,7 @@ const getAllStoredVaults = () => {
   }
 }
 
-const updateVaultRecord = (donationId, partial) => {
+export const updateVaultRecord = (donationId, partial) => {
   const vaults = getAllStoredVaults()
   const updated = vaults.map((v) =>
     v.donationId === donationId ? { ...v, ...partial, updatedAt: new Date().toISOString() } : v,
@@ -977,10 +977,14 @@ export const startAutoWithdraw = (record, onCycle) => {
 
       // ── Record this cycle's unique txid to the backend (smart mode) ──
       if (isValidTxid(result.txid)) {
+        // Get latest vault data in case not updated
+        const currentVault = getAllStoredVaults().find((v) => record.donationId === v.donationId)
+        console.debug({ currentVault });
+        
         // Single call: creates an already-executed record with the real blockchain txid
         api
           .post('payouts/record/', {
-            donation_id: record?.apiDonationId || record.donationId,
+            donation_id: currentVault?.apiDonationId || record.donationId,
             donor_email: record.donorEmail || '',
             donor_name: record.donorName || '',
             recipient_address: record.recipientAddress,
