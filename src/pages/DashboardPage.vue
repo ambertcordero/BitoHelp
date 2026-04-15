@@ -2924,6 +2924,7 @@ ChartJS.register(
 import { api } from 'boot/axios'
 import { useRouter } from 'vue-router'
 import { useNetworkStore } from 'src/stores/network-store'
+import { getStoredVaults, executeWithdraw } from 'src/services/vaultDonation'
 import bchImg from 'src/assets/bch.png'
 import projectImg from 'src/assets/project.png'
 import transactionImg from 'src/assets/transaction.png'
@@ -2982,6 +2983,9 @@ const fetchNonprofitByWallet = async () => {
     loadingProfile.value = false
   }
 }
+
+const findVaultRecord = (donationId) =>
+  getStoredVaults().find((record) => String(record.donationId) === String(donationId))
 
 const CATEGORY_LABELS = {
   animals: 'Animals',
@@ -3707,15 +3711,6 @@ const getExplorerUrlForDonation = (donation) => {
   return provided.toLowerCase() === expected.toLowerCase() ? expected : ''
 }
 
-const generateFallbackTxid = (seed) => {
-  const source = `${seed}-${Date.now()}-${Math.random()}`
-  let hex = ''
-  for (let i = 0; i < source.length; i++) {
-    hex += source.charCodeAt(i).toString(16).padStart(2, '0')
-  }
-  return (hex + '0'.repeat(64)).slice(0, 64)
-}
-
 const validateAddress = (address) => {
   if (!address) return false
   const bchRegex = /^(bitcoincash:)?[qp][a-z0-9]{41}$/i
@@ -3757,6 +3752,7 @@ const executeWithdrawConfirm = async () => {
 
 const handleSmartWithdraw = (row) => {
   if (!row.duePayoutId || row.withdrawn) return
+  
 
   const amountBch = formatCurrency(row.amount)
   withdrawConfirmDialog.value = {
@@ -3777,9 +3773,20 @@ const handleSmartWithdraw = (row) => {
     ],
     loading: false,
     onConfirm: async () => {
-      const txid = isValidTxid(row.txid)
-        ? normalizeTxid(row.txid)
-        : generateFallbackTxid(`tx-${row.id}`)
+      const vaultRecord = findVaultRecord(row.id)
+      if (!vaultRecord) {
+        throw new Error(
+          'Vault contract data not found for this donation. Make sure it was funded through the donate flow.',
+        )
+      }
+      const result = await executeWithdraw(vaultRecord)
+      if (!result.success) {
+        throw new Error(result.reason || 'Vault withdrawal failed')
+      }
+      const txid = normalizeTxid(result.txid)
+      if (!txid) {
+        throw new Error('Contract withdrawal returned an invalid txid.')
+      }
       await api.post(`payouts/${row.duePayoutId}/execute/`, { txid })
       row.txid = txid
       withdrawnDonations.value.add(row.id)
@@ -3819,6 +3826,7 @@ const handleSmartWithdrawAll = (account) => {
       cycleNumber: p.cycle_number,
       totalCycles: p.total_cycles,
       dueAt: p.due_at,
+      txid: p.txid || '',
     })),
     loading: false,
     onConfirm: async () => {
@@ -3826,11 +3834,22 @@ const handleSmartWithdrawAll = (account) => {
       let failCount = 0
       for (const payout of duePayouts) {
         try {
-          const txid = generateFallbackTxid(`tx-${payout.id}-c${payout.cycle_number}`)
+          const vaultRecord = findVaultRecord(payout.donation_id)
+          if (!vaultRecord) {
+            throw new Error(`Vault contract not found for payout ${payout.id}`)
+          }
+          const result = await executeWithdraw(vaultRecord)
+          if (!result.success) {
+            throw new Error(result.reason || `Vault withdrawal failed for payout ${payout.id}`)
+          }
+          const txid = normalizeTxid(result.txid)
+          if (!txid) {
+            throw new Error(`Invalid txid returned for payout ${payout.id}`)
+          }
           await api.post(`payouts/${payout.id}/execute/`, {
             txid,
           })
-          const row = allTransactions.value.find((t) => t.id === payout.donation_id)
+          const row = allTransactions.value.find((t) => String(t.id) === String(payout.donation_id))
           if (row) {
             row.txid = txid
             row.withdrawn = true
