@@ -399,16 +399,16 @@
                 <template v-slot:body-cell-txid="props">
                   <q-td :props="props">
                     <span
-                      v-if="isValidTxid(props.row.txid)"
+                      v-if="isValidTxid(props.row.donation_txid)"
                       class="text-primary"
                       style="font-family: monospace; font-size: 12px; cursor: pointer"
-                      @click="copyTxid(props.row.txid)"
+                      @click="copyTxid(props.row.donation_txid)"
                     >
-                      {{ formatTxidPreview(props.row.txid, 18) }}
+                      {{ formatTxidPreview(props.row.donation_txid, 18) }}
                       <q-icon name="content_copy" size="12px" class="q-ml-xs" />
                     </span>
                     <span
-                      v-else-if="props.row.txid"
+                      v-else-if="props.row.donation_txid"
                       class="text-warning text-caption text-weight-medium"
                       >Invalid TXID</span
                     >
@@ -3327,7 +3327,7 @@ const fetchPayoutsForNonprofit = async (nonprofitId) => {
     // Keep dashboard TXIDs aligned with payout backend records.
     const latestExecutedByDonation = {}
     executed.forEach((payout) => {
-      if (!payout?.donation_id || !payout?.txid) return
+      if (!payout?.donation_id) return
       const current = latestExecutedByDonation[payout.donation_id]
       const currentTs = current?.executed_at ? new Date(current.executed_at).getTime() : 0
       const nextTs = payout.executed_at ? new Date(payout.executed_at).getTime() : 0
@@ -3337,7 +3337,8 @@ const fetchPayoutsForNonprofit = async (nonprofitId) => {
     })
 
     Object.entries(latestExecutedByDonation).forEach(([donationId, payout]) => {
-      const txid = String(payout.txid || '')
+      // Use donation's txid (from smart contract) instead of payout txid
+      const txid = String(payout.donation_txid || '')
         .trim()
         .toLowerCase()
       const explorerUrl = txid ? `${networkStore.explorerBaseUrl}/tx/${txid}` : ''
@@ -3771,7 +3772,6 @@ const handleSmartWithdraw = (row) => {
     ],
     loading: false,
     onConfirm: async () => {
-<<<<<<< HEAD
       const vaultRecord = findVaultRecord(row.id)
       if (!vaultRecord) {
         throw new Error(
@@ -3788,11 +3788,6 @@ const handleSmartWithdraw = (row) => {
       }
       await api.post(`payouts/${row.duePayoutId}/execute/`, { txid })
       row.txid = txid
-=======
-      await api.post(`payouts/${row.duePayoutId}/execute/`, {
-        txid: normalizeTxid(row.txid) || undefined,
-      })
->>>>>>> e1205841a8f13faedff81b7a28e4fe039846bc71
       withdrawnDonations.value.add(row.id)
       localStorage.setItem('withdrawnDonations', JSON.stringify([...withdrawnDonations.value]))
       row.withdrawn = true
@@ -3838,7 +3833,6 @@ const handleSmartWithdrawAll = (account) => {
       let failCount = 0
       for (const payout of duePayouts) {
         try {
-<<<<<<< HEAD
           const vaultRecord = findVaultRecord(payout.donation_id)
           if (!vaultRecord) {
             throw new Error(`Vault contract not found for payout ${payout.id}`)
@@ -3855,12 +3849,6 @@ const handleSmartWithdrawAll = (account) => {
             txid,
           })
           const row = allTransactions.value.find((t) => String(t.id) === String(payout.donation_id))
-=======
-          const row = allTransactions.value.find((t) => t.id === payout.donation_id)
-          await api.post(`payouts/${payout.id}/execute/`, {
-            txid: normalizeTxid(row?.txid) || undefined,
-          })
->>>>>>> e1205841a8f13faedff81b7a28e4fe039846bc71
           if (row) {
             row.withdrawn = true
             row.status = 'completed'
