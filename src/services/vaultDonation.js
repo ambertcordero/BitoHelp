@@ -34,12 +34,16 @@ const getProvider = () => {
   }
 
   const now = Date.now()
-  const isStale = providerInstance && (now - providerCreatedAt > PROVIDER_MAX_AGE_MS)
+  const isStale = providerInstance && now - providerCreatedAt > PROVIDER_MAX_AGE_MS
   const isWrongNetwork = providerInstance && providerNetwork !== network
 
   if (!providerInstance || isStale || isWrongNetwork) {
     if (providerInstance) {
-      try { providerInstance.disconnect?.() } catch { /* ignore */ }
+      try {
+        providerInstance.disconnect?.()
+      } catch {
+        /* ignore */
+      }
     }
     providerInstance = new ElectrumNetworkProvider(network)
     providerNetwork = network
@@ -50,7 +54,11 @@ const getProvider = () => {
 
 const resetProvider = () => {
   if (providerInstance) {
-    try { providerInstance.disconnect?.() } catch { /* ignore */ }
+    try {
+      providerInstance.disconnect?.()
+    } catch {
+      /* ignore */
+    }
   }
   providerInstance = null
   providerNetwork = null
@@ -612,7 +620,11 @@ export const startAutoWithdraw = (record, onCycle) => {
       const utxos = await contract.getUtxos()
       currentBalanceSats = utxos.reduce((sum, u) => sum + u.satoshis, 0n)
     } catch (balErr) {
-      if (/socket|connection|Cannot initiate|ECONNREFUSED|ETIMEDOUT/i.test(String(balErr?.message || ''))) {
+      if (
+        /socket|connection|Cannot initiate|ECONNREFUSED|ETIMEDOUT/i.test(
+          String(balErr?.message || ''),
+        )
+      ) {
         resetProvider()
       }
     }
