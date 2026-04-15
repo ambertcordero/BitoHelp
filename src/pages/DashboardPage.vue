@@ -1749,16 +1749,14 @@
                                 cursor: pointer;
                               "
                               @click="
-                                $q
-                                  .copyToClipboard(nonprofitProfile.bch_address)
-                                  .then(() =>
-                                    $q.notify({
-                                      type: 'positive',
-                                      message: 'Address copied',
-                                      position: 'top',
-                                      timeout: 1500,
-                                    }),
-                                  )
+                                $q.copyToClipboard(nonprofitProfile.bch_address).then(() =>
+                                  $q.notify({
+                                    type: 'positive',
+                                    message: 'Address copied',
+                                    position: 'top',
+                                    timeout: 1500,
+                                  }),
+                                )
                               "
                             >
                               {{ nonprofitProfile.bch_address }}
@@ -3707,15 +3705,6 @@ const getExplorerUrlForDonation = (donation) => {
   return provided.toLowerCase() === expected.toLowerCase() ? expected : ''
 }
 
-const generateFallbackTxid = (seed) => {
-  const source = `${seed}-${Date.now()}-${Math.random()}`
-  let hex = ''
-  for (let i = 0; i < source.length; i++) {
-    hex += source.charCodeAt(i).toString(16).padStart(2, '0')
-  }
-  return (hex + '0'.repeat(64)).slice(0, 64)
-}
-
 const validateAddress = (address) => {
   if (!address) return false
   const bchRegex = /^(bitcoincash:)?[qp][a-z0-9]{41}$/i
@@ -3777,9 +3766,16 @@ const handleSmartWithdraw = (row) => {
     ],
     loading: false,
     onConfirm: async () => {
-      const txid = isValidTxid(row.txid)
-        ? normalizeTxid(row.txid)
-        : generateFallbackTxid(`tx-${row.id}`)
+      const txid = normalizeTxid(row.txid)
+      if (!txid) {
+        $q.notify({
+          type: 'negative',
+          message: 'Cannot execute withdrawal — no valid blockchain TXID found for this donation.',
+          position: 'top',
+          timeout: 4000,
+        })
+        return
+      }
       await api.post(`payouts/${row.duePayoutId}/execute/`, { txid })
       row.txid = txid
       withdrawnDonations.value.add(row.id)
@@ -3826,11 +3822,13 @@ const handleSmartWithdrawAll = (account) => {
       let failCount = 0
       for (const payout of duePayouts) {
         try {
-          const txid = generateFallbackTxid(`tx-${payout.id}-c${payout.cycle_number}`)
-          await api.post(`payouts/${payout.id}/execute/`, {
-            txid,
-          })
           const row = allTransactions.value.find((t) => t.id === payout.donation_id)
+          const txid = normalizeTxid(row?.txid)
+          if (!txid) {
+            failCount++
+            continue
+          }
+          await api.post(`payouts/${payout.id}/execute/`, { txid })
           if (row) {
             row.txid = txid
             row.withdrawn = true

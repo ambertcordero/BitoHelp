@@ -15,6 +15,7 @@ import { getAddressHash160 } from './bchChipnet.js'
 import { getAddressUtxos } from './electrumClient.js'
 import { api } from '../boot/axios.js'
 import { useNetworkStore } from '../stores/network-store.js'
+import { isValidTxid } from '../utils/bchUtils.js'
 
 const VAULT_STORAGE_KEY = 'cryptocare.vaults'
 
@@ -498,6 +499,12 @@ const handleInboxApproval = async (record, cycleNumber, currentBalanceSats = nul
  * Report a successful payout execution to the backend.
  */
 const reportExecution = async (approvalId, txid) => {
+  if (!isValidTxid(txid)) {
+    if (import.meta.env.DEV) {
+      console.error('[CrypToCare][vault-approval:invalid-txid]', { approvalId, txid })
+    }
+    return
+  }
   try {
     await api.post(`payouts/${approvalId}/execute/`, { txid })
   } catch (err) {
@@ -698,12 +705,49 @@ export const startAutoWithdraw = (record, onCycle) => {
             const nextCycle = cycleNumber + 1
             cycleNumber = nextCycle
             noUtxoStreak = 0
+
+            // Build withdrawal history entry
+            const currentVault = getAllStoredVaults().find((v) => v.donationId === id)
+            const withdrawalHistory = currentVault?.withdrawalHistory || []
+            withdrawalHistory.push({
+              cycleNumber,
+              txid: result.txid,
+              amount: result.amount.toString(),
+              drained: result.drained,
+              timestamp: new Date().toISOString(),
+            })
+
             updateVaultRecord(id, {
               lastWithdrawTxid: result.txid,
               lastWithdrawAt: new Date().toISOString(),
               cyclesCompleted: cycleNumber,
               status: result.drained ? 'drained' : 'withdrawing',
+              withdrawalHistory,
             })
+
+            // Report withdrawal to backend as a donation record (best-effort)
+            if (isValidTxid(result.txid)) {
+              api
+                .post('donations/', {
+                  txid: result.txid,
+                  recipient: record.recipientAddress,
+                  amount: (Number(result.amount) / 1e8).toFixed(8),
+                  coin: record.coin || 'BCH',
+                  cause: record.cause || '',
+                  donor_name: record.donorName || '',
+                  donor_email: record.donorEmail || '',
+                  contract: record.vaultAddress || '',
+                  interval: record.intervalLabel || '',
+                  interval_blocks: record.intervalBlocks || 0,
+                  wallet_address: (record.funderAddress || '').toLowerCase(),
+                  payout_mode: record.payoutMode || 'smart',
+                })
+                .catch((err) => {
+                  if (import.meta.env.DEV) {
+                    console.warn('[CrypToCare][withdrawal-post:failed]', err?.message)
+                  }
+                })
+            }
             if (import.meta.env.DEV) {
               console.info('[CrypToCare][vault-autowithdraw:success]', {
                 status: result.drained ? 'Successful (final drain)' : 'Successful',
@@ -840,12 +884,49 @@ export const startAutoWithdraw = (record, onCycle) => {
 
       cycleNumber++
       noUtxoStreak = 0
+
+      // Build withdrawal history entry
+      const currentVault = getAllStoredVaults().find((v) => v.donationId === id)
+      const withdrawalHistory = currentVault?.withdrawalHistory || []
+      withdrawalHistory.push({
+        cycleNumber,
+        txid: result.txid,
+        amount: result.amount.toString(),
+        drained: result.drained,
+        timestamp: new Date().toISOString(),
+      })
+
       updateVaultRecord(id, {
         lastWithdrawTxid: result.txid,
         lastWithdrawAt: new Date().toISOString(),
         cyclesCompleted: cycleNumber,
         status: result.drained ? 'drained' : 'withdrawing',
+        withdrawalHistory,
       })
+
+      // Report withdrawal to backend as a donation record (best-effort)
+      if (isValidTxid(result.txid)) {
+        api
+          .post('donations/', {
+            txid: result.txid,
+            recipient: record.recipientAddress,
+            amount: (Number(result.amount) / 1e8).toFixed(8),
+            coin: record.coin || 'BCH',
+            cause: record.cause || '',
+            donor_name: record.donorName || '',
+            donor_email: record.donorEmail || '',
+            contract: record.vaultAddress || '',
+            interval: record.intervalLabel || '',
+            interval_blocks: record.intervalBlocks || 0,
+            wallet_address: (record.funderAddress || '').toLowerCase(),
+            payout_mode: record.payoutMode || 'smart',
+          })
+          .catch((err) => {
+            if (import.meta.env.DEV) {
+              console.warn('[CrypToCare][withdrawal-post:failed]', err?.message)
+            }
+          })
+      }
 
       if (import.meta.env.DEV) {
         console.info('[CrypToCare][vault-autowithdraw:success]', {

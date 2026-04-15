@@ -1271,6 +1271,41 @@
                 {{ donationDetailDialog.txid }}
               </div>
             </div>
+
+            <!-- Withdrawal History -->
+            <div v-if="donationDetailDialog.withdrawalHistory.length > 0" class="q-mt-md">
+              <div class="tx-detail-label q-mb-sm">Withdrawal History</div>
+              <q-list dense bordered separator class="rounded-borders">
+                <q-item
+                  v-for="(entry, idx) in donationDetailDialog.withdrawalHistory"
+                  :key="idx"
+                  class="q-py-xs"
+                >
+                  <q-item-section side>
+                    <q-badge
+                      :color="entry.drained ? 'orange' : 'positive'"
+                      :label="`Cycle ${entry.cycleNumber}`"
+                    />
+                  </q-item-section>
+                  <q-item-section>
+                    <q-item-label
+                      style="font-family: monospace; font-size: 10px; word-break: break-all"
+                    >
+                      {{ entry.txid }}
+                    </q-item-label>
+                    <q-item-label caption>
+                      {{ (Number(entry.amount) / 1e8).toFixed(8) }} BCH
+                      <span v-if="entry.timestamp" class="q-ml-sm text-grey-5">
+                        {{ new Date(entry.timestamp).toLocaleString() }}
+                      </span>
+                    </q-item-label>
+                  </q-item-section>
+                  <q-item-section side v-if="entry.drained">
+                    <q-badge color="orange" label="Final" />
+                  </q-item-section>
+                </q-item>
+              </q-list>
+            </div>
           </div>
 
           <div class="tx-detail-note q-mt-md">
@@ -1490,6 +1525,7 @@ import { useDonationStore } from '../stores/donation-store'
 import { useQuasar } from 'quasar'
 import { api } from 'boot/axios'
 import { getStoredVaults, checkReclaimEligibility, executeReclaim } from '../services/vaultDonation'
+import { isValidTxid } from '../utils/bchUtils'
 import bchImg from 'src/assets/bch.png'
 import projectImg from 'src/assets/project.png'
 import transactionImg from 'src/assets/transaction.png'
@@ -1546,6 +1582,7 @@ const donationDetailDialog = ref({
   coin: 'BCH',
   txid: '',
   rows: [],
+  withdrawalHistory: [],
 })
 
 const receiptDialog = ref({
@@ -1632,6 +1669,16 @@ const handleReclaim = async (vault) => {
     const result = await executeReclaim(vault)
 
     if (result.success) {
+      if (!isValidTxid(result.txid)) {
+        console.error('[CrypToCare][reclaim:invalid-txid]', result.txid)
+        $q.notify({
+          type: 'negative',
+          message: 'Reclaim succeeded on-chain but returned an invalid txid.',
+          timeout: 6000,
+        })
+        if (idx !== -1) reclaimableVaults.value[idx].reclaiming = false
+        return
+      }
       $q.notify({
         type: 'positive',
         message: `Reclaimed ${formatBchFromSats(result.amount)} BCH. Txid: ${result.txid}`,
@@ -2234,6 +2281,14 @@ const openReceiptFromDetail = () => {
 const viewDonationDetails = (donation) => {
   const donationDate = formatDate(donation.timestamp || donation.date)
   const formattedAmount = formatCurrency(donation.amount)
+
+  // Look up withdrawal history from matching vault record
+  const vaults = getStoredVaults()
+  const matchingVault = vaults.find(
+    (v) => v.fundingTxid === donation.txid || v.recipientAddress === donation.recipient,
+  )
+  const history = (matchingVault?.withdrawalHistory || []).filter((e) => isValidTxid(e.txid))
+
   donationDetailDialog.value = {
     open: true,
     _raw: donation,
@@ -2247,6 +2302,7 @@ const viewDonationDetails = (donation) => {
     formattedAmount,
     coin: donation.coin || 'BCH',
     txid: donation.txid || '',
+    withdrawalHistory: history,
     rows: [
       { label: 'Date', value: donationDate },
       { label: 'Cause / Nonprofit', value: donation.cause || 'N/A' },

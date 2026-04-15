@@ -48,6 +48,12 @@ export function getAddressExplorerUrl(address, isTestnet = false) {
   return `${base}/address/${address}`
 }
 
+const TXID_RE = /^[a-fA-F0-9]{64}$/
+
+export function isValidTxid(txid) {
+  return typeof txid === 'string' && TXID_RE.test(txid.trim())
+}
+
 export function calculateTxFee(inputCount = 1, outputCount = 2, feeRate = 1) {
   const estimatedSize = inputCount * 148 + outputCount * 34 + 10
   return estimatedSize * feeRate
