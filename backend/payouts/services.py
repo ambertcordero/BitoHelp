@@ -387,3 +387,122 @@ def refresh_and_send(approval):
     )
 
     send_approval_email(approval, raw_token)
+
+
+# ── Reclaim warning email ────────────────────────────────────────────
+
+def send_reclaim_warning_email(
+    *,
+    donor_email,
+    donor_name='',
+    vault_address='',
+    recipient_address='',
+    vault_balance_satoshis=0,
+    coin='BCH',
+    interval_label='',
+):
+    """
+    Send a plain notice email to the donor warning them that a recipient has
+    failed to withdraw for the 2nd consecutive interval. If the 3rd cycle
+    also goes unwithdrawn, the donor will be able to reclaim the funds.
+    No links, no action buttons — purely informational.
+    """
+    bch_balance = f'{vault_balance_satoshis / 1e8:.8f}' if vault_balance_satoshis else '0.00000000'
+    truncated_vault = (
+        f'{vault_address[:12]}...{vault_address[-6:]}'
+        if len(vault_address) > 22
+        else vault_address
+    )
+    truncated_recipient = (
+        f'{recipient_address[:12]}...{recipient_address[-6:]}'
+        if len(recipient_address) > 22
+        else recipient_address
+    )
+
+    subject = '[CrypToCare] Withdrawal warning \u2014 recipient has not withdrawn for 2 intervals'
+    greeting = f'Hi {donor_name},' if donor_name else 'Hi,'
+    interval_note = f' ({interval_label} each)' if interval_label else ''
+
+    html_body = f"""\
+<html><head></head>
+<body style="margin:0;padding:0;background:#f4f4f4;font-family:Arial,Helvetica,sans-serif;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#f4f4f4;padding:30px 0;">
+<tr><td align="center">
+<table width="520" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.08);">
+
+<!-- Logo Header -->
+<tr><td align="center" style="padding:28px 24px 12px;">
+  <img src="cid:cryptocare_logo" alt="CrypToCare" width="180" style="max-width:180px;height:auto;" />
+</td></tr>
+
+<!-- Title -->
+<tr><td align="center" style="padding:4px 24px 6px;">
+  <h2 style="margin:0;font-size:22px;color:#e65100;">Withdrawal Warning</h2>
+</td></tr>
+<tr><td style="padding:0 32px 20px;">
+  <p style="margin:0;font-size:15px;color:#666;line-height:1.6;">
+    {greeting}<br/><br/>
+    The recipient of one of your donations has <strong>failed to withdraw for
+    2 consecutive intervals</strong>{interval_note}.
+    <br/><br/>
+    If the recipient does not withdraw during the <strong>3rd interval</strong>,
+    the remaining funds in the vault will become <strong>eligible for you to reclaim</strong>
+    back to your wallet through the Donor Dashboard's <strong>Reclaim</strong> tab.
+  </p>
+</td></tr>
+
+<!-- Details Table -->
+<tr><td style="padding:0 32px;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;">
+    <tr>
+      <td style="padding:12px 0;border-bottom:1px solid #eee;font-size:14px;color:#888;width:130px;">Vault Balance</td>
+      <td style="padding:12px 0;border-bottom:1px solid #eee;font-size:14px;color:#e65100;font-weight:700;">{bch_balance} {coin}</td>
+    </tr>
+    <tr>
+      <td style="padding:12px 0;border-bottom:1px solid #eee;font-size:14px;color:#888;">Vault Address</td>
+      <td style="padding:12px 0;border-bottom:1px solid #eee;font-size:14px;color:#222;font-weight:600;">{truncated_vault}</td>
+    </tr>
+    <tr>
+      <td style="padding:12px 0;font-size:14px;color:#888;">Recipient</td>
+      <td style="padding:12px 0;font-size:14px;color:#222;font-weight:600;">{truncated_recipient}</td>
+    </tr>
+  </table>
+</td></tr>
+
+<!-- Footer -->
+<tr><td style="background:#fafafa;padding:16px 24px;border-top:1px solid #eee;">
+  <p style="margin:0;font-size:11px;color:#999;text-align:center;">
+    This is an automated notice. No action is required at this time.<br/>
+    &copy; CrypToCare &mdash; Empowering transparent giving on Bitcoin Cash.
+  </p>
+</td></tr>
+
+</table>
+</td></tr>
+</table>
+</body></html>"""
+
+    text_body = strip_tags(html_body)
+
+    sender = getattr(settings, 'PAYOUT_FROM_EMAIL', settings.DEFAULT_FROM_EMAIL)
+
+    msg = EmailMultiAlternatives(
+        subject=subject,
+        body=text_body,
+        from_email=sender,
+        to=[donor_email],
+    )
+    msg.attach_alternative(html_body, 'text/html')
+
+    # Attach logo as CID inline image
+    logo_path = os.path.join(settings.BASE_DIR, '..', 'src', 'logo.png')
+    if os.path.isfile(logo_path):
+        with open(logo_path, 'rb') as f:
+            logo_data = f.read()
+        logo_img = MIMEImage(logo_data, _subtype='png')
+        logo_img.add_header('Content-ID', '<cryptocare_logo>')
+        logo_img.add_header('Content-Disposition', 'inline', filename='logo.png')
+        msg.attach(logo_img)
+
+    msg.send(fail_silently=False)
+    logger.info('Reclaim warning email sent to %s for vault %s', donor_email, vault_address)

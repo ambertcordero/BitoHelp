@@ -223,6 +223,85 @@ export const checkVaultUtxo = async (contract, intervalBlocks) => {
 }
 
 /**
+ * Check if a vault is eligible for reclaim (age >= interval * 3).
+ */
+export const checkReclaimEligibility = async (record) => {
+  const contract = contractFromRecord(record)
+  const intervalBlocks = Number(record.intervalBlocks)
+  const reclaimAge = intervalBlocks * 3
+
+  const utxos = await contract.getUtxos()
+  if (!utxos.length) {
+    return { eligible: false, reason: 'no-utxos' }
+  }
+
+  const vaultUtxo = utxos.reduce((a, b) => (a.satoshis > b.satoshis ? a : b))
+  const balance = vaultUtxo.satoshis
+
+  const check = await checkVaultUtxo(contract, reclaimAge)
+  if (!check.eligible) {
+    return {
+      eligible: false,
+      reason: check.reason,
+      confirmations: check.confirmations,
+      needed: check.needed,
+      balance,
+    }
+  }
+
+  return { eligible: true, utxo: vaultUtxo, balance }
+}
+
+/**
+ * Execute the reclaim() function on a vault contract.
+ * Sends all remaining funds (minus miner fee) back to the original donor.
+ */
+export const executeReclaim = async (record) => {
+  const contract = contractFromRecord(record)
+  const intervalBlocks = Number(record.intervalBlocks)
+  const reclaimAge = intervalBlocks * 3
+
+  const check = await checkVaultUtxo(contract, reclaimAge)
+  if (!check.eligible) {
+    return { success: false, reason: check.reason, confirmations: check.confirmations, needed: check.needed }
+  }
+
+  const vaultUtxo = check.utxo
+  const currentValue = vaultUtxo.satoshis
+  const reclaimAmount = currentValue - MINER_FEE
+
+  if (reclaimAmount <= 0n) {
+    return { success: false, reason: 'insufficient-balance' }
+  }
+
+  const reclaimUnlocker = contract.unlock.reclaim()
+  const sequence = reclaimAge
+  const funderAddress = record.funderAddress
+
+  const tx = new TransactionBuilder({ provider: getProvider() })
+    .addInput(vaultUtxo, reclaimUnlocker, { sequence })
+    .addOutput({ to: funderAddress, amount: reclaimAmount })
+
+  const sendResult = await tx.send()
+  const txid = sendResult.txid
+
+  if (import.meta.env.DEV) {
+    console.info('[CrypToCare][vault-reclaim:success]', {
+      txid, amount: reclaimAmount.toString(), funderAddress, donationId: record.donationId,
+    })
+  }
+
+  updateVaultRecord(record.donationId, {
+    status: 'reclaimed',
+    reclaimTxid: txid,
+    reclaimedAt: new Date().toISOString(),
+    reclaimedAmount: reclaimAmount.toString(),
+  })
+
+  return { success: true, txid, amount: reclaimAmount, vaultBalanceBefore: currentValue }
+}
+
+/**
  * Attempt a single withdraw() call against a vault.
  * If the UTXO is too young the network will reject with a BIP68 error,
  * which the auto-withdraw scheduler handles by retrying after the interval.
@@ -456,6 +535,31 @@ export const startAutoWithdraw = (record, onCycle) => {
   const MAX_NO_UTXO_RETRIES = 20
   let timer = null
 
+  const sendReclaimWarningEmail = async (currentBalanceSats) => {
+    if (!record.donorEmail) return
+    try {
+      await api.post('payouts/reclaim-warning/', {
+        donor_email: record.donorEmail,
+        donor_name: record.donorName || '',
+        vault_address: record.vaultAddress || '',
+        recipient_address: record.recipientAddress || '',
+        vault_balance_satoshis: currentBalanceSats !== null ? Number(currentBalanceSats) : 0,
+        coin: record.coin || 'BCH',
+        interval_label: record.intervalLabel || '',
+      })
+      if (import.meta.env.DEV) {
+        console.info('[CrypToCare][vault-reclaim-warning:sent]', {
+          donationId: record.donationId,
+          donorEmail: record.donorEmail,
+        })
+      }
+    } catch (err) {
+      if (import.meta.env.DEV) {
+        console.warn('[CrypToCare][vault-reclaim-warning:failed]', err?.message)
+      }
+    }
+  }
+
   const stop = () => {
     stopped = true
     if (timer) clearTimeout(timer)
@@ -660,6 +764,15 @@ export const startAutoWithdraw = (record, onCycle) => {
       const result = await executeWithdraw(record)
 
       if (!result.success) {
+        // Send reclaim warning after 2nd consecutive failed withdrawal cycle
+        if (cycleNumber >= 1) {
+          const storedVaults = getAllStoredVaults()
+          const currentVault = storedVaults.find((v) => v.donationId === id)
+          if (!currentVault?.reclaimWarningSentAt) {
+            sendReclaimWarningEmail(currentBalanceSats)
+            updateVaultRecord(id, { reclaimWarningSentAt: new Date().toISOString() })
+          }
+        }
         if (result.reason === 'no-utxos') {
           noUtxoStreak++
           if (noUtxoStreak >= MAX_NO_UTXO_RETRIES) {
@@ -777,6 +890,15 @@ export const startAutoWithdraw = (record, onCycle) => {
       const waitMs = Number(record.intervalBlocks) * BLOCK_TIME_MS + POLL_INTERVAL_MS
       scheduleNext(waitMs)
     } catch (error) {
+      // Send reclaim warning after 2nd consecutive failed cycle (catch path)
+      if (cycleNumber >= 1) {
+        const storedVaults = getAllStoredVaults()
+        const currentVault = storedVaults.find((v) => v.donationId === id)
+        if (!currentVault?.reclaimWarningSentAt) {
+          sendReclaimWarningEmail(currentBalanceSats)
+          updateVaultRecord(id, { reclaimWarningSentAt: new Date().toISOString() })
+        }
+      }
       const rawMsg = String(error?.message || '')
       // Strip CashScript Bitauth debug URI from error messages
       const msg = rawMsg.replace(/\s*WARNING:.*Bitauth URI:.*$/s, '').trim()

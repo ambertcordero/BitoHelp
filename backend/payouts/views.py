@@ -1,3 +1,4 @@
+import logging
 import re
 from django.http import JsonResponse, HttpResponse
 from django.views.decorators.csrf import csrf_exempt
@@ -7,7 +8,9 @@ from rest_framework.response import Response
 
 from .models import PayoutApproval
 from .serializers import PayoutApprovalSerializer, PayoutApprovalListSerializer, PayoutAuditLogSerializer
-from .services import create_pending_approval, send_approval_email, process_approval, mark_executed, mark_failed, refresh_and_send
+from .services import create_pending_approval, send_approval_email, process_approval, mark_executed, mark_failed, refresh_and_send, send_reclaim_warning_email
+
+logger = logging.getLogger(__name__)
 
 
 TXID_PATTERN = re.compile(r'^[A-Fa-f0-9]{64}$')
@@ -276,6 +279,37 @@ def trigger_approval(request, pk):
 
     serializer = PayoutApprovalSerializer(approval)
     return Response(serializer.data)
+
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def notify_reclaim_warning(request):
+    """
+    Called by the auto-withdraw scheduler when the 2nd withdrawal cycle
+    fails. Sends a warning notice to the donor that their funds may
+    become reclaimable. No links, no approval — purely informational.
+    POST /api/payouts/reclaim-warning/
+    """
+    data = request.data
+    donor_email = (data.get('donor_email') or '').strip()
+    if not donor_email:
+        return Response({'error': 'donor_email is required'}, status=400)
+
+    try:
+        send_reclaim_warning_email(
+            donor_email=donor_email,
+            donor_name=data.get('donor_name', ''),
+            vault_address=data.get('vault_address', ''),
+            recipient_address=data.get('recipient_address', ''),
+            vault_balance_satoshis=int(data.get('vault_balance_satoshis', 0)),
+            coin=data.get('coin', 'BCH'),
+            interval_label=data.get('interval_label', ''),
+        )
+    except Exception as exc:
+        logger.warning('Failed to send reclaim warning: %s', exc)
+        return Response({'error': f'Email failed: {exc}'}, status=500)
+
+    return Response({'ok': True, 'message': 'Reclaim warning sent'})
 
 
 # ── Helpers ───────────────────────────────────────────────────────────
