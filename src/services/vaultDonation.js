@@ -263,7 +263,12 @@ export const executeReclaim = async (record) => {
 
   const check = await checkVaultUtxo(contract, reclaimAge)
   if (!check.eligible) {
-    return { success: false, reason: check.reason, confirmations: check.confirmations, needed: check.needed }
+    return {
+      success: false,
+      reason: check.reason,
+      confirmations: check.confirmations,
+      needed: check.needed,
+    }
   }
 
   const vaultUtxo = check.utxo
@@ -287,7 +292,10 @@ export const executeReclaim = async (record) => {
 
   if (import.meta.env.DEV) {
     console.info('[CrypToCare][vault-reclaim:success]', {
-      txid, amount: reclaimAmount.toString(), funderAddress, donationId: record.donationId,
+      txid,
+      amount: reclaimAmount.toString(),
+      funderAddress,
+      donationId: record.donationId,
     })
   }
 

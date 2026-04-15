@@ -790,8 +790,8 @@
             <q-tab-panel name="reclaim">
               <div class="text-h6 q-mb-md">Reclaim Unspent Donations</div>
               <p class="text-body2 text-grey-7 q-mb-lg">
-                If a recipient has not withdrawn funds for 3 consecutive intervals,
-                you may reclaim the remaining balance back to your wallet.
+                If a recipient has not withdrawn funds for 3 consecutive intervals, you may reclaim
+                the remaining balance back to your wallet.
               </p>
 
               <div v-if="reclaimLoading" class="text-center q-pa-xl">
@@ -801,23 +801,34 @@
 
               <div v-else-if="reclaimableVaults.length === 0" class="text-center q-pa-xl">
                 <q-icon name="check_circle" size="64px" color="positive" />
-                <div class="text-body1 text-grey-7 q-mt-md">No vaults are currently eligible for reclaim.</div>
+                <div class="text-body1 text-grey-7 q-mt-md">
+                  No vaults are currently eligible for reclaim.
+                </div>
                 <div class="text-caption text-grey-5 q-mt-xs">
-                  Vaults become reclaimable after the recipient misses 3 consecutive withdrawal intervals.
+                  Vaults become reclaimable after the recipient misses 3 consecutive withdrawal
+                  intervals.
                 </div>
               </div>
 
               <div v-else class="row q-col-gutter-md">
-                <div v-for="vault in reclaimableVaults" :key="vault.donationId" class="col-12 col-md-6 col-lg-4">
+                <div
+                  v-for="vault in reclaimableVaults"
+                  :key="vault.donationId"
+                  class="col-12 col-md-6 col-lg-4"
+                >
                   <q-card flat bordered class="reclaim-card">
                     <q-card-section>
                       <div class="flex items-center q-mb-md">
                         <q-avatar size="48px" color="orange" text-color="white">
                           <q-icon name="account_balance" size="28px" />
                         </q-avatar>
-                        <div class="q-ml-md" style="min-width:0;flex:1">
-                          <div class="text-subtitle1 text-weight-bold ellipsis">{{ vault.donorName || 'Donation' }}</div>
-                          <div class="text-caption text-grey-6">{{ vault.intervalLabel || vault.intervalBlocks + ' blocks' }}</div>
+                        <div class="q-ml-md" style="min-width: 0; flex: 1">
+                          <div class="text-subtitle1 text-weight-bold ellipsis">
+                            {{ vault.donorName || 'Donation' }}
+                          </div>
+                          <div class="text-caption text-grey-6">
+                            {{ vault.intervalLabel || vault.intervalBlocks + ' blocks' }}
+                          </div>
                         </div>
                       </div>
 
@@ -826,34 +837,56 @@
                       <div class="row q-col-gutter-sm">
                         <div class="col-6">
                           <div class="text-caption text-grey-6">Vault Balance</div>
-                          <div class="text-h6 text-weight-bold" style="color:#e65100">{{ formatBchFromSats(vault.balance) }} BCH</div>
+                          <div class="text-h6 text-weight-bold" style="color: #e65100">
+                            {{ formatBchFromSats(vault.balance) }} BCH
+                          </div>
                         </div>
                         <div class="col-6">
                           <div class="text-caption text-grey-6">Status</div>
-                          <q-badge :color="vault.eligible ? 'orange' : 'grey'" :label="vault.eligible ? 'Reclaimable' : 'Not Yet'" />
+                          <q-badge
+                            :color="vault.eligible ? 'orange' : 'grey'"
+                            :label="vault.eligible ? 'Reclaimable' : 'Not Yet'"
+                          />
                         </div>
                       </div>
 
                       <div class="q-mt-sm">
                         <div class="text-caption text-grey-6">Vault Address</div>
-                        <div class="text-body2 ellipsis" style="font-family:monospace;font-size:11px">{{ vault.vaultAddress }}</div>
+                        <div
+                          class="text-body2 ellipsis"
+                          style="font-family: monospace; font-size: 11px"
+                        >
+                          {{ vault.vaultAddress }}
+                        </div>
                       </div>
                       <div class="q-mt-sm">
                         <div class="text-caption text-grey-6">Recipient</div>
-                        <div class="text-body2 ellipsis" style="font-family:monospace;font-size:11px">{{ vault.recipientAddress }}</div>
+                        <div
+                          class="text-body2 ellipsis"
+                          style="font-family: monospace; font-size: 11px"
+                        >
+                          {{ vault.recipientAddress }}
+                        </div>
                       </div>
 
                       <div v-if="!vault.eligible && vault.needed" class="q-mt-sm">
                         <div class="text-caption text-orange-8">
-                          ⏳ {{ vault.needed - (vault.confirmations || 0) }} more block(s) until reclaimable
+                          ⏳ {{ vault.needed - (vault.confirmations || 0) }} more block(s) until
+                          reclaimable
                         </div>
                       </div>
                     </q-card-section>
 
                     <q-card-actions>
-                      <q-btn flat color="orange-8" label="Reclaim Funds" icon="undo"
-                        :loading="vault.reclaiming" :disable="!vault.eligible || vault.reclaiming"
-                        @click="handleReclaim(vault)" />
+                      <q-btn
+                        flat
+                        color="orange-8"
+                        label="Reclaim Funds"
+                        icon="undo"
+                        :loading="vault.reclaiming"
+                        :disable="!vault.eligible || vault.reclaiming"
+                        @click="handleReclaim(vault)"
+                      />
                     </q-card-actions>
                   </q-card>
                 </div>
@@ -1456,11 +1489,7 @@ ChartJS.register(
 import { useDonationStore } from '../stores/donation-store'
 import { useQuasar } from 'quasar'
 import { api } from 'boot/axios'
-import {
-  getStoredVaults,
-  checkReclaimEligibility,
-  executeReclaim,
-} from '../services/vaultDonation'
+import { getStoredVaults, checkReclaimEligibility, executeReclaim } from '../services/vaultDonation'
 import bchImg from 'src/assets/bch.png'
 import projectImg from 'src/assets/project.png'
 import transactionImg from 'src/assets/transaction.png'
@@ -1617,9 +1646,11 @@ const handleReclaim = async (vault) => {
 
       setTimeout(() => loadReclaimVaults(), 2000)
 
-      window.dispatchEvent(new CustomEvent('bitohelp:wallet-balance-refresh', {
-        detail: { chain: vault.network === 'mainnet' ? 'bch:bitcoincash' : 'bch:bchtest' },
-      }))
+      window.dispatchEvent(
+        new CustomEvent('bitohelp:wallet-balance-refresh', {
+          detail: { chain: vault.network === 'mainnet' ? 'bch:bitcoincash' : 'bch:bchtest' },
+        }),
+      )
     } else {
       let message = 'Reclaim failed.'
       if (result.reason === 'too-young') {
