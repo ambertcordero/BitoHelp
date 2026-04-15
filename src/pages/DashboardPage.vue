@@ -297,7 +297,6 @@
               v-if="nonprofitProfile"
               name="profile"
               label="Organization Profile"
-              icon="business"
             />
           </q-tabs>
 
@@ -2918,7 +2917,7 @@ ChartJS.register(
 import { api } from 'boot/axios'
 import { useRouter } from 'vue-router'
 import { useNetworkStore } from 'src/stores/network-store'
-import { executeWithdraw, getStoredVaults, buildVaultRecordFromBackend } from 'src/services/vaultDonation'
+import { executeWithdraw, buildVaultRecordFromBackend } from 'src/services/vaultDonation'
 import bchImg from 'src/assets/bch.png'
 import projectImg from 'src/assets/project.png'
 import transactionImg from 'src/assets/transaction.png'
@@ -2977,9 +2976,6 @@ const fetchNonprofitByWallet = async () => {
     loadingProfile.value = false
   }
 }
-
-const findVaultRecord = (donationId) =>
-  getStoredVaults().find((record) => String(record.donationId) === String(donationId))
 
 const CATEGORY_LABELS = {
   animals: 'Animals',

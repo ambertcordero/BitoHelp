@@ -12,7 +12,7 @@ class DonationAdmin(admin.ModelAdmin):
     
     fieldsets = (
         ('Transaction Info', {
-            'fields': ('txid', 'explorer_url', 'timestamp')
+            'fields': ('txid', 'reclaim_txid', 'explorer_url', 'timestamp')
         }),
         ('Donation Details', {
             'fields': ('recipient', 'amount', 'coin', 'cause', 'message')
