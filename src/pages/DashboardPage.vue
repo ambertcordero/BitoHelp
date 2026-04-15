@@ -2918,7 +2918,7 @@ ChartJS.register(
 import { api } from 'boot/axios'
 import { useRouter } from 'vue-router'
 import { useNetworkStore } from 'src/stores/network-store'
-import { executeWithdraw, buildVaultRecordFromBackend } from 'src/services/vaultDonation'
+import { executeWithdraw, getStoredVaults, buildVaultRecordFromBackend } from 'src/services/vaultDonation'
 import bchImg from 'src/assets/bch.png'
 import projectImg from 'src/assets/project.png'
 import transactionImg from 'src/assets/transaction.png'
@@ -3886,25 +3886,7 @@ const handleSmartWithdrawAll = (account) => {
       let failCount = 0
       for (const payout of duePayouts) {
         try {
-<<<<<<< HEAD
-          const vaultRecord = findVaultRecord(payout.donation_id)
-          if (!vaultRecord) {
-            throw new Error(`Vault contract not found for payout ${payout.id}`)
-          }
-          const result = await executeWithdraw(vaultRecord)
-          if (!result.success) {
-            throw new Error(result.reason || `Vault withdrawal failed for payout ${payout.id}`)
-          }
-          const txid = normalizeTxid(result.txid)
-          if (!txid) {
-            throw new Error(`Invalid txid returned for payout ${payout.id}`)
-          }
-          await api.post(`payouts/${payout.id}/execute/`, {
-            txid,
-          })
           const row = allTransactions.value.find((t) => String(t.id) === String(payout.donation_id))
-=======
-          const row = allTransactions.value.find((t) => t.id === payout.donation_id)
           const vaultRecord =
             payout.funder_address && payout.recipient_address
               ? buildVaultRecordFromBackend({
