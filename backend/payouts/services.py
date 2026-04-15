@@ -83,7 +83,15 @@ def create_pending_approval(
         # Duplicate idempotency_key — check if existing is expired/failed
         existing = PayoutApproval.objects.filter(idempotency_key=idempotency_key).first()
         if existing:
-            if existing.status in (PayoutApproval.Status.EXPIRED, PayoutApproval.Status.FAILED):
+            # Allow replacing executed records that have no txid (smart mode backfill)
+            replaceable_statuses = (
+                PayoutApproval.Status.EXPIRED,
+                PayoutApproval.Status.FAILED,
+            )
+            is_executed_without_txid = (
+                existing.status == PayoutApproval.Status.EXECUTED and not existing.txid
+            )
+            if existing.status in replaceable_statuses or is_executed_without_txid:
                 # Replace stale approval: delete old, create fresh one
                 existing.delete()
                 approval = PayoutApproval.objects.create(

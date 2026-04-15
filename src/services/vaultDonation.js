@@ -74,6 +74,32 @@ const bytesToHex = (bytes) =>
     .join('')
 
 /**
+ * Build a vault record from backend payout data so executeWithdraw() can
+ * reconstruct the contract without relying on localStorage.
+ */
+export const buildVaultRecordFromBackend = ({
+  recipientAddress,
+  funderAddress,
+  withdrawalSatoshis,
+  intervalBlocks,
+  vaultAddress,
+}) => {
+  const recipientHash = getAddressHash160(recipientAddress)
+  const funderHash = getAddressHash160(funderAddress)
+  if (!recipientHash || !funderHash) return null
+  return {
+    recipientAddress,
+    vaultAddress,
+    contractParams: {
+      recipientHash: bytesToHex(recipientHash),
+      funderHash: bytesToHex(funderHash),
+    },
+    withdrawalSatoshis,
+    intervalBlocks,
+  }
+}
+
+/**
  * Instantiate a VaultDonation contract and return its P2SH20 address.
  *
  * @param {Object} params
@@ -934,8 +960,37 @@ export const startAutoWithdraw = (record, onCycle) => {
         withdrawalHistory,
       })
 
-      // Report withdrawal to backend as a donation record (best-effort)
+      // ── Record this cycle's unique txid to the backend (smart mode) ──
       if (isValidTxid(result.txid)) {
+        // Single call: creates an already-executed record with the real blockchain txid
+        api
+          .post('payouts/record/', {
+            donation_id: record.donationId,
+            donor_email: record.donorEmail || '',
+            donor_name: record.donorName || '',
+            recipient_address: record.recipientAddress,
+            vault_address: record.vaultAddress || '',
+            payout_amount_satoshis: record.withdrawalSatoshis,
+            coin: record.coin || 'BCH',
+            interval_label: record.intervalLabel || '',
+            interval_blocks: record.intervalBlocks,
+            cycle_number: cycleNumber,
+            total_cycles:
+              record.totalCycles ||
+              Math.floor(
+                Number(record.depositSatoshis) /
+                  (Number(record.withdrawalSatoshis) + Number(MINER_FEE)),
+              ) ||
+              1,
+            txid: result.txid,
+          })
+          .catch((err) => {
+            if (import.meta.env.DEV) {
+              console.warn('[CrypToCare][smart-payout:record-failed]', err?.message)
+            }
+          })
+
+        // Also save to Donation table (best-effort, for donor history)
         api
           .post('donations/', {
             txid: result.txid,
@@ -1085,6 +1140,41 @@ export const startAutoWithdraw = (record, onCycle) => {
 }
 
 /**
+ * Push locally-cached withdrawal txids to the backend so the nonprofit
+ * Dashboard shows the correct per-cycle txids even if the vault is drained
+ * and the auto-scheduler can no longer re-report them.
+ */
+export const syncCachedWithdrawalHistory = async () => {
+  const vaults = getAllStoredVaults()
+  for (const vault of vaults) {
+    const history = vault.withdrawalHistory
+    if (!Array.isArray(history) || !history.length) continue
+    if (!vault.vaultAddress) continue
+    for (const entry of history) {
+      if (!isValidTxid(entry.txid) || !entry.cycleNumber) continue
+      try {
+        await api.post('payouts/record/', {
+          donation_id: vault.donationId,
+          donor_email: vault.donorEmail || '',
+          donor_name: vault.donorName || '',
+          recipient_address: vault.recipientAddress,
+          vault_address: vault.vaultAddress,
+          payout_amount_satoshis: vault.withdrawalSatoshis,
+          coin: vault.coin || 'BCH',
+          interval_label: vault.intervalLabel || '',
+          interval_blocks: vault.intervalBlocks || 1,
+          cycle_number: entry.cycleNumber,
+          total_cycles: vault.totalCycles || 1,
+          txid: entry.txid,
+        })
+      } catch {
+        // best-effort — ignore 404s and other errors
+      }
+    }
+  }
+}
+
+/**
  * Resume auto-withdraw for all active (non-drained) vaults in localStorage.
  * Call this on app startup / page load.
  *
@@ -1092,6 +1182,9 @@ export const startAutoWithdraw = (record, onCycle) => {
  * @returns {Function} stopAll — stops all running auto-withdrawers
  */
 export const resumeAllAutoWithdraws = (onCycle) => {
+  // Sync any locally-cached txids that the backend may be missing
+  syncCachedWithdrawalHistory().catch(() => {})
+
   const vaults = getStoredVaults()
   let staggerIndex = 0
   for (const vault of vaults) {

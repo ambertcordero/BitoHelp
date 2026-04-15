@@ -6,7 +6,7 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 
-from .models import PayoutApproval
+from .models import PayoutApproval, PayoutAuditLog
 from .serializers import PayoutApprovalSerializer, PayoutApprovalListSerializer, PayoutAuditLogSerializer
 from .services import create_pending_approval, send_approval_email, process_approval, mark_executed, mark_failed, refresh_and_send, send_reclaim_warning_email
 
@@ -86,7 +86,7 @@ def request_approval(request):
 
     approval, raw_token = create_pending_approval(
         donation_id=data['donation_id'],
-        donor_email=data['donor_email'],
+        donor_email=data.get('donor_email', ''),
         donor_name=data.get('donor_name', ''),
         recipient_address=data['recipient_address'],
         vault_address=data.get('vault_address', ''),
@@ -117,7 +117,7 @@ def request_approval(request):
             approval.donation = linked
             approval.save(update_fields=['donation'])
 
-    if raw_token:
+    if raw_token and payout_mode == 'inbox_approval':
         try:
             send_approval_email(approval, raw_token)
         except Exception as exc:
@@ -218,6 +218,10 @@ def report_execution(request, pk):
         txid = txid.lower()
 
     if approval.status == 'executed':
+        # Allow updating an empty txid on an already-executed record
+        if txid and not approval.txid:
+            approval.txid = txid
+            approval.save(update_fields=['txid', 'updated_at'])
         return Response({'message': 'Already executed', 'txid': approval.txid})
 
     mark_executed(approval, txid)
@@ -254,6 +258,105 @@ def report_execution(request, pk):
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
+def report_execution_by_vault(request):
+    """
+    Smart mode reports a successful on-chain withdrawal by vault address + cycle.
+    Finds the matching PayoutApproval and marks it executed with the real txid.
+    """
+    data = request.data
+    vault_address = (data.get('vault_address', '') or '').strip()
+    cycle_number = data.get('cycle_number')
+    txid = (data.get('txid', '') or '').strip()
+
+    if not vault_address or cycle_number is None:
+        return Response({'error': 'vault_address and cycle_number are required'}, status=400)
+
+    if txid and not TXID_PATTERN.fullmatch(txid):
+        return Response(
+            {'error': 'txid must be a 64-character hexadecimal blockchain transaction ID.'},
+            status=400,
+        )
+    if txid:
+        txid = txid.lower()
+
+    try:
+        cycle_number = int(cycle_number)
+    except (TypeError, ValueError):
+        return Response({'error': 'cycle_number must be an integer'}, status=400)
+
+    # Find matching approval: prefer pending, then executed-without-txid,
+    # then any executed record (so cached txids can always overwrite bad data).
+    approval = (
+        PayoutApproval.objects.filter(
+            vault_address=vault_address,
+            cycle_number=cycle_number,
+            status=PayoutApproval.Status.PENDING,
+        ).first()
+    )
+    if not approval:
+        approval = (
+            PayoutApproval.objects.filter(
+                vault_address=vault_address,
+                cycle_number=cycle_number,
+                status=PayoutApproval.Status.EXECUTED,
+                txid='',
+            ).first()
+        )
+    if not approval:
+        # Last resort: find any executed record (even with a different txid)
+        approval = (
+            PayoutApproval.objects.filter(
+                vault_address=vault_address,
+                cycle_number=cycle_number,
+                status=PayoutApproval.Status.EXECUTED,
+            ).first()
+        )
+
+    if not approval:
+        return Response({'error': 'No matching approval found'}, status=404)
+
+    if approval.status == PayoutApproval.Status.EXECUTED:
+        # Update txid if the new one is valid and different
+        if txid and approval.txid != txid:
+            approval.txid = txid
+            approval.save(update_fields=['txid', 'updated_at'])
+        serializer = PayoutApprovalSerializer(approval)
+        return Response(serializer.data)
+
+    mark_executed(approval, txid)
+
+    # Auto-schedule the next cycle if more remain
+    if approval.cycle_number < approval.total_cycles:
+        from datetime import timedelta
+        from django.utils import timezone
+        next_due = approval.executed_at + timedelta(minutes=approval.interval_blocks * 10)
+        try:
+            next_approval, _ = create_pending_approval(
+                donation_id=approval.donation_ref,
+                donor_email=approval.donor_email,
+                donor_name=approval.donor_name,
+                recipient_address=approval.recipient_address,
+                vault_address=approval.vault_address,
+                payout_amount_satoshis=approval.payout_amount_satoshis,
+                coin=approval.coin,
+                interval_label=approval.interval_label,
+                interval_blocks=approval.interval_blocks,
+                cycle_number=approval.cycle_number + 1,
+                total_cycles=approval.total_cycles,
+                due_at=next_due,
+            )
+            if approval.donation_id and next_approval:
+                next_approval.donation_id = approval.donation_id
+                next_approval.save(update_fields=['donation'])
+        except Exception as exc:
+            logger.warning('Failed to create next cycle approval (vault): %s', exc)
+
+    serializer = PayoutApprovalSerializer(approval)
+    return Response(serializer.data)
+
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
 def trigger_approval(request, pk):
     """
     Admin triggers a scheduled withdrawal: refreshes the approval token
@@ -278,6 +381,92 @@ def trigger_approval(request, pk):
 
     serializer = PayoutApprovalSerializer(approval)
     return Response(serializer.data)
+
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def record_smart_withdrawal(request):
+    """
+    Called after each successful smart-mode withdrawal cycle.
+    Creates an already-executed PayoutApproval record with the real
+    blockchain txid. No approval flow, no email, no token — just a ledger entry.
+    POST /api/payouts/record/
+    """
+    data = request.data
+    required = ['donation_id', 'recipient_address', 'payout_amount_satoshis', 'cycle_number', 'txid']
+    missing = [f for f in required if not data.get(f)]
+    if missing:
+        return Response({'error': f'Missing fields: {", ".join(missing)}'}, status=400)
+
+    txid = (data.get('txid', '') or '').strip()
+    if not TXID_PATTERN.fullmatch(txid):
+        return Response(
+            {'error': 'txid must be a 64-character hexadecimal blockchain transaction hash.'},
+            status=400,
+        )
+    txid = txid.lower()
+
+    from django.utils import timezone as tz
+    from donations.models import Donation
+
+    cycle_number = int(data.get('cycle_number', 1))
+    donation_id = str(data['donation_id'])
+    idempotency_key = f'{donation_id}:cycle:{cycle_number}'
+
+    # If a record already exists for this cycle, update its txid if needed
+    existing = PayoutApproval.objects.filter(idempotency_key=idempotency_key).first()
+    if existing:
+        if existing.txid == txid and existing.status == PayoutApproval.Status.EXECUTED:
+            return Response({'message': 'Already recorded', 'id': existing.id, 'txid': existing.txid})
+        existing.status = PayoutApproval.Status.EXECUTED
+        existing.executed_at = existing.executed_at or tz.now()
+        existing.txid = txid
+        existing.save(update_fields=['status', 'executed_at', 'txid', 'updated_at'])
+        serializer = PayoutApprovalSerializer(existing)
+        return Response(serializer.data)
+
+    # Create a record born in "executed" state — no approval token needed
+    _, hashed_token = PayoutApproval.generate_token()
+    approval = PayoutApproval.objects.create(
+        donation_ref=donation_id,
+        donor_email=data.get('donor_email', ''),
+        donor_name=data.get('donor_name', ''),
+        recipient_address=data['recipient_address'],
+        vault_address=data.get('vault_address', ''),
+        payout_amount_satoshis=int(data['payout_amount_satoshis']),
+        coin=data.get('coin', 'BCH'),
+        interval_label=data.get('interval_label', ''),
+        interval_blocks=int(data.get('interval_blocks', 1)),
+        cycle_number=cycle_number,
+        total_cycles=int(data.get('total_cycles', 1)),
+        due_at=tz.now(),
+        approval_token_hash=hashed_token,
+        approval_expires_at=tz.now(),
+        status=PayoutApproval.Status.EXECUTED,
+        executed_at=tz.now(),
+        txid=txid,
+        idempotency_key=idempotency_key,
+    )
+
+    # Link donation FK so the Dashboard can filter by nonprofit_id
+    vault_address = data.get('vault_address', '')
+    linked = None
+    if vault_address:
+        linked = Donation.objects.filter(contract=vault_address).first()
+    if linked is None and str(donation_id).isdigit():
+        linked = Donation.objects.filter(pk=int(donation_id)).first()
+    if linked is not None:
+        approval.donation = linked
+        approval.save(update_fields=['donation'])
+
+    PayoutAuditLog.objects.create(
+        payout_approval=approval,
+        action=PayoutAuditLog.Action.EXECUTED,
+        detail=f'Smart-mode withdrawal recorded: txid={txid}, cycle {cycle_number}/{approval.total_cycles}',
+    )
+
+    serializer = PayoutApprovalSerializer(approval)
+    return Response(serializer.data, status=201)
 
 
 @api_view(['POST'])

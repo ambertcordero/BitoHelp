@@ -22,6 +22,7 @@ class PayoutApprovalSerializer(serializers.ModelSerializer):
 class PayoutApprovalListSerializer(serializers.ModelSerializer):
     payout_mode = serializers.CharField(source='donation.payout_mode', default='smart', read_only=True)
     donation_id = serializers.IntegerField(source='donation.id', default=None, read_only=True)
+    funder_address = serializers.CharField(source='donation.wallet_address', default='', read_only=True)
 
     class Meta:
         model = PayoutApproval
@@ -30,7 +31,7 @@ class PayoutApprovalListSerializer(serializers.ModelSerializer):
             'payout_amount_satoshis', 'coin', 'status',
             'due_at', 'interval_label', 'interval_blocks',
             'donor_email', 'donor_name',
-            'recipient_address', 'vault_address',
+            'recipient_address', 'vault_address', 'funder_address',
             'payout_mode',
             'approval_expires_at', 'approved_at', 'executed_at',
             'txid', 'created_at',
