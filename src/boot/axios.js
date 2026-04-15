@@ -4,7 +4,7 @@ import axios from 'axios'
 const defaultApiUrl =
   typeof window !== 'undefined'
     ? `${window.location.protocol}//${window.location.hostname}:8001/api/`
-    : 'http://localhost:8001/api/'
+    : 'http://localhost:8000/api/'
 
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL || defaultApiUrl,

@@ -403,12 +403,14 @@ const isIntervalSupported = (key) => key === '10min'
 // --- API nonprofits (for address lookup) ---
 const nonprofits = ref([])
 
+const normalizeOrgName = (name) => String(name || '').trim().toLowerCase()
+
 const fetchNonprofits = async () => {
   try {
     const response = await api.get('nonprofits/verified/')
     nonprofits.value = response.data.map((np) => ({
       id: np.id,
-      name: np.name,
+      name: String(np.name || '').trim(),
       address: np.bch_address,
       category: np.category,
     }))
@@ -602,8 +604,15 @@ watch(
       form.value.recipientAddress = ''
       return
     }
-    const match = nonprofits.value.find((np) => np.name === orgName)
-    if (match) form.value.recipientAddress = match.address
+    const normalizedOrg = normalizeOrgName(orgName)
+    const match = nonprofits.value.find(
+      (np) => normalizeOrgName(np.name) === normalizedOrg,
+    )
+    if (match) {
+      form.value.recipientAddress = match.address
+    } else {
+      form.value.recipientAddress = ''
+    }
   },
 )
 

@@ -2978,6 +2978,9 @@ const fetchNonprofitByWallet = async () => {
   }
 }
 
+const findVaultRecord = (donationId) =>
+  getStoredVaults().find((record) => String(record.donationId) === String(donationId))
+
 const CATEGORY_LABELS = {
   animals: 'Animals',
   poverty: 'Poverty Alleviation',
@@ -3777,6 +3780,7 @@ const executeWithdrawConfirm = async () => {
 const handleSmartWithdraw = (row) => {
   if (!row.duePayoutId || row.withdrawn) return
 
+
   const amountBch = formatCurrency(row.amount)
   withdrawConfirmDialog.value = {
     open: true,
@@ -3874,6 +3878,7 @@ const handleSmartWithdrawAll = (account) => {
       cycleNumber: p.cycle_number,
       totalCycles: p.total_cycles,
       dueAt: p.due_at,
+      txid: p.txid || '',
     })),
     loading: false,
     onConfirm: async () => {
@@ -3881,6 +3886,24 @@ const handleSmartWithdrawAll = (account) => {
       let failCount = 0
       for (const payout of duePayouts) {
         try {
+<<<<<<< HEAD
+          const vaultRecord = findVaultRecord(payout.donation_id)
+          if (!vaultRecord) {
+            throw new Error(`Vault contract not found for payout ${payout.id}`)
+          }
+          const result = await executeWithdraw(vaultRecord)
+          if (!result.success) {
+            throw new Error(result.reason || `Vault withdrawal failed for payout ${payout.id}`)
+          }
+          const txid = normalizeTxid(result.txid)
+          if (!txid) {
+            throw new Error(`Invalid txid returned for payout ${payout.id}`)
+          }
+          await api.post(`payouts/${payout.id}/execute/`, {
+            txid,
+          })
+          const row = allTransactions.value.find((t) => String(t.id) === String(payout.donation_id))
+=======
           const row = allTransactions.value.find((t) => t.id === payout.donation_id)
           const vaultRecord =
             payout.funder_address && payout.recipient_address
