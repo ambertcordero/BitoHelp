@@ -408,7 +408,7 @@
                       <q-icon name="content_copy" size="12px" class="q-ml-xs" />
                     </span>
                     <span
-                      v-else-if="props.row.txid"
+                      v-else-if="props.row.donation_txid"
                       class="text-warning text-caption text-weight-medium"
                       >Invalid TXID</span
                     >
@@ -3329,7 +3329,7 @@ const fetchPayoutsForNonprofit = async (nonprofitId) => {
     // Keep dashboard TXIDs aligned with payout backend records.
     const latestExecutedByDonation = {}
     executed.forEach((payout) => {
-      if (!payout?.donation_id || !payout?.txid) return
+      if (!payout?.donation_id) return
       const current = latestExecutedByDonation[payout.donation_id]
       const currentTs = current?.executed_at ? new Date(current.executed_at).getTime() : 0
       const nextTs = payout.executed_at ? new Date(payout.executed_at).getTime() : 0
@@ -3339,7 +3339,8 @@ const fetchPayoutsForNonprofit = async (nonprofitId) => {
     })
 
     Object.entries(latestExecutedByDonation).forEach(([donationId, payout]) => {
-      const txid = String(payout.txid || '')
+      // Use donation's txid (from smart contract) instead of payout txid
+      const txid = String(payout.donation_txid || '')
         .trim()
         .toLowerCase()
       const explorerUrl = txid ? `${networkStore.explorerBaseUrl}/tx/${txid}` : ''
