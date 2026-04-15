@@ -7,6 +7,7 @@ from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 
 from .models import PayoutApproval, PayoutAuditLog
+from .models import PayoutApproval, PayoutAuditLog
 from .serializers import PayoutApprovalSerializer, PayoutApprovalListSerializer, PayoutAuditLogSerializer
 from .services import create_pending_approval, send_approval_email, process_approval, mark_executed, mark_failed, refresh_and_send, send_reclaim_warning_email
 
@@ -86,7 +87,7 @@ def request_approval(request):
 
     approval, raw_token = create_pending_approval(
         donation_id=data['donation_id'],
-        donor_email=data['donor_email'],
+        donor_email=data.get('donor_email', ''),
         donor_name=data.get('donor_name', ''),
         recipient_address=data['recipient_address'],
         vault_address=data.get('vault_address', ''),
@@ -117,7 +118,7 @@ def request_approval(request):
             approval.donation = linked
             approval.save(update_fields=['donation'])
 
-    if raw_token:
+    if raw_token and payout_mode == 'inbox_approval':
         try:
             send_approval_email(approval, raw_token)
         except Exception as exc:
@@ -257,6 +258,105 @@ def report_execution(request, pk):
                 next_approval.save(update_fields=['donation'])
         except Exception as exc:
             logger.warning('Failed to create next cycle approval: %s', exc)
+
+    serializer = PayoutApprovalSerializer(approval)
+    return Response(serializer.data)
+
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def report_execution_by_vault(request):
+    """
+    Smart mode reports a successful on-chain withdrawal by vault address + cycle.
+    Finds the matching PayoutApproval and marks it executed with the real txid.
+    """
+    data = request.data
+    vault_address = (data.get('vault_address', '') or '').strip()
+    cycle_number = data.get('cycle_number')
+    txid = (data.get('txid', '') or '').strip()
+
+    if not vault_address or cycle_number is None:
+        return Response({'error': 'vault_address and cycle_number are required'}, status=400)
+
+    if txid and not TXID_PATTERN.fullmatch(txid):
+        return Response(
+            {'error': 'txid must be a 64-character hexadecimal blockchain transaction ID.'},
+            status=400,
+        )
+    if txid:
+        txid = txid.lower()
+
+    try:
+        cycle_number = int(cycle_number)
+    except (TypeError, ValueError):
+        return Response({'error': 'cycle_number must be an integer'}, status=400)
+
+    # Find matching approval: prefer pending, then executed-without-txid,
+    # then any executed record (so cached txids can always overwrite bad data).
+    approval = (
+        PayoutApproval.objects.filter(
+            vault_address=vault_address,
+            cycle_number=cycle_number,
+            status=PayoutApproval.Status.PENDING,
+        ).first()
+    )
+    if not approval:
+        approval = (
+            PayoutApproval.objects.filter(
+                vault_address=vault_address,
+                cycle_number=cycle_number,
+                status=PayoutApproval.Status.EXECUTED,
+                txid='',
+            ).first()
+        )
+    if not approval:
+        # Last resort: find any executed record (even with a different txid)
+        approval = (
+            PayoutApproval.objects.filter(
+                vault_address=vault_address,
+                cycle_number=cycle_number,
+                status=PayoutApproval.Status.EXECUTED,
+            ).first()
+        )
+
+    if not approval:
+        return Response({'error': 'No matching approval found'}, status=404)
+
+    if approval.status == PayoutApproval.Status.EXECUTED:
+        # Update txid if the new one is valid and different
+        if txid and approval.txid != txid:
+            approval.txid = txid
+            approval.save(update_fields=['txid', 'updated_at'])
+        serializer = PayoutApprovalSerializer(approval)
+        return Response(serializer.data)
+
+    mark_executed(approval, txid)
+
+    # Auto-schedule the next cycle if more remain
+    if approval.cycle_number < approval.total_cycles:
+        from datetime import timedelta
+        from django.utils import timezone
+        next_due = approval.executed_at + timedelta(minutes=approval.interval_blocks * 10)
+        try:
+            next_approval, _ = create_pending_approval(
+                donation_id=approval.donation_ref,
+                donor_email=approval.donor_email,
+                donor_name=approval.donor_name,
+                recipient_address=approval.recipient_address,
+                vault_address=approval.vault_address,
+                payout_amount_satoshis=approval.payout_amount_satoshis,
+                coin=approval.coin,
+                interval_label=approval.interval_label,
+                interval_blocks=approval.interval_blocks,
+                cycle_number=approval.cycle_number + 1,
+                total_cycles=approval.total_cycles,
+                due_at=next_due,
+            )
+            if approval.donation_id and next_approval:
+                next_approval.donation_id = approval.donation_id
+                next_approval.save(update_fields=['donation'])
+        except Exception as exc:
+            logger.warning('Failed to create next cycle approval (vault): %s', exc)
 
     serializer = PayoutApprovalSerializer(approval)
     return Response(serializer.data)

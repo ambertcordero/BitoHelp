@@ -399,12 +399,21 @@
                 <template v-slot:body-cell-txid="props">
                   <q-td :props="props">
                     <span
+<<<<<<< HEAD
                       v-if="isValidTxid(props.row.donation_txid)"
                       class="text-primary"
                       style="font-family: monospace; font-size: 12px; cursor: pointer"
                       @click="copyTxid(props.row.donation_txid)"
                     >
                       {{ formatTxidPreview(props.row.donation_txid, 18) }}
+=======
+                      v-if="resolvePayoutTxid(props.row)"
+                      class="text-primary"
+                      style="font-family: monospace; font-size: 12px; cursor: pointer"
+                      @click="copyTxid(resolvePayoutTxid(props.row))"
+                    >
+                      {{ formatTxidPreview(resolvePayoutTxid(props.row), 18) }}
+>>>>>>> cc95c21e12f63b41b69f61377b10462373e0f48e
                       <q-icon name="content_copy" size="12px" class="q-ml-xs" />
                     </span>
                     <span
@@ -480,19 +489,15 @@
                           :label="props.row.interval_label || '—'"
                         />
                       </div>
-                      <div v-if="props.row.txid" class="dash-mobile-card__row">
+                      <div v-if="resolvePayoutTxid(props.row)" class="dash-mobile-card__row">
                         <span class="dash-mobile-card__label">TxID</span>
                         <span
-                          v-if="isValidTxid(props.row.txid)"
                           class="text-primary dash-mobile-card__txid"
-                          @click="copyTxid(props.row.txid)"
+                          @click="copyTxid(resolvePayoutTxid(props.row))"
                         >
-                          {{ formatTxidPreview(props.row.txid, 16) }}
+                          {{ formatTxidPreview(resolvePayoutTxid(props.row), 16) }}
                           <q-icon name="content_copy" size="11px" class="q-ml-xs" />
                         </span>
-                        <span v-else class="text-warning text-caption text-weight-medium"
-                          >Invalid TXID</span
-                        >
                       </div>
                     </div>
                   </div>
@@ -2922,7 +2927,7 @@ ChartJS.register(
 import { api } from 'boot/axios'
 import { useRouter } from 'vue-router'
 import { useNetworkStore } from 'src/stores/network-store'
-import { getStoredVaults, executeWithdraw } from 'src/services/vaultDonation'
+import { executeWithdraw, buildVaultRecordFromBackend } from 'src/services/vaultDonation'
 import bchImg from 'src/assets/bch.png'
 import projectImg from 'src/assets/project.png'
 import transactionImg from 'src/assets/transaction.png'
@@ -3312,13 +3317,19 @@ const fetchPayoutsForNonprofit = async (nonprofitId) => {
       },
     }
 
-    // Stamp duePayoutId on matching smart transaction rows
+    // Stamp duePayoutId + payout metadata on matching smart transaction rows
     due
       .filter((p) => p.payout_mode !== 'inbox_approval')
       .forEach((payout) => {
         const stamp = (list) => {
           const row = list.value.find((t) => payout.donation_id && t.id === payout.donation_id)
-          if (row) row.duePayoutId = payout.id
+          if (row) {
+            row.duePayoutId = payout.id
+            row.vault_address = payout.vault_address
+            row.recipientAddress = payout.recipient_address
+            row.cycleNumber = payout.cycle_number
+            row.totalCycles = payout.total_cycles
+          }
         }
         stamp(transactions)
         stamp(allTransactions)
@@ -3686,6 +3697,33 @@ const normalizeTxid = (txid) => {
 
 const isValidTxid = (txid) => normalizeTxid(txid).length > 0
 
+/**
+ * Resolve the txid for an executed payout row.
+ * Primary source: backend PayoutApproval.txid.
+ * Fallback: localStorage vault withdrawalHistory matched by cycle_number.
+ */
+const resolvePayoutTxid = (row) => {
+  const backendTxid = normalizeTxid(row.txid)
+  if (backendTxid) return backendTxid
+  try {
+    const raw = localStorage.getItem('cryptocare.vaults')
+    if (!raw) return ''
+    const vaults = JSON.parse(raw)
+    if (!Array.isArray(vaults)) return ''
+    // Match by donation_ref or vault_address
+    const vault = vaults.find(
+      (v) =>
+        (row.donation_ref && String(v.donationId) === String(row.donation_ref)) ||
+        (row.vault_address && v.vaultAddress === row.vault_address),
+    )
+    if (!vault?.withdrawalHistory?.length) return ''
+    const match = vault.withdrawalHistory.find((h) => h.cycleNumber === row.cycle_number)
+    return normalizeTxid(match?.txid) || ''
+  } catch {
+    return ''
+  }
+}
+
 const formatTxidPreview = (txid, visible = 18) => {
   const normalized = normalizeTxid(txid)
   return normalized ? `${normalized.substring(0, visible)}…` : 'Invalid TXID'
@@ -3751,7 +3789,7 @@ const executeWithdrawConfirm = async () => {
 
 const handleSmartWithdraw = (row) => {
   if (!row.duePayoutId || row.withdrawn) return
-  
+
 
   const amountBch = formatCurrency(row.amount)
   withdrawConfirmDialog.value = {
@@ -3772,6 +3810,7 @@ const handleSmartWithdraw = (row) => {
     ],
     loading: false,
     onConfirm: async () => {
+<<<<<<< HEAD
       const vaultRecord = findVaultRecord(row.id)
       if (!vaultRecord) {
         throw new Error(
@@ -3788,18 +3827,61 @@ const handleSmartWithdraw = (row) => {
       }
       await api.post(`payouts/${row.duePayoutId}/execute/`, { txid })
       row.txid = txid
+=======
+      // Look up the full payout object from allPayoutsMap
+      const nonprofitId = row.nonprofit
+      const payoutsData = allPayoutsMap.value[nonprofitId]
+      const payout = payoutsData?.pending?.find((p) => p.id === row.duePayoutId)
+
+      let resultTxid = ''
+      const vaultRecord =
+        payout?.funder_address && payout?.recipient_address
+          ? buildVaultRecordFromBackend({
+              recipientAddress: payout.recipient_address,
+              funderAddress: payout.funder_address,
+              withdrawalSatoshis: payout.payout_amount_satoshis,
+              intervalBlocks: payout.interval_blocks,
+              vaultAddress: payout.vault_address,
+            })
+          : null
+
+      if (vaultRecord) {
+        const result = await executeWithdraw(vaultRecord)
+        if (result.success) {
+          resultTxid = result.txid
+          await api.post('payouts/record/', {
+            donation_id: payout.donation_id,
+            cycle_number: payout.cycle_number,
+            txid: resultTxid,
+            recipient_address: payout.recipient_address,
+            vault_address: payout.vault_address,
+            payout_amount_satoshis: payout.payout_amount_satoshis,
+            interval_blocks: payout.interval_blocks,
+          })
+        } else {
+          throw new Error(`Withdrawal failed: ${result.reason || 'unknown error'}`)
+        }
+      } else {
+        // Funder address unavailable — mark executed; auto-scheduler will fill txid
+        await api.post(`payouts/${row.duePayoutId}/execute/`, {})
+      }
+
+>>>>>>> cc95c21e12f63b41b69f61377b10462373e0f48e
       withdrawnDonations.value.add(row.id)
       localStorage.setItem('withdrawnDonations', JSON.stringify([...withdrawnDonations.value]))
       row.withdrawn = true
       row.status = 'completed'
+      if (resultTxid) row.txid = resultTxid
       row.duePayoutId = null
       if (row.nonprofit) fetchPayoutsForNonprofit(row.nonprofit)
       $q.notify({
         type: 'positive',
         message: 'Withdrawal confirmed!',
-        caption: `${amountBch} BCH executed.`,
+        caption: resultTxid
+          ? `BCH sent. TxID: ${resultTxid.substring(0, 14)}…`
+          : 'Marked executed. TxID will appear once the auto-scheduler runs.',
         position: 'top',
-        timeout: 3000,
+        timeout: 5000,
       })
     },
   }
@@ -3849,9 +3931,48 @@ const handleSmartWithdrawAll = (account) => {
             txid,
           })
           const row = allTransactions.value.find((t) => String(t.id) === String(payout.donation_id))
+<<<<<<< HEAD
+=======
+=======
+          const row = allTransactions.value.find((t) => t.id === payout.donation_id)
+          const vaultRecord =
+            payout.funder_address && payout.recipient_address
+              ? buildVaultRecordFromBackend({
+                  recipientAddress: payout.recipient_address,
+                  funderAddress: payout.funder_address,
+                  withdrawalSatoshis: payout.payout_amount_satoshis,
+                  intervalBlocks: payout.interval_blocks,
+                  vaultAddress: payout.vault_address,
+                })
+              : null
+
+          let resultTxid = ''
+          if (vaultRecord) {
+            const result = await executeWithdraw(vaultRecord)
+            if (result.success) {
+              resultTxid = result.txid
+              await api.post('payouts/record/', {
+                donation_id: payout.donation_id,
+                cycle_number: payout.cycle_number,
+                txid: resultTxid,
+                recipient_address: payout.recipient_address,
+                vault_address: payout.vault_address,
+                payout_amount_satoshis: payout.payout_amount_satoshis,
+                interval_blocks: payout.interval_blocks,
+              })
+            } else {
+              failCount++
+              continue
+            }
+          } else {
+            await api.post(`payouts/${payout.id}/execute/`, {})
+          }
+
+>>>>>>> cc95c21e12f63b41b69f61377b10462373e0f48e
           if (row) {
             row.withdrawn = true
             row.status = 'completed'
+            if (resultTxid) row.txid = resultTxid
             row.duePayoutId = null
             withdrawnDonations.value.add(row.id)
           }
@@ -3866,9 +3987,9 @@ const handleSmartWithdrawAll = (account) => {
         $q.notify({
           type: 'positive',
           message: `${successCount} withdrawal(s) confirmed`,
-          caption: `${totalBch} BCH executed for ${account.name}`,
+          caption: `Each cycle has its own unique transaction ID.`,
           position: 'top',
-          timeout: 3000,
+          timeout: 4000,
         })
       }
       if (failCount > 0) {
