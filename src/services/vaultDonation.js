@@ -965,7 +965,7 @@ export const startAutoWithdraw = (record, onCycle) => {
         // Single call: creates an already-executed record with the real blockchain txid
         api
           .post('payouts/record/', {
-            donation_id: record.donationId,
+            donation_id: record?.apiDonationId || record.donationId,
             donor_email: record.donorEmail || '',
             donor_name: record.donorName || '',
             recipient_address: record.recipientAddress,

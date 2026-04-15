@@ -10,6 +10,18 @@ import { useNetworkStore } from '../stores/network-store'
 const CHIPNET_BASE = 'https://chipnet.watchtower.cash/api'
 const MAINNET_BASE = 'https://watchtower.cash/api'
 const REQUEST_TIMEOUT_MS = 15000
+const CHIPNET_PROJECT_ID = 'ebbd3ed8-09e5-4d7f-ad05-094937cdd18c';
+const MAINNET_PROJECT_ID = '5722f346-aaca-4a2a-8144-84ddb0dd88fe';
+
+const getActiveProjectId = () => {
+  try {
+    const networkStore = useNetworkStore()
+    return networkStore.isMainnet ? MAINNET_PROJECT_ID : CHIPNET_PROJECT_ID
+  } catch {
+    // Store may not be initialised yet (e.g. during SSR bootstrap)
+    return CHIPNET_PROJECT_ID
+  }
+}
 
 const getActiveBaseUrl = () => {
   try {
@@ -95,6 +107,20 @@ export const broadcastTransaction = async (rawTxHex) => {
   }
 
   return txid
+}
+
+export const subscribeAddress = async(address) => {
+  const url = `${getActiveBaseUrl()}/subscription/`
+  const response = await fetchWithTimeout(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ address: address, project_id: getActiveProjectId() }),
+  })
+
+  if (!response.ok) {
+    const errorText = await response.text().catch(() => '')
+    throw new Error(`Watchtower subscribe failed (${response.status}): ${errorText}`)
+  }
 }
 
 /**
