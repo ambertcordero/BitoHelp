@@ -207,16 +207,15 @@ def report_execution(request, pk):
         return Response({'error': 'Not found'}, status=404)
 
     txid = (request.data.get('txid', '') or '').strip()
-    if not txid:
-        return Response({'error': 'txid is required'}, status=400)
 
-    if not TXID_PATTERN.fullmatch(txid):
+    if txid and not TXID_PATTERN.fullmatch(txid):
         return Response(
             {'error': 'txid must be a 64-character hexadecimal blockchain transaction ID.'},
             status=400,
         )
 
-    txid = txid.lower()
+    if txid:
+        txid = txid.lower()
 
     if approval.status == 'executed':
         return Response({'message': 'Already executed', 'txid': approval.txid})

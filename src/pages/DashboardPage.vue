@@ -3766,18 +3766,9 @@ const handleSmartWithdraw = (row) => {
     ],
     loading: false,
     onConfirm: async () => {
-      const txid = normalizeTxid(row.txid)
-      if (!txid) {
-        $q.notify({
-          type: 'negative',
-          message: 'Cannot execute withdrawal — no valid blockchain TXID found for this donation.',
-          position: 'top',
-          timeout: 4000,
-        })
-        return
-      }
-      await api.post(`payouts/${row.duePayoutId}/execute/`, { txid })
-      row.txid = txid
+      await api.post(`payouts/${row.duePayoutId}/execute/`, {
+        txid: normalizeTxid(row.txid) || undefined,
+      })
       withdrawnDonations.value.add(row.id)
       localStorage.setItem('withdrawnDonations', JSON.stringify([...withdrawnDonations.value]))
       row.withdrawn = true
@@ -3823,14 +3814,10 @@ const handleSmartWithdrawAll = (account) => {
       for (const payout of duePayouts) {
         try {
           const row = allTransactions.value.find((t) => t.id === payout.donation_id)
-          const txid = normalizeTxid(row?.txid)
-          if (!txid) {
-            failCount++
-            continue
-          }
-          await api.post(`payouts/${payout.id}/execute/`, { txid })
+          await api.post(`payouts/${payout.id}/execute/`, {
+            txid: normalizeTxid(row?.txid) || undefined,
+          })
           if (row) {
-            row.txid = txid
             row.withdrawn = true
             row.status = 'completed'
             row.duePayoutId = null

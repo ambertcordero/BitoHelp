@@ -343,17 +343,17 @@ TXID_PATTERN = re.compile(r'^[A-Fa-f0-9]{64}$')
 
 def mark_executed(approval, txid):
     """Called after the frontend or a background task successfully withdraws."""
-    if not TXID_PATTERN.fullmatch(txid):
+    if txid and not TXID_PATTERN.fullmatch(txid):
         raise ValueError(f'Invalid txid passed to mark_executed: "{txid[:80]}"')
     approval.status = PayoutApproval.Status.EXECUTED
     approval.executed_at = timezone.now()
-    approval.txid = txid.lower()
+    approval.txid = txid.lower() if txid else ''
     approval.save(update_fields=['status', 'executed_at', 'txid', 'updated_at'])
 
     PayoutAuditLog.objects.create(
         payout_approval=approval,
         action=PayoutAuditLog.Action.EXECUTED,
-        detail=f'Payout executed: txid={txid}',
+        detail=f'Payout executed: txid={txid or "(pending)"}',
     )
 
 
