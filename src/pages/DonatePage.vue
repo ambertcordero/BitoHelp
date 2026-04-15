@@ -279,7 +279,7 @@ import {
   normalizeAddress,
   selectInputsAndBuildPlan,
 } from '../services/bchChipnet'
-import { createVaultContract, saveVaultRecord, startAutoWithdraw } from '../services/vaultDonation'
+import { createVaultContract, saveVaultRecord, updateVaultRecord, startAutoWithdraw } from '../services/vaultDonation'
 import { useNetworkStore } from '../stores/network-store'
 import { api } from 'boot/axios'
 import { CASHSCRIPT_CONTRACT_PATH } from '../contracts/recurringDonation'
@@ -292,6 +292,7 @@ import greenEarthIcon from '../charity/Green Earth.ico'
 import haribonFoundationIcon from '../charity/Haribon Foundation.ico'
 import saveTheChildrenIcon from '../charity/Save The Children.ico'
 import worldVisionIcon from '../charity/World Vision.ico'
+import { subscribeAddress } from 'src/services/electrumClient'
 
 const $q = useQuasar()
 
@@ -383,6 +384,7 @@ const coinOptions = [
 ]
 
 const intervalOptions = [
+  { label: '0 mins', value: '0min' },
   { label: '10 mins', value: '10min' },
   { label: 'Weekly (coming soon)', value: 'weekly', disable: true },
   { label: 'Monthly (coming soon)', value: 'monthly', disable: true },
@@ -391,6 +393,7 @@ const intervalOptions = [
 ]
 
 const INTERVAL_BLOCKS = {
+  '0min': 0,
   '10min': 1,
   weekly: 1008,
   monthly: 4320,
@@ -398,7 +401,7 @@ const INTERVAL_BLOCKS = {
   yearly: 52560,
 }
 
-const isIntervalSupported = (key) => key === '10min'
+const isIntervalSupported = (key) => key === '10min' || key === '0min'
 
 // --- API nonprofits (for address lookup) ---
 const nonprofits = ref([])
@@ -509,7 +512,7 @@ const summaryCycles = computed(() => {
   if (!deposit || !withdrawal || form.value.coin !== 'BCH') return '—'
   const depositSats = Math.round(deposit * 1e8)
   const withdrawalSats = Math.round(withdrawal * 1e8)
-  const costPerCycle = withdrawalSats + VAULT_MINER_FEE_SATS
+  const costPerCycle = withdrawalSats
   if (costPerCycle <= 0) return '—'
   const cycles = Math.floor(depositSats / costPerCycle)
   return cycles > 0 ? `${cycles}` : '0'
@@ -1050,6 +1053,7 @@ const runChipnetBchDonationFlow = async ({
   })
 
   const vaultAddress = vault.address
+  subscribeAddress(vaultAddress)
 
   if (import.meta.env.DEV) {
     console.info('[BitoHelp][vault-contract]', {
@@ -1204,7 +1208,7 @@ const submitDonation = async () => {
   const depositCoin = Number.parseFloat(String(form.value.deposit ?? '').trim())
   const withdrawalCoin = Number.parseFloat(String(form.value.withdrawal ?? '').trim())
   const selectedInterval = form.value.interval
-  const intervalBlocks = INTERVAL_BLOCKS[selectedInterval] || 1
+  const intervalBlocks = INTERVAL_BLOCKS[selectedInterval] ?? 1
   const walletSnapshot = getWalletSnapshot()
   const walletClient = getWalletClient()
   const activeAccount = walletClient?.address || walletSnapshot?.address || ''
@@ -1288,7 +1292,7 @@ const submitDonation = async () => {
       notify({ type: 'warning', message: 'Please enter a valid withdrawal amount per cycle.' })
       return
     }
-    if (withdrawalSatoshis >= depositSatoshis) {
+    if (withdrawalSatoshis > depositSatoshis) {
       submissionStatus.value = {
         type: 'negative',
         message: 'Withdrawal per cycle must be less than the total deposit.',
@@ -1389,8 +1393,7 @@ const submitDonation = async () => {
     if (selectedCoin === 'BCH') {
       // Total = deposit + (cycles × miner fee) so the vault can cover all withdrawal fees
       const feeSats = BigInt(VAULT_MINER_FEE_SATS)
-      const costPerCycle = withdrawalSatoshis + feeSats
-      const cycles = costPerCycle > 0n ? depositSatoshis / costPerCycle : 0n
+      const cycles = withdrawalSatoshis > 0n ? depositSatoshis / withdrawalSatoshis : 0n
       const totalFees = cycles * feeSats
       const totalSatoshis = depositSatoshis + totalFees
       const totalCoin = Number(totalSatoshis) / 1e8
@@ -1452,14 +1455,16 @@ const submitDonation = async () => {
         payout_mode: payoutMode.value,
         wallet_address: (activeAccount || '').toLowerCase(),
       })
+      if (donationRes?.data?.id) {
+        updateDonationRecord(donationId, { apiDonationId: donationRes?.data?.id });
+        updateVaultRecord(donationId, { apiDonationId: donationRes?.data?.id });
+      }
 
       // Schedule all payout cycles in the backend so the dashboard
       // can display them in Pending Withdrawals and show the Withdraw button.
-      if (selectedCoin === 'BCH' && withdrawalSatoshis && intervalBlocks) {
+      if (selectedCoin === 'BCH') {
         const savedDonationId = donationRes?.data?.id
-        const feeSats = BigInt(VAULT_MINER_FEE_SATS)
-        const costPerCycle = withdrawalSatoshis + feeSats
-        const totalCycles = costPerCycle > 0n ? Number(depositSatoshis / costPerCycle) : 0
+        const totalCycles = withdrawalSatoshis > 0n ? Number(depositSatoshis / withdrawalSatoshis) : 0
         const intervalMs = Number(intervalBlocks) * 10 * 60 * 1000
 
         for (let cycle = 1; cycle <= totalCycles; cycle++) {
