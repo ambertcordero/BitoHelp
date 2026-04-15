@@ -9,7 +9,10 @@ from rest_framework.response import Response
 from .models import Donation
 from .serializers import DonationSerializer, DonationStatsSerializer
 from users.models import WalletUser
+import re
 import time
+
+TXID_PATTERN = re.compile(r'^[A-Fa-f0-9]{64}$')
 
 
 @method_decorator(csrf_exempt, name='dispatch')
@@ -19,6 +22,13 @@ class DonationViewSet(viewsets.ModelViewSet):
     
     def create(self, request, *args, **kwargs):
         """Override create to retry on database lock and link wallet user"""
+        txid = (request.data.get('txid') or '').strip()
+        if not TXID_PATTERN.fullmatch(txid):
+            return Response(
+                {'error': f'Invalid txid format: must be a 64-character hex hash, got "{txid[:80]}"'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
         max_retries = 5
         for attempt in range(max_retries):
             try:

@@ -1428,8 +1428,12 @@ const submitDonation = async () => {
 
     // Also save to backend database (best-effort)
     try {
+      if (!txReference || !/^[a-fA-F0-9]{64}$/.test(txReference)) {
+        console.error('[CrypToCare][donation:invalid-txid]', { txReference, donationId })
+        throw new Error(`Invalid transaction ID: "${txReference}" is not a valid blockchain hash.`)
+      }
       const matchedNp = nonprofits.value.find((np) => np.name === form.value.organization)
-      const explorerUrl = txReference ? `${networkStore.explorerBaseUrl}/tx/${txReference}` : ''
+      const explorerUrl = `${networkStore.explorerBaseUrl}/tx/${txReference}`
       const donationRes = await api.post('donations/', {
         txid: txReference,
         recipient: form.value.recipientAddress,

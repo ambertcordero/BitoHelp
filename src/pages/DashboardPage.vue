@@ -1749,16 +1749,14 @@
                                 cursor: pointer;
                               "
                               @click="
-                                $q
-                                  .copyToClipboard(nonprofitProfile.bch_address)
-                                  .then(() =>
-                                    $q.notify({
-                                      type: 'positive',
-                                      message: 'Address copied',
-                                      position: 'top',
-                                      timeout: 1500,
-                                    }),
-                                  )
+                                $q.copyToClipboard(nonprofitProfile.bch_address).then(() =>
+                                  $q.notify({
+                                    type: 'positive',
+                                    message: 'Address copied',
+                                    position: 'top',
+                                    timeout: 1500,
+                                  }),
+                                )
                               "
                             >
                               {{ nonprofitProfile.bch_address }}
@@ -3773,6 +3771,7 @@ const handleSmartWithdraw = (row) => {
     ],
     loading: false,
     onConfirm: async () => {
+<<<<<<< HEAD
       const vaultRecord = findVaultRecord(row.id)
       if (!vaultRecord) {
         throw new Error(
@@ -3789,6 +3788,11 @@ const handleSmartWithdraw = (row) => {
       }
       await api.post(`payouts/${row.duePayoutId}/execute/`, { txid })
       row.txid = txid
+=======
+      await api.post(`payouts/${row.duePayoutId}/execute/`, {
+        txid: normalizeTxid(row.txid) || undefined,
+      })
+>>>>>>> e1205841a8f13faedff81b7a28e4fe039846bc71
       withdrawnDonations.value.add(row.id)
       localStorage.setItem('withdrawnDonations', JSON.stringify([...withdrawnDonations.value]))
       row.withdrawn = true
@@ -3834,6 +3838,7 @@ const handleSmartWithdrawAll = (account) => {
       let failCount = 0
       for (const payout of duePayouts) {
         try {
+<<<<<<< HEAD
           const vaultRecord = findVaultRecord(payout.donation_id)
           if (!vaultRecord) {
             throw new Error(`Vault contract not found for payout ${payout.id}`)
@@ -3850,8 +3855,13 @@ const handleSmartWithdrawAll = (account) => {
             txid,
           })
           const row = allTransactions.value.find((t) => String(t.id) === String(payout.donation_id))
+=======
+          const row = allTransactions.value.find((t) => t.id === payout.donation_id)
+          await api.post(`payouts/${payout.id}/execute/`, {
+            txid: normalizeTxid(row?.txid) || undefined,
+          })
+>>>>>>> e1205841a8f13faedff81b7a28e4fe039846bc71
           if (row) {
-            row.txid = txid
             row.withdrawn = true
             row.status = 'completed'
             row.duePayoutId = null

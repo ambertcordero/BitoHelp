@@ -15,11 +15,14 @@ import { getAddressHash160 } from './bchChipnet.js'
 import { getAddressUtxos } from './electrumClient.js'
 import { api } from '../boot/axios.js'
 import { useNetworkStore } from '../stores/network-store.js'
+import { isValidTxid } from '../utils/bchUtils.js'
 
 const VAULT_STORAGE_KEY = 'cryptocare.vaults'
 
 let providerInstance = null
 let providerNetwork = null
+let providerCreatedAt = 0
+const PROVIDER_MAX_AGE_MS = 5 * 60 * 1000
 
 const getProvider = () => {
   let network
@@ -30,18 +33,40 @@ const getProvider = () => {
     network = 'chipnet'
   }
 
-  if (!providerInstance || providerNetwork !== network) {
+  const now = Date.now()
+  const isStale = providerInstance && now - providerCreatedAt > PROVIDER_MAX_AGE_MS
+  const isWrongNetwork = providerInstance && providerNetwork !== network
+
+  if (!providerInstance || isStale || isWrongNetwork) {
+    if (providerInstance) {
+      try {
+        providerInstance.disconnect?.()
+      } catch {
+        /* ignore */
+      }
+    }
     providerInstance = new ElectrumNetworkProvider(network)
     providerNetwork = network
+    providerCreatedAt = now
   }
   return providerInstance
 }
 
-// Allow the network store to reset the singleton when the network changes
-window.__cryptocare_resetElectrumProvider = () => {
+const resetProvider = () => {
+  if (providerInstance) {
+    try {
+      providerInstance.disconnect?.()
+    } catch {
+      /* ignore */
+    }
+  }
   providerInstance = null
   providerNetwork = null
+  providerCreatedAt = 0
 }
+
+// Allow the network store to reset the singleton when the network changes
+window.__cryptocare_resetElectrumProvider = resetProvider
 
 const bytesToHex = (bytes) =>
   Array.from(bytes)
@@ -498,6 +523,12 @@ const handleInboxApproval = async (record, cycleNumber, currentBalanceSats = nul
  * Report a successful payout execution to the backend.
  */
 const reportExecution = async (approvalId, txid) => {
+  if (!isValidTxid(txid)) {
+    if (import.meta.env.DEV) {
+      console.error('[CrypToCare][vault-approval:invalid-txid]', { approvalId, txid })
+    }
+    return
+  }
   try {
     await api.post(`payouts/${approvalId}/execute/`, { txid })
   } catch (err) {
@@ -588,8 +619,14 @@ export const startAutoWithdraw = (record, onCycle) => {
       const contract = contractFromRecord(record)
       const utxos = await contract.getUtxos()
       currentBalanceSats = utxos.reduce((sum, u) => sum + u.satoshis, 0n)
-    } catch {
-      /* ignore */
+    } catch (balErr) {
+      if (
+        /socket|connection|Cannot initiate|ECONNREFUSED|ETIMEDOUT/i.test(
+          String(balErr?.message || ''),
+        )
+      ) {
+        resetProvider()
+      }
     }
 
     if (import.meta.env.DEV) {
@@ -698,12 +735,49 @@ export const startAutoWithdraw = (record, onCycle) => {
             const nextCycle = cycleNumber + 1
             cycleNumber = nextCycle
             noUtxoStreak = 0
+
+            // Build withdrawal history entry
+            const currentVault = getAllStoredVaults().find((v) => v.donationId === id)
+            const withdrawalHistory = currentVault?.withdrawalHistory || []
+            withdrawalHistory.push({
+              cycleNumber,
+              txid: result.txid,
+              amount: result.amount.toString(),
+              drained: result.drained,
+              timestamp: new Date().toISOString(),
+            })
+
             updateVaultRecord(id, {
               lastWithdrawTxid: result.txid,
               lastWithdrawAt: new Date().toISOString(),
               cyclesCompleted: cycleNumber,
               status: result.drained ? 'drained' : 'withdrawing',
+              withdrawalHistory,
             })
+
+            // Report withdrawal to backend as a donation record (best-effort)
+            if (isValidTxid(result.txid)) {
+              api
+                .post('donations/', {
+                  txid: result.txid,
+                  recipient: record.recipientAddress,
+                  amount: (Number(result.amount) / 1e8).toFixed(8),
+                  coin: record.coin || 'BCH',
+                  cause: record.cause || '',
+                  donor_name: record.donorName || '',
+                  donor_email: record.donorEmail || '',
+                  contract: record.vaultAddress || '',
+                  interval: record.intervalLabel || '',
+                  interval_blocks: record.intervalBlocks || 0,
+                  wallet_address: (record.funderAddress || '').toLowerCase(),
+                  payout_mode: record.payoutMode || 'smart',
+                })
+                .catch((err) => {
+                  if (import.meta.env.DEV) {
+                    console.warn('[CrypToCare][withdrawal-post:failed]', err?.message)
+                  }
+                })
+            }
             if (import.meta.env.DEV) {
               console.info('[CrypToCare][vault-autowithdraw:success]', {
                 status: result.drained ? 'Successful (final drain)' : 'Successful',
@@ -840,12 +914,49 @@ export const startAutoWithdraw = (record, onCycle) => {
 
       cycleNumber++
       noUtxoStreak = 0
+
+      // Build withdrawal history entry
+      const currentVault = getAllStoredVaults().find((v) => v.donationId === id)
+      const withdrawalHistory = currentVault?.withdrawalHistory || []
+      withdrawalHistory.push({
+        cycleNumber,
+        txid: result.txid,
+        amount: result.amount.toString(),
+        drained: result.drained,
+        timestamp: new Date().toISOString(),
+      })
+
       updateVaultRecord(id, {
         lastWithdrawTxid: result.txid,
         lastWithdrawAt: new Date().toISOString(),
         cyclesCompleted: cycleNumber,
         status: result.drained ? 'drained' : 'withdrawing',
+        withdrawalHistory,
       })
+
+      // Report withdrawal to backend as a donation record (best-effort)
+      if (isValidTxid(result.txid)) {
+        api
+          .post('donations/', {
+            txid: result.txid,
+            recipient: record.recipientAddress,
+            amount: (Number(result.amount) / 1e8).toFixed(8),
+            coin: record.coin || 'BCH',
+            cause: record.cause || '',
+            donor_name: record.donorName || '',
+            donor_email: record.donorEmail || '',
+            contract: record.vaultAddress || '',
+            interval: record.intervalLabel || '',
+            interval_blocks: record.intervalBlocks || 0,
+            wallet_address: (record.funderAddress || '').toLowerCase(),
+            payout_mode: record.payoutMode || 'smart',
+          })
+          .catch((err) => {
+            if (import.meta.env.DEV) {
+              console.warn('[CrypToCare][withdrawal-post:failed]', err?.message)
+            }
+          })
+      }
 
       if (import.meta.env.DEV) {
         console.info('[CrypToCare][vault-autowithdraw:success]', {
@@ -910,6 +1021,20 @@ export const startAutoWithdraw = (record, onCycle) => {
       const rawMsg = String(error?.message || '')
       // Strip CashScript Bitauth debug URI from error messages
       const msg = rawMsg.replace(/\s*WARNING:.*Bitauth URI:.*$/s, '').trim()
+
+      const isSocketError = /socket|connection|ECONNREFUSED|ETIMEDOUT|Cannot initiate/i.test(msg)
+      if (isSocketError) {
+        resetProvider()
+        if (import.meta.env.DEV) {
+          console.warn('[CrypToCare][vault-autowithdraw:socket-reset]', {
+            donationId: id,
+            error: msg,
+          })
+        }
+        scheduleNext(120_000)
+        return
+      }
+
       const isBip68 = /non-BIP68-final|non-final|mandatory-script-verify-flag|sequence/i.test(msg)
       const isContractRequire = /Require statement failed/i.test(msg)
 
@@ -968,11 +1093,14 @@ export const startAutoWithdraw = (record, onCycle) => {
  */
 export const resumeAllAutoWithdraws = (onCycle) => {
   const vaults = getStoredVaults()
+  let staggerIndex = 0
   for (const vault of vaults) {
     if (vault.status === 'drained' || vault.status === 'reclaimed') continue
     // Skip legacy vaults without an explicit payoutMode
     if (!vault.payoutMode) continue
-    startAutoWithdraw(vault, onCycle)
+    const delay = staggerIndex * 5000
+    setTimeout(() => startAutoWithdraw(vault, onCycle), delay)
+    staggerIndex++
   }
 
   return () => {

@@ -36,7 +36,6 @@ class PayoutApproval(models.Model):
 
     # Payout details
     recipient_address = models.CharField(max_length=255)
-    txid = models.CharField(max_length=255, blank=True)
     vault_address = models.CharField(max_length=255, blank=True)
     payout_amount_satoshis = models.BigIntegerField()
     coin = models.CharField(max_length=20, default='BCH')
@@ -58,7 +57,8 @@ class PayoutApproval(models.Model):
     executed_at = models.DateTimeField(null=True, blank=True)
 
     # Execution result
-    txid = models.CharField(max_length=255, blank=True)
+    txid = models.CharField(max_length=64, blank=True,
+                            help_text='64-char hex blockchain transaction hash')
     execution_error = models.TextField(blank=True)
 
     # Status
