@@ -82,6 +82,18 @@ export const getAddressUtxos = async (address) => {
   }))
 }
 
+export const getBlockHeight = async () => {
+  const url = `${getActiveBaseUrl()}/blockheight/latest/`
+  const response = await fetchWithTimeout(url) 
+  if (!response.ok) {
+    throw new Error(`Watchtower blockheight request failed (${response.status})`)
+  }
+
+  const data = await response.json()
+
+  return data.number
+}
+
 /**
  * Broadcast a raw transaction hex to the network.
  * Returns the transaction id on success.

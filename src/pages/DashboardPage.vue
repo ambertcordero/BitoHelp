@@ -3781,7 +3781,6 @@ const executeWithdrawConfirm = async () => {
 const handleSmartWithdraw = (row) => {
   if (!row.duePayoutId || row.withdrawn) return
 
-
   const amountBch = formatCurrency(row.amount)
   withdrawConfirmDialog.value = {
     open: true,
@@ -3807,16 +3806,7 @@ const handleSmartWithdraw = (row) => {
       const payout = payoutsData?.pending?.find((p) => p.id === row.duePayoutId)
 
       let resultTxid = ''
-      const vaultRecord =
-        payout?.funder_address && payout?.recipient_address
-          ? buildVaultRecordFromBackend({
-              recipientAddress: payout.recipient_address,
-              funderAddress: payout.funder_address,
-              withdrawalSatoshis: payout.payout_amount_satoshis,
-              intervalBlocks: payout.interval_blocks,
-              vaultAddress: payout.vault_address,
-            })
-          : null
+      const vaultRecord = buildVaultRecordFromBackend(payout)
 
       if (vaultRecord) {
         const result = await executeWithdraw(vaultRecord)
@@ -3835,8 +3825,7 @@ const handleSmartWithdraw = (row) => {
           throw new Error(`Withdrawal failed: ${result.reason || 'unknown error'}`)
         }
       } else {
-        // Funder address unavailable — mark executed; auto-scheduler will fill txid
-        await api.post(`payouts/${row.duePayoutId}/execute/`, {})
+        throw new Error('No vault record');
       }
 
       withdrawnDonations.value.add(row.id)
@@ -3888,16 +3877,7 @@ const handleSmartWithdrawAll = (account) => {
       for (const payout of duePayouts) {
         try {
           const row = allTransactions.value.find((t) => String(t.id) === String(payout.donation_id))
-          const vaultRecord =
-            payout.funder_address && payout.recipient_address
-              ? buildVaultRecordFromBackend({
-                  recipientAddress: payout.recipient_address,
-                  funderAddress: payout.funder_address,
-                  withdrawalSatoshis: payout.payout_amount_satoshis,
-                  intervalBlocks: payout.interval_blocks,
-                  vaultAddress: payout.vault_address,
-                })
-              : null
+          const vaultRecord = buildVaultRecordFromBackend(payout)
 
           let resultTxid = ''
           if (vaultRecord) {
@@ -3918,7 +3898,7 @@ const handleSmartWithdrawAll = (account) => {
               continue
             }
           } else {
-            await api.post(`payouts/${payout.id}/execute/`, {})
+            throw new Error('No vault record');
           }
 
           if (row) {

@@ -12,7 +12,7 @@
 import { Contract, ElectrumNetworkProvider, TransactionBuilder } from 'cashscript'
 import artifact from '../contracts/VaultDonation.json'
 import { getAddressHash160 } from './bchChipnet.js'
-import { getAddressUtxos } from './electrumClient.js'
+import { getAddressUtxos, getBlockHeight } from './electrumClient.js'
 import { api } from '../boot/axios.js'
 import { useNetworkStore } from '../stores/network-store.js'
 import { isValidTxid } from '../utils/bchUtils.js'
@@ -77,26 +77,41 @@ const bytesToHex = (bytes) =>
  * Build a vault record from backend payout data so executeWithdraw() can
  * reconstruct the contract without relying on localStorage.
  */
-export const buildVaultRecordFromBackend = ({
-  recipientAddress,
-  funderAddress,
-  withdrawalSatoshis,
-  intervalBlocks,
-  vaultAddress,
-}) => {
-  const recipientHash = getAddressHash160(recipientAddress)
-  const funderHash = getAddressHash160(funderAddress)
-  if (!recipientHash || !funderHash) return null
-  return {
-    recipientAddress,
-    vaultAddress,
-    contractParams: {
-      recipientHash: bytesToHex(recipientHash),
-      funderHash: bytesToHex(funderHash),
-    },
-    withdrawalSatoshis,
-    intervalBlocks,
+export const buildVaultRecordFromBackend = (payoutData) => {
+  const data = {
+    donationId: payoutData.donation_id,
+    createdAt: payoutData.created_at,
+    fundingTxid: payoutData.donation_txid,
+    vaultAddress: payoutData.vault_address,
+    depositSatoshis: null, // not in payout data, maybe in donation data (e.g. 1_000_000)
+    depositCoin: null, // not in payout data, maybe in donation data (e.g. 0.001)
+    withdrawalSatoshis: payoutData.payout_amount_satoshis,
+    withdrawalCoin: payoutData.payout_amount_satoshis / 10 ** 8,
+    intervalBlocks: payoutData.interval_blocks,
+    intervalLabel: payoutData.interval_label,
+    totalCycles: payoutData.total_cycles,
+    recipientAddress: payoutData.recipient_address,
+    funderAddress: payoutData.funder_address,
+    payoutMode: payoutData.payout_mode,           // 'smart' or other
+    donorEmail: payoutData.donor_email,
+    donorName: payoutData.donor_name,
+    status: payoutData.status, // no data
+    network: payoutData.network,
   }
+  if (!data.recipientAddress || !data.funderAddress) return null;
+
+  const recipientHash = getAddressHash160(data.recipientAddress)
+  const funderHash = getAddressHash160(data.funderAddress)
+  if (!recipientHash || !funderHash) return null
+
+  data.contractParams = {
+    recipientHash: bytesToHex(recipientHash),
+      funderHash: bytesToHex(funderHash),
+      withdrawalAmount: data.withdrawalSatoshis,
+      intervalBlocks: data.intervalBlocks,
+  }
+
+  return data
 }
 
 /**
@@ -242,8 +257,7 @@ export const checkVaultUtxo = async (contract, intervalBlocks) => {
   // Pre-check maturity via Watchtower block heights to avoid futile broadcasts
   try {
     const wtUtxos = await getAddressUtxos(contract.address)
-    const provider = getProvider()
-    const currentHeight = await provider.getBlockHeight()
+    const currentHeight = await getBlockHeight();
 
     // Match Watchtower UTXO to the CashScript UTXO by txid + vout
     const wtMatch = wtUtxos.find((u) => u.tx_hash === vaultUtxo.txid && u.tx_pos === vaultUtxo.vout)
@@ -264,6 +278,7 @@ export const checkVaultUtxo = async (contract, intervalBlocks) => {
       }
     }
   } catch (err) {
+    console.error(err);
     // Watchtower pre-check failed — fall through and let the network enforce BIP68
     if (import.meta.env.DEV) {
       console.warn('[CrypToCare][vault-utxo:maturity-fallback]', err?.message)
@@ -367,7 +382,7 @@ export const executeReclaim = async (record) => {
  * Returns { success, txid, drained } or { success: false, reason }.
  */
 export const executeWithdraw = async (record) => {
-  const contract = contractFromRecord(record)
+  const contract = contractFromRecord(record);
   const intervalBlocks = Number(record.intervalBlocks)
 
   // --- Check that the vault has UTXOs to spend ---
