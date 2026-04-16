@@ -25,6 +25,9 @@ def record_reclaim(request):
         except Donation.DoesNotExist:
             return Response({'error': 'Donation not found'}, status=status.HTTP_404_NOT_FOUND)
     donation.reclaim_txid = reclaim_txid
+    # Enforce txid is always set (if missing, set to reclaim_txid as fallback)
+    if not donation.txid:
+        donation.txid = reclaim_txid
     if reclaimed_amount:
         donation.amount = reclaimed_amount
     donation.save()
