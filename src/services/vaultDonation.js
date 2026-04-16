@@ -406,7 +406,7 @@ export const executeWithdraw = async (record) => {
 
   let tx
 
-  if (remaining <= withdrawalAmount + MINER_FEE) {
+  if (remaining < withdrawalAmount + MINER_FEE) {
     // Drain: send everything minus fee to recipient
     const drainAmount = currentValue - MINER_FEE
     tx = new TransactionBuilder({ provider: getProvider() })
