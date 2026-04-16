@@ -1,0 +1,66 @@
+# -------------------------------------------------------
+# CrypToCare — Docker Compose (production)
+# Start everything:  docker compose -f prod.yml up --build -d
+# Stop everything:   docker compose -f prod.yml down
+# View logs:         docker compose -f prod.yml logs -f
+# -------------------------------------------------------
+
+services:
+  # ---- PostgreSQL database ----
+  db:
+    image: postgres:16-alpine
+    restart: always
+    env_file:
+      - .env_prod
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U postgres']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - cryptocare_network
+
+  # ---- Django REST API (production) ----
+  backend:
+    build:
+      context: ../backend
+      dockerfile: Dockerfile
+    restart: always
+    env_file:
+      - .env_prod
+    environment:
+      - DJANGO_DEBUG=False
+    ports:
+      - '127.0.0.1:8000:8000' # Only accessible via localhost (nginx proxy)
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - cryptocare_network
+    command: >
+      sh -c "python manage.py migrate --noinput &&
+             python manage.py collectstatic --noinput --clear &&
+             gunicorn bitohelp_api.wsgi:application --bind 0.0.0.0:8000 --workers 4 --timeout 60"
+
+  # ---- Quasar Frontend (production build served by Nginx) ----
+  frontend:
+    build:
+      context: ../
+      dockerfile: Dockerfile
+      target: prod-runtime
+    restart: always
+    ports:
+      - '127.0.0.1:9000:80' # Only accessible via localhost (nginx proxy)
+    depends_on:
+      - backend
+    networks:
+      - cryptocare_network
+
+volumes:
+  pgdata:
+
+networks:
+  cryptocare_network:
+    driver: bridge

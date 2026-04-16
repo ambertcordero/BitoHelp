@@ -58,6 +58,7 @@ MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
+    'bitohelp_api.middleware.csrf_exempt_for_api',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
@@ -175,6 +176,17 @@ if DEBUG:
 
 CORS_ALLOW_CREDENTIALS = False
 
+# CSRF trusted origins - allow production domain
+CSRF_TRUSTED_ORIGINS = [
+    "http://localhost:9000",
+    "http://localhost:9001",
+    "http://localhost:8080",
+]
+# Add production origins from environment
+_csrf_origins = os.environ.get('CSRF_TRUSTED_ORIGINS', '')
+if _csrf_origins:
+    CSRF_TRUSTED_ORIGINS.extend([o.strip() for o in _csrf_origins.split(',') if o.strip()])
+
 # Additional CORS headers
 CORS_ALLOW_HEADERS = [
     'accept',
@@ -188,13 +200,6 @@ CORS_ALLOW_HEADERS = [
     'x-requested-with',
 ]
 
-# CSRF Configuration
-CSRF_TRUSTED_ORIGINS = [
-    "http://localhost:9000",
-    "http://localhost:9001",
-    "http://localhost:8080",
-]
-
 # Exempt API from CSRF (common for REST APIs)
 CSRF_COOKIE_HTTPONLY = False
 CSRF_COOKIE_SAMESITE = 'Lax'
@@ -203,6 +208,10 @@ CSRF_COOKIE_SAMESITE = 'Lax'
 REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.AllowAny',
+    ],
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.TokenAuthentication',
+        'rest_framework.authentication.SessionAuthentication',
     ],
     'DEFAULT_RENDERER_CLASSES': [
         'rest_framework.renderers.JSONRenderer',
