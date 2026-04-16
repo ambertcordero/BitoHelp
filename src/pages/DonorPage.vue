@@ -1679,6 +1679,21 @@ const handleReclaim = async (vault) => {
         if (idx !== -1) reclaimableVaults.value[idx].reclaiming = false
         return
       }
+      // Notify backend of reclaim event
+      try {
+        await api.post('donations/reclaim/', {
+          donation_id: vault.donationId || vault.txid,
+          reclaim_txid: result.txid,
+          reclaimed_amount: Number(result.amount) / 1e8,
+        })
+      } catch (err) {
+        console.error('[CrypToCare][reclaim:backend-fail]', err)
+        $q.notify({
+          type: 'warning',
+          message: 'Reclaim succeeded but failed to save to backend.',
+          timeout: 6000,
+        })
+      }
       $q.notify({
         type: 'positive',
         message: `Reclaimed ${formatBchFromSats(result.amount)} BCH. Txid: ${result.txid}`,
