@@ -4,7 +4,7 @@ from .models import Donation
 
 @admin.register(Donation)
 class DonationAdmin(admin.ModelAdmin):
-    list_display = ['donor_name', 'amount', 'coin', 'cause', 'recipient', 'timestamp', 'reclaim_txid']
+    list_display = ['donor_name', 'amount', 'coin', 'cause', 'recipient', 'timestamp']
     list_filter = ['coin', 'cause', 'timestamp']
     search_fields = ['donor_name', 'donor_email', 'txid', 'recipient', 'cause']
     readonly_fields = ['timestamp']
@@ -12,7 +12,7 @@ class DonationAdmin(admin.ModelAdmin):
     
     fieldsets = (
         ('Transaction Info', {
-            'fields': ('txid', 'reclaim_txid', 'explorer_url', 'timestamp')
+            'fields': ('txid', 'explorer_url', 'timestamp')
         }),
         ('Donation Details', {
             'fields': ('recipient', 'amount', 'coin', 'cause', 'message')

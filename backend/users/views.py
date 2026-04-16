@@ -16,9 +16,9 @@ from payouts.serializers import PayoutApprovalSerializer
 @api_view(['POST'])
 def wallet_connect(request):
     """
-    Upsert a wallet user by address.
+    Update metadata for an existing wallet user (chain, balance, etc).
+    Does NOT create a new WalletUser — that only happens on first donation.
     POST /api/users/connect/
-    Body: { "wallet_address": "bchtest:qz..." }
     """
     serializer = WalletConnectSerializer(data=request.data)
     serializer.is_valid(raise_exception=True)
@@ -27,25 +27,56 @@ def wallet_connect(request):
     if not raw_address:
         return Response({'error': 'wallet_address is required'}, status=status.HTTP_400_BAD_REQUEST)
 
-    defaults = {'last_connected_at': timezone.now()}
+    try:
+        user = WalletUser.objects.get(wallet_address=raw_address)
+    except WalletUser.DoesNotExist:
+        return Response({'exists': False, 'wallet_address': raw_address}, status=status.HTTP_200_OK)
 
-    display_name = serializer.validated_data.get('display_name', '').strip()
-    email = serializer.validated_data.get('email', '').strip()
-    contact = serializer.validated_data.get('contact', '').strip()
+    chain = serializer.validated_data.get('chain', '').strip()
+    namespace = serializer.validated_data.get('namespace', '').strip()
+    balance = serializer.validated_data.get('balance', 0)
+    symbol = serializer.validated_data.get('symbol', '').strip()
 
-    if display_name:
-        defaults['display_name'] = display_name
-    if email:
-        defaults['email'] = email
-    if contact:
-        defaults['contact'] = contact
+    update_fields = ['last_connected_at']
+    user.last_connected_at = timezone.now()
 
-    user, created = WalletUser.objects.update_or_create(
-        wallet_address=raw_address,
-        defaults=defaults,
-    )
+    if chain:
+        user.chain = chain
+        update_fields.append('chain')
+    if namespace:
+        user.namespace = namespace
+        update_fields.append('namespace')
+    if balance:
+        user.balance = balance
+        update_fields.append('balance')
+    if symbol:
+        user.symbol = symbol
+        update_fields.append('symbol')
 
+    user.save(update_fields=update_fields)
     return Response(WalletUserSerializer(user).data, status=status.HTTP_200_OK)
+
+
+@api_view(['GET'])
+def wallet_role(request, wallet_address):
+    """
+    Check the role of a wallet address.
+    Returns: { role: 'nonprofit' | 'donor' | 'new' }
+    GET /api/users/<wallet_address>/role/
+    """
+    from nonprofits.models import Nonprofit
+
+    addr = wallet_address.lower().strip()
+    if not addr:
+        return Response({'error': 'wallet_address is required'}, status=status.HTTP_400_BAD_REQUEST)
+
+    if Nonprofit.objects.filter(bch_address__iexact=addr).exists():
+        return Response({'role': 'nonprofit', 'wallet_address': addr})
+
+    if WalletUser.objects.filter(wallet_address=addr).exists():
+        return Response({'role': 'donor', 'wallet_address': addr})
+
+    return Response({'role': 'new', 'wallet_address': addr})
 
 
 @api_view(['GET'])

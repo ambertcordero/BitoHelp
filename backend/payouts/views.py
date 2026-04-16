@@ -7,7 +7,6 @@ from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 
 from .models import PayoutApproval, PayoutAuditLog
-from .models import PayoutApproval, PayoutAuditLog
 from .serializers import PayoutApprovalSerializer, PayoutApprovalListSerializer, PayoutAuditLogSerializer
 from .services import create_pending_approval, send_approval_email, process_approval, mark_executed, mark_failed, refresh_and_send, send_reclaim_warning_email
 
@@ -75,6 +74,9 @@ def request_approval(request):
     missing = [f for f in required if not data.get(f)]
     if missing:
         return Response({'error': f'Missing fields: {", ".join(missing)}'}, status=400)
+
+    if int(data.get('payout_amount_satoshis', 0)) <= 0:
+        return Response({'error': 'payout_amount_satoshis must be greater than 0'}, status=400)
 
     vault_bal = data.get('vault_balance_satoshis')
 
@@ -219,16 +221,10 @@ def report_execution(request, pk):
         txid = txid.lower()
 
     if approval.status == 'executed':
+        # Allow updating an empty txid on an already-executed record
         if txid and not approval.txid:
             approval.txid = txid
             approval.save(update_fields=['txid', 'updated_at'])
-            PayoutAuditLog.objects.create(
-                payout_approval=approval,
-                action=PayoutAuditLog.Action.EXECUTED,
-                detail=f'Updated missing txid for already-executed payout: txid={txid}',
-            )
-            serializer = PayoutApprovalSerializer(approval)
-            return Response(serializer.data)
         return Response({'message': 'Already executed', 'txid': approval.txid})
 
     mark_executed(approval, txid)
@@ -390,25 +386,6 @@ def trigger_approval(request, pk):
     return Response(serializer.data)
 
 
-@api_view(['GET'])
-@permission_classes([AllowAny])
-def list_missing_txids(request):
-    """
-    Diagnostic endpoint: list all executed payouts with missing txids.
-    GET /api/payouts/missing-txids/
-    """
-    missing = PayoutApproval.objects.filter(
-        status='executed',
-        txid=''
-    ).order_by('-executed_at')[:50]
-    
-    serializer = PayoutApprovalListSerializer(missing, many=True)
-    return Response({
-        'count': missing.count(),
-        'payouts': serializer.data
-    })
-
-
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def record_smart_withdrawal(request):
@@ -423,6 +400,9 @@ def record_smart_withdrawal(request):
     missing = [f for f in required if not data.get(f)]
     if missing:
         return Response({'error': f'Missing fields: {", ".join(missing)}'}, status=400)
+
+    if int(data.get('payout_amount_satoshis', 0)) <= 0:
+        return Response({'error': 'payout_amount_satoshis must be greater than 0'}, status=400)
 
     txid = (data.get('txid', '') or '').strip()
     if not TXID_PATTERN.fullmatch(txid):

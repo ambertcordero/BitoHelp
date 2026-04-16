@@ -3,7 +3,6 @@ from . import views
 
 urlpatterns = [
     path('payouts/approve/<str:token>/', views.gmail_approve, name='gmail-approve'),
-    path('payouts/missing-txids/', views.list_missing_txids, name='payout-missing-txids'),
     path('payouts/', views.list_approvals, name='payout-list'),
     path('payouts/request/', views.request_approval, name='payout-request'),
     path('payouts/record/', views.record_smart_withdrawal, name='payout-record'),
