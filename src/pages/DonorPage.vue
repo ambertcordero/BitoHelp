@@ -2157,13 +2157,13 @@ const recipientSummary = computed(() => {
 
 const totalDistributed = computed(() => {
   const total = recipientSummary.value.reduce((sum, r) => sum + r.totalAmount, 0)
-  return total.toFixed(2)
+  return total.toFixed(8)
 })
 
 const averagePerRecipient = computed(() => {
-  if (recipientSummary.value.length === 0) return '0.00'
+  if (recipientSummary.value.length === 0) return '0.00000000'
   const avg = parseFloat(totalDistributed.value) / recipientSummary.value.length
-  return avg.toFixed(2)
+  return avg.toFixed(8)
 })
 
 const filteredActivity = computed(() => {
@@ -2197,7 +2197,7 @@ const selectWallet = (wallet) => {
 
 const formatCurrency = (amount) => {
   const num = parseFloat(amount) || 0
-  return num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 8 })
+  return num.toLocaleString('en-US', { minimumFractionDigits: 8, maximumFractionDigits: 8 })
 }
 
 function formatDate(timestamp) {

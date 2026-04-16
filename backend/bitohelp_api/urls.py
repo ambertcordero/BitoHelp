@@ -26,4 +26,5 @@ urlpatterns = [
     path('api/', include('payouts.urls')),
     path('api/', include('users.urls')),
     path('api/', include('chatbot.urls')),
+    path('api/', include('vaults.urls')),
 ]

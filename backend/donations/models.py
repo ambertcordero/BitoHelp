@@ -22,7 +22,7 @@ class Donation(models.Model):
                                     related_name='donations', null=True, blank=True, db_index=True)
     wallet_address = models.CharField(max_length=255, blank=True, db_index=True,
                                       help_text='Donor wallet address (lowercase)')
-    reclaim_txid = models.CharField(max_length=255, blank=True, db_index=True,
+    reclaim_txid = models.CharField(max_length=255, blank=True, default='', db_index=True,
                                     help_text='Transaction ID of reclaim/withdrawal')
     class Meta:
         ordering = ['-timestamp']

@@ -3,14 +3,10 @@ from .models import PayoutApproval, PayoutAuditLog
 
 
 class PayoutApprovalSerializer(serializers.ModelSerializer):
-    payout_id = serializers.IntegerField(source='id', read_only=True)
-    transaction_id = serializers.CharField(source='txid', read_only=True)
-    donation_txid = serializers.CharField(source='donation.txid', default='', read_only=True)
-
     class Meta:
         model = PayoutApproval
         fields = [
-            'id', 'payout_id', 'transaction_id', 'donation_txid', 'donation_ref', 'donor_email', 'donor_name',
+            'id', 'donation_ref', 'vault_id', 'donor_email', 'donor_name',
             'recipient_address', 'vault_address',
             'payout_amount_satoshis', 'coin',
             'interval_label', 'interval_blocks',
@@ -24,9 +20,6 @@ class PayoutApprovalSerializer(serializers.ModelSerializer):
 
 
 class PayoutApprovalListSerializer(serializers.ModelSerializer):
-    payout_id = serializers.IntegerField(source='id', read_only=True)
-    transaction_id = serializers.CharField(source='txid', read_only=True)
-    donation_txid = serializers.CharField(source='donation.txid', default='', read_only=True)
     payout_mode = serializers.CharField(source='donation.payout_mode', default='smart', read_only=True)
     donation_id = serializers.IntegerField(source='donation.id', default=None, read_only=True)
     funder_address = serializers.CharField(source='donation.wallet_address', default='', read_only=True)
@@ -34,7 +27,7 @@ class PayoutApprovalListSerializer(serializers.ModelSerializer):
     class Meta:
         model = PayoutApproval
         fields = [
-            'id', 'payout_id', 'transaction_id', 'donation_txid', 'donation_ref', 'donation_id', 'cycle_number', 'total_cycles',
+            'id', 'donation_ref', 'vault_id', 'donation_id', 'cycle_number', 'total_cycles',
             'payout_amount_satoshis', 'coin', 'status',
             'due_at', 'interval_label', 'interval_blocks',
             'donor_email', 'donor_name',

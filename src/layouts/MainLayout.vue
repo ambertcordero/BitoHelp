@@ -2839,7 +2839,7 @@ onBeforeUnmount(() => {
   height: 62px;
   border-radius: 32px;
   /* glassmorphism light */
-  background: rgba(255, 255, 255, 0.553);
+  background: rgba(255, 255, 255, 0.915);
   backdrop-filter: blur(24px) saturate(180%);
   -webkit-backdrop-filter: blur(24px) saturate(180%);
   border: 1px solid rgba(255, 255, 255, 0.5);

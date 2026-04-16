@@ -25,6 +25,10 @@ class PayoutApproval(models.Model):
     # Donation / schedule reference
     donation_ref = models.CharField(max_length=128, db_index=True,
                                     help_text='Frontend-generated donation ID string')
+    vault_id = models.CharField(
+        max_length=20, blank=True, db_index=True,
+        help_text='Auto-assigned vault identifier (VLT-0001)',
+    )
     donation = models.ForeignKey(
         'donations.Donation', on_delete=models.SET_NULL,
         null=True, blank=True, related_name='payout_approvals',
@@ -81,8 +85,32 @@ class PayoutApproval(models.Model):
             models.Index(fields=['approval_token_hash']),
         ]
 
+    def save(self, *args, **kwargs):
+        if not self.vault_id and self.donation_ref:
+            existing = PayoutApproval.objects.filter(
+                donation_ref=self.donation_ref
+            ).exclude(vault_id='').values_list('vault_id', flat=True).first()
+
+            if existing:
+                self.vault_id = existing
+            else:
+                from django.db.models import Max
+                last = PayoutApproval.objects.exclude(vault_id='').aggregate(
+                    max_id=Max('vault_id')
+                )['max_id']
+                if last and last.startswith('VLT-'):
+                    try:
+                        next_num = int(last.split('-')[1]) + 1
+                    except (IndexError, ValueError):
+                        next_num = 1
+                else:
+                    next_num = 1
+                self.vault_id = f'VLT-{next_num:04d}'
+
+        super().save(*args, **kwargs)
+
     def __str__(self):
-        return f"PayoutApproval {self.donation_ref} cycle {self.cycle_number} [{self.status}]"
+        return f"PayoutApproval {self.vault_id or self.donation_ref} cycle {self.cycle_number} [{self.status}]"
 
     @property
     def is_expired(self):
