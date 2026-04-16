@@ -89,6 +89,30 @@ class DonationViewSet(viewsets.ModelViewSet):
             return Response(serializer.data)
         return Response({'error': 'Cause parameter required'}, status=400)
 
+    @action(detail=False, methods=['post'])
+    def reclaim(self, request):
+        donation_id = request.data.get('donation_id')
+        reclaim_txid = request.data.get('reclaim_txid')
+        reclaimed_amount = request.data.get('reclaimed_amount')
+        donation_txid = request.data.get('donation_txid')
+        if not donation_id or not reclaim_txid:
+            return Response({'error': 'Missing donation_id or reclaim_txid'}, status=status.HTTP_400_BAD_REQUEST)
+        try:
+            donation = Donation.objects.get(id=donation_id)
+        except (Donation.DoesNotExist, ValueError):
+            try:
+                donation = Donation.objects.get(txid=donation_txid)
+            except Donation.DoesNotExist:
+                return Response({'error': 'Donation not found'}, status=status.HTTP_404_NOT_FOUND)
+        donation.reclaim_txid = reclaim_txid
+        
+        if reclaimed_amount:
+            donation.amount = reclaimed_amount
+        donation.save()
+        return Response(DonationSerializer(donation).data, status=status.HTTP_200_OK)
+
+
+
 
 @api_view(['GET'])
 def donation_stats(request):

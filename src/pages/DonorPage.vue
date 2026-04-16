@@ -1679,11 +1679,12 @@ const handleReclaim = async (vault) => {
         if (idx !== -1) reclaimableVaults.value[idx].reclaiming = false
         return
       }
-      // Notify backend of reclaim event
+      
       try {
         await api.post('donations/reclaim/', {
-          donation_id: vault.donationId || vault.txid,
+          donation_id: vault.donationId,
           reclaim_txid: result.txid,
+          donation_txid: vault.fundingTxid,
           reclaimed_amount: Number(result.amount) / 1e8,
         })
       } catch (err) {
