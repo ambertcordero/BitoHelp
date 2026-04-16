@@ -62,12 +62,13 @@
           <q-btn flat no-caps label="Contact" class="nav-item" to="/contact" />
 
           <!-- Network selector -->
-          <q-btn flat no-caps class="nav-item">
+          <q-btn flat no-caps class="nav-item" :disable="isConnected">
             <div class="row items-center no-wrap">
               <q-icon name="lan" size="18px" class="q-mr-xs" />
               <span>{{ networkStore.networkLabel }}</span>
               <q-icon name="expand_more" size="20px" class="q-ml-xs" />
             </div>
+            <q-tooltip v-if="isConnected">Disconnect your wallet to switch networks</q-tooltip>
             <q-menu anchor="bottom left" self="top left">
               <q-list style="min-width: 200px">
                 <q-item
@@ -673,8 +674,12 @@
           <div class="network-switcher">
             <button
               class="network-card"
-              :class="{ 'network-card--active network-card--blue': networkStore.isChipnet }"
-              @click="networkStore.switchNetwork('chipnet')"
+              :class="{
+                'network-card--active network-card--blue': networkStore.isChipnet,
+                'network-card--disabled': isConnected,
+              }"
+              :disabled="isConnected"
+              @click="isConnected ? notifyDisconnectFirst() : networkStore.switchNetwork('chipnet')"
             >
               <div class="network-card__icon network-card__icon--blue">
                 <q-icon name="science" size="20px" />
@@ -691,8 +696,12 @@
 
             <button
               class="network-card"
-              :class="{ 'network-card--active network-card--amber': networkStore.isMainnet }"
-              @click="confirmMainnetSwitch"
+              :class="{
+                'network-card--active network-card--amber': networkStore.isMainnet,
+                'network-card--disabled': isConnected,
+              }"
+              :disabled="isConnected"
+              @click="isConnected ? notifyDisconnectFirst() : confirmMainnetSwitch()"
             >
               <div class="network-card__icon network-card__icon--amber">
                 <q-icon name="account_balance" size="20px" />
@@ -788,6 +797,15 @@ const router = useRouter()
 const route = useRoute()
 const donationStore = useDonationStore()
 const networkStore = useNetworkStore()
+
+const notifyDisconnectFirst = () => {
+  $q.notify({
+    type: 'warning',
+    message: 'Disconnect your wallet first to switch networks.',
+    icon: 'warning',
+    timeout: 3000,
+  })
+}
 
 const confirmMainnetSwitch = () => {
   if (networkStore.isMainnet) return
@@ -3490,6 +3508,12 @@ onBeforeUnmount(() => {
 }
 
 /* Dark mode */
+.network-card--disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  pointer-events: auto;
+}
+
 .body--dark .network-card {
   background: rgba(255, 255, 255, 0.04);
 }
