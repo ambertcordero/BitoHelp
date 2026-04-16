@@ -36,7 +36,7 @@ contract VaultDonation(
 
         // If the remainder can't fund another full cycle, drain everything
         // to the recipient (minus miner fee) and close the vault.
-        if (remaining <= withdrawalAmount + minerFee) {
+        if (remaining < withdrawalAmount + minerFee) {
             require(tx.outputs[0].value == currentValue - minerFee);
         } else {
             // Send exactly the scheduled amount to the recipient.
