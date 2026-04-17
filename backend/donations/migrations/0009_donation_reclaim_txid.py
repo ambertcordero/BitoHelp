@@ -13,6 +13,6 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='donation',
             name='reclaim_txid',
-            field=models.CharField(blank=True, db_index=True, help_text='Transaction ID of reclaim/withdrawal', max_length=255),
+            field=models.CharField(blank=True, default='', db_index=True, help_text='Transaction ID of reclaim/withdrawal', max_length=255),
         ),
     ]

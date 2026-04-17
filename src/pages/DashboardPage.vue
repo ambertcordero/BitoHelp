@@ -290,14 +290,10 @@
             align="left"
             mobile-arrows
           >
-            <q-tab name="transactions" label="Withdrawal History" />
             <q-tab name="details" label="Details" />
+            <q-tab name="transactions" label="Withdrawal History" />
             <q-tab name="pending" label="Pending Withdrawals" />
-            <q-tab
-              v-if="nonprofitProfile"
-              name="profile"
-              label="Organization Profile"
-            />
+            <q-tab v-if="nonprofitProfile" name="profile" label="Organization Profile" />
           </q-tabs>
 
           <q-separator class="q-mb-lg" />
@@ -316,14 +312,14 @@
                   color="green-2"
                   text-color="green-9"
                   icon="check_circle"
-                  :label="`${getAccountSchedule(selectedAccount).executed.length} completed`"
+                  :label="`${executedScheduleGroups.length} contract${executedScheduleGroups.length !== 1 ? 's' : ''} · ${getAccountSchedule(selectedAccount).executed.length} completed`"
                   style="font-weight: 700"
                 />
               </div>
 
               <!-- Empty state -->
               <div
-                v-if="getAccountSchedule(selectedAccount).executed.length === 0"
+                v-if="executedScheduleGroups.length === 0"
                 class="text-center q-py-xl"
                 style="border: 2px dashed #e0e0e0; border-radius: 12px"
               >
@@ -334,105 +330,79 @@
                 </div>
               </div>
 
-              <!-- History table -->
-              <q-table
-                v-else
-                :rows="getAccountSchedule(selectedAccount).executed"
-                :columns="executedColumns"
-                row-key="id"
-                flat
-                bordered
-                :pagination="{ rowsPerPage: 15, sortBy: 'executed_at', descending: true }"
-                class="transactions-table"
-                :grid="$q.screen.lt.md"
-              >
-                <template v-slot:body-cell-executed_at="props">
-                  <q-td :props="props">
-                    <div class="text-weight-medium" style="font-size: 13px">
-                      {{
-                        new Date(props.row.executed_at).toLocaleDateString('en-US', {
-                          month: 'short',
-                          day: 'numeric',
-                          year: 'numeric',
-                        })
-                      }}
-                    </div>
-                    <div class="text-caption text-grey-6">
-                      {{
-                        new Date(props.row.executed_at).toLocaleTimeString('en-US', {
-                          hour: '2-digit',
-                          minute: '2-digit',
-                        })
-                      }}
-                    </div>
-                  </q-td>
-                </template>
-                <template v-slot:body-cell-amount="props">
-                  <q-td :props="props">
-                    <span class="text-weight-bold text-green-8" style="font-size: 14px">
-                      {{ (props.row.payout_amount_satoshis / 1e8).toFixed(8) }}
-                    </span>
-                    <span class="text-caption text-grey-6 q-ml-xs">BCH</span>
-                  </q-td>
-                </template>
-                <template v-slot:body-cell-cycle="props">
-                  <q-td :props="props" class="text-center">
-                    <q-chip
-                      dense
-                      color="green-2"
-                      text-color="green-9"
-                      :label="`${props.row.cycle_number} / ${props.row.total_cycles}`"
-                      style="font-size: 11px; font-weight: 700; border-radius: 6px; height: 22px"
-                    />
-                  </q-td>
-                </template>
-                <template v-slot:body-cell-interval="props">
-                  <q-td :props="props" class="text-center">
-                    <q-badge
-                      color="blue-2"
-                      text-color="blue-9"
-                      :label="props.row.interval_label || '—'"
-                    />
-                  </q-td>
-                </template>
-                <template v-slot:body-cell-txid="props">
-                  <q-td :props="props">
-                    <span
-                      v-if="resolvePayoutTxid(props.row)"
-                      class="text-primary"
-                      style="font-family: monospace; font-size: 12px; cursor: pointer"
-                      @click="copyTxid(resolvePayoutTxid(props.row))"
-                    >
-                      {{ formatTxidPreview(resolvePayoutTxid(props.row), 18) }}
-                      <q-icon name="content_copy" size="12px" class="q-ml-xs" />
-                    </span>
-                    <span
-                      v-else-if="props.row.donation_txid"
-                      class="text-warning text-caption text-weight-medium"
-                      >Invalid TXID</span
-                    >
-                    <span v-else class="text-grey-5 text-caption">—</span>
-                  </q-td>
-                </template>
-                <template v-slot:body-cell-payout_status="props">
-                  <q-td :props="props" class="text-center">
-                    <q-badge color="positive" label="Completed" style="font-weight: 600" />
-                  </q-td>
-                </template>
-
-                <!-- Mobile card layout -->
-                <template v-slot:item="props">
-                  <div class="dash-mobile-card">
-                    <div class="dash-mobile-card__header">
-                      <div class="dash-mobile-card__title">
-                        {{ props.row.donor_name || 'Anonymous' }}
+              <!-- Contract history groups -->
+              <div v-else>
+                <div
+                  v-for="(group, groupIndex) in executedScheduleGroups"
+                  :key="group.donationId"
+                  class="q-mb-xl"
+                >
+                  <!-- Contract header card (same style as pending tab) -->
+                  <div
+                    class="contract-header-card"
+                    :style="{
+                      background: $q.dark.isActive
+                        ? 'linear-gradient(135deg, #0d2818 0%, #0a2015 100%)'
+                        : 'linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%)',
+                      borderRadius: '12px',
+                      padding: '16px 20px',
+                      marginBottom: '10px',
+                      border: $q.dark.isActive ? '1px solid #2e7d32' : '1px solid #81c784',
+                    }"
+                  >
+                    <div class="row items-center justify-between no-wrap">
+                      <div style="min-width: 0; flex: 1">
+                        <div
+                          class="ellipsis contract-donor-name"
+                          style="font-size: 16px; font-weight: 700; color: #1a237e"
+                        >
+                          {{ group.donorName }}
+                        </div>
+                        <div
+                          class="text-caption q-mt-xs contract-meta-caption"
+                          style="color: #546e7a"
+                        >
+                          <q-icon name="schedule" size="13px" />
+                          <span class="q-ml-xs">{{ group.intervalLabel }} interval</span>
+                          &nbsp;&middot;&nbsp;
+                          <q-icon name="currency_bitcoin" size="13px" />
+                          <span class="q-ml-xs">{{ group.amountBch }} BCH per cycle</span>
+                          &nbsp;&middot;&nbsp;
+                          <q-icon name="check_circle" size="13px" />
+                          <span class="q-ml-xs"
+                            >{{ group.completedCycles }} of {{ group.totalCycles }} cycles
+                            completed</span
+                          >
+                        </div>
                       </div>
-                      <q-badge color="positive" label="Completed" style="font-weight: 600" />
+                      <q-badge
+                        color="green-2"
+                        text-color="green-9"
+                        :label="group.vaultId || `#${groupIndex + 1}`"
+                        style="
+                          font-size: 14px;
+                          font-weight: 800;
+                          padding: 6px 14px;
+                          border-radius: 10px;
+                        "
+                      />
                     </div>
-                    <div class="dash-mobile-card__body">
-                      <div class="dash-mobile-card__row">
-                        <span class="dash-mobile-card__label">Date</span>
-                        <span class="dash-mobile-card__value">
+                  </div>
+
+                  <!-- Per-contract executed cycles table -->
+                  <q-table
+                    :rows="group.cycles"
+                    :columns="executedColumns"
+                    row-key="id"
+                    flat
+                    bordered
+                    :pagination="{ rowsPerPage: 10, sortBy: 'executed_at', descending: true }"
+                    class="transactions-table"
+                    :grid="$q.screen.lt.md"
+                  >
+                    <template v-slot:body-cell-executed_at="props">
+                      <q-td :props="props">
+                        <div class="text-weight-medium" style="font-size: 13px">
                           {{
                             new Date(props.row.executed_at).toLocaleDateString('en-US', {
                               month: 'short',
@@ -440,24 +410,27 @@
                               year: 'numeric',
                             })
                           }}
-                          <span class="text-grey-6 q-ml-xs" style="font-size: 11px">
-                            {{
-                              new Date(props.row.executed_at).toLocaleTimeString('en-US', {
-                                hour: '2-digit',
-                                minute: '2-digit',
-                              })
-                            }}
-                          </span>
+                        </div>
+                        <div class="text-caption text-grey-6">
+                          {{
+                            new Date(props.row.executed_at).toLocaleTimeString('en-US', {
+                              hour: '2-digit',
+                              minute: '2-digit',
+                            })
+                          }}
+                        </div>
+                      </q-td>
+                    </template>
+                    <template v-slot:body-cell-amount="props">
+                      <q-td :props="props">
+                        <span class="text-weight-bold text-green-8" style="font-size: 14px">
+                          {{ (props.row.payout_amount_satoshis / 1e8).toFixed(8) }}
                         </span>
-                      </div>
-                      <div class="dash-mobile-card__row">
-                        <span class="dash-mobile-card__label">Amount</span>
-                        <span class="dash-mobile-card__value text-green-8 text-weight-bold">
-                          {{ (props.row.payout_amount_satoshis / 1e8).toFixed(8) }} BCH
-                        </span>
-                      </div>
-                      <div class="dash-mobile-card__row">
-                        <span class="dash-mobile-card__label">Cycle</span>
+                        <span class="text-caption text-grey-6 q-ml-xs">BCH</span>
+                      </q-td>
+                    </template>
+                    <template v-slot:body-cell-cycle="props">
+                      <q-td :props="props" class="text-center">
                         <q-chip
                           dense
                           color="green-2"
@@ -470,29 +443,117 @@
                             height: 22px;
                           "
                         />
-                      </div>
-                      <div class="dash-mobile-card__row">
-                        <span class="dash-mobile-card__label">Interval</span>
+                      </q-td>
+                    </template>
+                    <template v-slot:body-cell-interval="props">
+                      <q-td :props="props" class="text-center">
                         <q-badge
                           color="blue-2"
                           text-color="blue-9"
                           :label="props.row.interval_label || '—'"
                         />
-                      </div>
-                      <div v-if="resolvePayoutTxid(props.row)" class="dash-mobile-card__row">
-                        <span class="dash-mobile-card__label">TxID</span>
+                      </q-td>
+                    </template>
+                    <template v-slot:body-cell-txid="props">
+                      <q-td :props="props">
                         <span
-                          class="text-primary dash-mobile-card__txid"
+                          v-if="resolvePayoutTxid(props.row)"
+                          class="text-primary"
+                          style="font-family: monospace; font-size: 12px; cursor: pointer"
                           @click="copyTxid(resolvePayoutTxid(props.row))"
                         >
-                          {{ formatTxidPreview(resolvePayoutTxid(props.row), 16) }}
-                          <q-icon name="content_copy" size="11px" class="q-ml-xs" />
+                          {{ formatTxidPreview(resolvePayoutTxid(props.row), 18) }}
+                          <q-icon name="content_copy" size="12px" class="q-ml-xs" />
                         </span>
+                        <span
+                          v-else-if="props.row.donation_txid"
+                          class="text-warning text-caption text-weight-medium"
+                          >Invalid TXID</span
+                        >
+                        <span v-else class="text-grey-5 text-caption">—</span>
+                      </q-td>
+                    </template>
+                    <template v-slot:body-cell-payout_status="props">
+                      <q-td :props="props" class="text-center">
+                        <q-badge color="positive" label="Completed" style="font-weight: 600" />
+                      </q-td>
+                    </template>
+
+                    <!-- Mobile card layout -->
+                    <template v-slot:item="props">
+                      <div class="dash-mobile-card">
+                        <div class="dash-mobile-card__header">
+                          <div class="dash-mobile-card__title">
+                            {{ props.row.donor_name || 'Anonymous' }}
+                          </div>
+                          <q-badge color="positive" label="Completed" style="font-weight: 600" />
+                        </div>
+                        <div class="dash-mobile-card__body">
+                          <div class="dash-mobile-card__row">
+                            <span class="dash-mobile-card__label">Date</span>
+                            <span class="dash-mobile-card__value">
+                              {{
+                                new Date(props.row.executed_at).toLocaleDateString('en-US', {
+                                  month: 'short',
+                                  day: 'numeric',
+                                  year: 'numeric',
+                                })
+                              }}
+                              <span class="text-grey-6 q-ml-xs" style="font-size: 11px">
+                                {{
+                                  new Date(props.row.executed_at).toLocaleTimeString('en-US', {
+                                    hour: '2-digit',
+                                    minute: '2-digit',
+                                  })
+                                }}
+                              </span>
+                            </span>
+                          </div>
+                          <div class="dash-mobile-card__row">
+                            <span class="dash-mobile-card__label">Amount</span>
+                            <span class="dash-mobile-card__value text-green-8 text-weight-bold">
+                              {{ (props.row.payout_amount_satoshis / 1e8).toFixed(8) }} BCH
+                            </span>
+                          </div>
+                          <div class="dash-mobile-card__row">
+                            <span class="dash-mobile-card__label">Cycle</span>
+                            <q-chip
+                              dense
+                              color="green-2"
+                              text-color="green-9"
+                              :label="`${props.row.cycle_number} / ${props.row.total_cycles}`"
+                              style="
+                                font-size: 11px;
+                                font-weight: 700;
+                                border-radius: 6px;
+                                height: 22px;
+                              "
+                            />
+                          </div>
+                          <div class="dash-mobile-card__row">
+                            <span class="dash-mobile-card__label">Interval</span>
+                            <q-badge
+                              color="blue-2"
+                              text-color="blue-9"
+                              :label="props.row.interval_label || '—'"
+                            />
+                          </div>
+                          <div v-if="resolvePayoutTxid(props.row)" class="dash-mobile-card__row">
+                            <span class="dash-mobile-card__label">TxID</span>
+                            <span
+                              class="text-primary dash-mobile-card__txid"
+                              @click="copyTxid(resolvePayoutTxid(props.row))"
+                            >
+                              {{ formatTxidPreview(resolvePayoutTxid(props.row), 16) }}
+                              <q-icon name="content_copy" size="11px" class="q-ml-xs" />
+                            </span>
+                          </div>
+                        </div>
                       </div>
-                    </div>
-                  </div>
-                </template>
-              </q-table>
+                    </template>
+                  </q-table>
+                </div>
+              </div>
             </q-tab-panel>
 
             <q-tab-panel name="details" class="details-panel q-pa-none">
@@ -3538,14 +3599,26 @@ const executedColumns = [
 // Pending schedule grouped by contract (donation_id)
 // All cycles are now stored in the backend with their own due_at,
 // so we just display each record directly — no projection needed.
+// Helper: check if a payout record belongs to the selected account
+const payoutMatchesAccount = (p, account) => {
+  const acctEmail = (account.email || '').trim().toLowerCase()
+  const acctName = (account.name || '').trim().toLowerCase()
+  const pEmail = (p.donor_email || '').trim().toLowerCase()
+  const pName = (p.donor_name || '').trim().toLowerCase()
+  if (acctEmail && pEmail) return acctEmail === pEmail
+  if (acctName && pName) return acctName === pName
+  return false
+}
+
 const pendingScheduleGroups = computed(() => {
   if (!selectedAccount.value) return []
   const { pending } = getAccountSchedule(selectedAccount.value)
+  const filtered = pending.filter((p) => payoutMatchesAccount(p, selectedAccount.value))
   const groups = {}
   const now = new Date()
 
   // Sort ascending by due_at so cycles are in order
-  const sorted = [...pending].sort((a, b) => new Date(a.due_at) - new Date(b.due_at))
+  const sorted = [...filtered].sort((a, b) => new Date(a.due_at) - new Date(b.due_at))
 
   sorted.forEach((p) => {
     const key = p.donation_id
@@ -3594,6 +3667,37 @@ const pendingScheduleGroups = computed(() => {
   // Recalculate cyclesRemaining after all records are processed
   Object.values(groups).forEach((g) => {
     g.cyclesRemaining = g.cycles.filter((c) => c.status !== 'due').length
+  })
+
+  return Object.values(groups)
+})
+
+// Executed schedule grouped by contract (donation_id)
+const executedScheduleGroups = computed(() => {
+  if (!selectedAccount.value) return []
+  const { executed } = getAccountSchedule(selectedAccount.value)
+  const filtered = executed.filter((p) => payoutMatchesAccount(p, selectedAccount.value))
+  const groups = {}
+
+  const sorted = [...filtered].sort((a, b) => new Date(a.executed_at) - new Date(b.executed_at))
+
+  sorted.forEach((p) => {
+    const key = p.donation_id
+    if (!groups[key]) {
+      groups[key] = {
+        donationId: key,
+        vaultId: p.vault_id || '',
+        donorName: p.donor_name || 'Anonymous',
+        donorEmail: p.donor_email || '',
+        intervalLabel: p.interval_label || '—',
+        amountBch: (p.payout_amount_satoshis / 1e8).toFixed(8),
+        totalCycles: p.total_cycles,
+        completedCycles: 0,
+        cycles: [],
+      }
+    }
+    groups[key].cycles.push(p)
+    groups[key].completedCycles = groups[key].cycles.length
   })
 
   return Object.values(groups)
@@ -3674,7 +3778,7 @@ const selectAccount = (account) => {
 }
 
 const formatCurrency = (amount) => {
-  return amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+  return amount.toLocaleString('en-US', { minimumFractionDigits: 8, maximumFractionDigits: 8 })
 }
 
 const normalizeTxid = (txid) => {
@@ -3763,7 +3867,7 @@ const executeWithdrawConfirm = async () => {
     await withdrawConfirmDialog.value.onConfirm()
     withdrawConfirmDialog.value.open = false
   } catch (err) {
-    console.error(err);
+    console.error(err)
     $q.notify({
       type: 'negative',
       message: 'Operation failed',
@@ -3822,7 +3926,7 @@ const handleSmartWithdraw = (row) => {
           throw new Error(`Withdrawal failed: ${result.reason || 'unknown error'}`)
         }
       } else {
-        throw new Error('No vault record');
+        throw new Error('No vault record')
       }
 
       withdrawnDonations.value.add(row.id)
@@ -3895,7 +3999,7 @@ const handleSmartWithdrawAll = (account) => {
               continue
             }
           } else {
-            throw new Error('No vault record');
+            throw new Error('No vault record')
           }
 
           if (row) {

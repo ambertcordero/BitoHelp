@@ -45,6 +45,62 @@ class DonationViewSet(viewsets.ModelViewSet):
                         if wallet_user:
                             extra_kwargs['wallet_user'] = wallet_user
                     self.perform_create(serializer, **extra_kwargs)
+
+                    # Create or update WalletUser with donor contact info
+                    if wallet_addr:
+                        donor_name = (request.data.get('donor_name', '') or '').strip()
+                        donor_email = (request.data.get('donor_email', '') or '').strip()
+                        donor_contact = (request.data.get('donor_contact', '') or '').strip()
+
+                        user, created = WalletUser.objects.get_or_create(
+                            wallet_address=wallet_addr,
+                            defaults={
+                                'display_name': donor_name,
+                                'email': donor_email,
+                                'contact': donor_contact,
+                                'names_history': [donor_name] if donor_name else [],
+                                'emails_history': [donor_email] if donor_email else [],
+                                'contacts_history': [donor_contact] if donor_contact else [],
+                            }
+                        )
+                        if not created:
+                            changed = False
+
+                            if donor_name and donor_name != user.display_name:
+                                if not user.names_history:
+                                    user.names_history = [user.display_name] if user.display_name else []
+                                if donor_name not in user.names_history:
+                                    user.names_history.append(donor_name)
+                                user.display_name = donor_name
+                                changed = True
+
+                            if donor_email and donor_email != user.email:
+                                if not user.emails_history:
+                                    user.emails_history = [user.email] if user.email else []
+                                if donor_email not in user.emails_history:
+                                    user.emails_history.append(donor_email)
+                                user.email = donor_email
+                                changed = True
+
+                            if donor_contact and donor_contact != user.contact:
+                                if not user.contacts_history:
+                                    user.contacts_history = [user.contact] if user.contact else []
+                                if donor_contact not in user.contacts_history:
+                                    user.contacts_history.append(donor_contact)
+                                user.contact = donor_contact
+                                changed = True
+
+                            if changed:
+                                user.save()
+
+                            # Link the wallet_user if it wasn't linked above
+                            if 'wallet_user' not in extra_kwargs:
+                                donation = Donation.objects.filter(
+                                    wallet_address=wallet_addr
+                                ).order_by('-timestamp').first()
+                                if donation and not donation.wallet_user:
+                                    donation.wallet_user = user
+                                    donation.save(update_fields=['wallet_user'])
                 
                 headers = self.get_success_headers(serializer.data)
                 return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
@@ -88,6 +144,30 @@ class DonationViewSet(viewsets.ModelViewSet):
             serializer = self.get_serializer(donations, many=True)
             return Response(serializer.data)
         return Response({'error': 'Cause parameter required'}, status=400)
+
+    @action(detail=False, methods=['post'])
+    def reclaim(self, request):
+        donation_id = request.data.get('donation_id')
+        reclaim_txid = request.data.get('reclaim_txid')
+        reclaimed_amount = request.data.get('reclaimed_amount')
+        donation_txid = request.data.get('donation_txid')
+        if not donation_id or not reclaim_txid:
+            return Response({'error': 'Missing donation_id or reclaim_txid'}, status=status.HTTP_400_BAD_REQUEST)
+        try:
+            donation = Donation.objects.get(id=donation_id)
+        except (Donation.DoesNotExist, ValueError):
+            try:
+                donation = Donation.objects.get(txid=donation_txid)
+            except Donation.DoesNotExist:
+                return Response({'error': 'Donation not found'}, status=status.HTTP_404_NOT_FOUND)
+        donation.reclaim_txid = reclaim_txid
+        
+        if reclaimed_amount:
+            donation.amount = reclaimed_amount
+        donation.save()
+        return Response(DonationSerializer(donation).data, status=status.HTTP_200_OK)
+
+
 
 
 @api_view(['GET'])
