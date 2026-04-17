@@ -58,6 +58,7 @@ DATABASE_URL=postgres://postgres:badpassword@db:5432/cryptocare
 ALLOWED_HOSTS=bitohelp.scibiz.dev          # Your domain
 CORS_ALLOWED_ORIGINS=https://bitohelp.scibiz.dev
 CSRF_TRUSTED_ORIGINS=https://bitohelp.scibiz.dev
+OPENAI_API_KEY=acc2c4k2e-3d2...
 ```
 
 #### Frontend (Vite/Quasar)

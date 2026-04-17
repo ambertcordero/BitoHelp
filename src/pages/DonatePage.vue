@@ -525,8 +525,7 @@ const summaryTotalAmount = computed(() => {
   if (!withdrawal) return `${deposit.toFixed(8)} BCH`
   const depositSats = Math.round(deposit * 1e8)
   const withdrawalSats = Math.round(withdrawal * 1e8)
-  const costPerCycle = withdrawalSats + VAULT_MINER_FEE_SATS
-  const cycles = costPerCycle > 0 ? Math.floor(depositSats / costPerCycle) : 0
+  const cycles = withdrawalSats > 0 ? Math.floor(depositSats / withdrawalSats) : 0
   const totalFees = cycles * VAULT_MINER_FEE_SATS
   const totalSats = depositSats + totalFees
   return `${(totalSats / 1e8).toFixed(8)} BCH`
